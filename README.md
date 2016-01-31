@@ -13,7 +13,7 @@ A android http library
 
 ### 使用接口定义API接口
 
-使用接口+注解的方式来定义API接口, 思路来源于[Retrofit](https://github.com/square/retrofit)，代码也参考了不少，具体实现稍有不同
+使用接口+注解的方式来定义API接口, 思路来源于[Retrofit](https://github.com/square/retrofit)，具体实现稍有不同
 
 Demo中的API接口定义
 
@@ -113,7 +113,7 @@ HttpLiteBuilder  builder = MockLite.mock(new MockHandler() {
 配置并创建HttpLite
 
 ```java
-httpLite = builder.setConnectTimeout(3, TimeUnit.SECONDS)  //设置连接超时
+    httpLite = builder.setConnectTimeout(3, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(3, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(3, TimeUnit.SECONDS)  //设置读超市
                 .setMaxRetryCount(2)  //设置失败重试次数
@@ -126,8 +126,8 @@ httpLite = builder.setConnectTimeout(3, TimeUnit.SECONDS)  //设置连接超时
                 .setHostnameVerifier(..)
                 .baseUrl("http://xxx.xxx.xxx")  //BaseUrl,用于拼接完整的Url
                 .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
-                .build()
-                .addResponseParser(new JacksonParser()); //添加ResponseParser实现结果解析
+                .build();
+    httpLite.addResponseParser(new JacksonParser()); //添加ResponseParser实现结果解析
 ```
 
 创建API接口实例
@@ -152,7 +152,17 @@ httpLite = builder.setConnectTimeout(3, TimeUnit.SECONDS)  //设置连接超时
 
 ### 自定义注解的使用
 
+ParameterProcessor/ParamMiscProcessor 实现对参数注解的检查和处理
 
+MethodProcessor 实现对方法注解的检查和处理
+
+AnnotationRule 定义对整个方法的注解和参数的检查处理
+
+```
+    Retrofit.register....
+```
+
+说明待完善...
 
 ### 直接使用http方法
 
