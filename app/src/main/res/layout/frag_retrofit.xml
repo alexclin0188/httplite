@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/btn_retrofit1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest1"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest2"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest3"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest4"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest5"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest6"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest7"
+        />
+
+    <Button
+        android:id="@+id/btn_retrofit8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RetrofitTest8"
+        />
+</LinearLayout>

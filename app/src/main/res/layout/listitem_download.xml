@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+    android:padding="5dip">
+    <TextView
+        android:id="@+id/tv_file_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:textColor="@color/black"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/tv_file_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:textColor="@color/black"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/tv_state_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textSize="14sp"/>
+
+    <ProgressBar
+        android:id="@+id/progress_download"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:max="100"
+        android:progress="50"
+        android:paddingLeft="10dip"
+        android:paddingRight="10dip"/>
+    <TextView
+        android:id="@+id/tv_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:text="990/1000"
+        android:layout_gravity="right"
+        android:textColor="@color/black"
+        android:textSize="12sp"/>
+</LinearLayout>

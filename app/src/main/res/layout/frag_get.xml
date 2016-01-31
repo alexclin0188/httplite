@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Button
+        android:id="@+id/btn_back_up"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="返回上级"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="top">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="当前路径："
+            android:textColor="@color/black"
+            android:textSize="18sp"/>
+        <TextView
+            android:id="@+id/tv_request_path"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/file_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/white"
+        android:choiceMode="singleChoice"
+        android:divider="@null"
+        android:dividerHeight="5dip"
+        android:scrollbars="vertical"
+        app:layoutManager="LinearLayoutManager"/>
+
+</LinearLayout>

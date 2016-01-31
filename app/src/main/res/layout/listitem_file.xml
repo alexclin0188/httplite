@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+    android:background="@drawable/bg_listitem"
+    android:padding="3dip">
+
+    <TextView
+        android:id="@+id/tv_file_type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="[文件]"
+        android:textSize="14sp"
+        android:textColor="@color/gray6"/>
+
+    <TextView
+        android:id="@+id/tv_file_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="name"
+        android:layout_toRightOf="@id/tv_file_type"
+        android:layout_marginLeft="5dip"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:textSize="18sp"
+        android:textColor="@color/black"/>
+
+    <TextView
+        android:id="@+id/tv_file_hash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="hash"
+        android:textSize="12sp"
+        android:layout_marginLeft="15dip"
+        android:layout_below="@id/tv_file_name"
+        android:textColor="@color/gray6"
+        android:singleLine="true"
+        android:ellipsize="end"/>
+</RelativeLayout>

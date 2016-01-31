@@ -1,0 +1,3 @@
+include ':mockserver', ':mockdata',
+        ':app', ':httplite', ':httplite-okhttp2', ':httplite-urlconnection', ':httplite-okhttp3'
+
