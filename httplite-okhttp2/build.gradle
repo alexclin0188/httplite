@@ -16,10 +16,27 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':httplite')
     compile 'com.squareup.okhttp:okhttp:2.7.0'
+}
+
+def VERSION_NAME = '1.0_beta1'
+def JAR_NAME = 'httplite-oklite' +VERSION_NAME+'.jar'
+
+task makeJar(type: Jar, dependsOn: ['build']) {
+    archiveName = JAR_NAME
+    from('build/intermediates/classes/release/')
+    destinationDir = file('build/outputs/libs/')
+    exclude('**/BuildConfig.class')
+    exclude('**/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+    include('alexclin/httplite/**/*.class')
 }

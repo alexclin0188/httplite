@@ -128,6 +128,7 @@ HttpLiteBuilder  builder = MockLite.mock(new MockHandler() {
                 .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
                 .build();
     httpLite.addResponseParser(new JacksonParser()); //添加ResponseParser实现结果解析
+    httpLite.setBaseUrl("http://192.168.99.238:10080/");
 ```
 
 创建API接口实例
