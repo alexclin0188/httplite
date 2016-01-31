@@ -56,7 +56,7 @@ public class URLConnectionLite extends HttpLiteBuilder implements LiteClient {
         mDispatcher = new Dispatcther();
     }
 
-    Dispatcther getDispatcher() {
+    public Dispatcther getDispatcher() {
         return mDispatcher;
     }
 

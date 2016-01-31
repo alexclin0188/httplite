@@ -18,6 +18,7 @@ import alexclin.httplite.urlconnection.URLConnectionLite;
  */
 public class MockLite extends HttpLiteBuilder{
     private MockHandler mockHandler;
+    private URLConnectionLite liteClient;
 
     public static HttpLiteBuilder mock(MockHandler mockHandler){
         return new MockLite(mockHandler);
@@ -25,6 +26,7 @@ public class MockLite extends HttpLiteBuilder{
 
     private MockLite(MockHandler mockHandler) {
         this.mockHandler = mockHandler;
+        this.liteClient = new URLConnectionLite();
     }
 
     public Response mockSync(Request request) throws Exception{
@@ -41,28 +43,34 @@ public class MockLite extends HttpLiteBuilder{
 
     public <T> MockResponse<T> mock(final Request request,final Callback<T> callback){
         final MockResponse<T> response = new MockResponse<T>(Clazz.of(callback),request);
-        try {
-            mockHandler.mock(request, response);
-            HttpLite.runOnMainThread(new Runnable() {
-                @Override
-                public void run() {
-                    response.performCallback(callback);
+        Runnable runnable = new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    mockHandler.mock(request, response);
+                    HttpLite.runOnMainThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            response.performCallback(callback);
+                        }
+                    });
+                } catch (final Exception e) {
+                    HttpLite.runOnMainThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onFailed(request, e);
+                        }
+                    });
                 }
-            });
-        } catch (final Exception e) {
-            HttpLite.runOnMainThread(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onFailed(request, e);
-                }
-            });
-        }
+            }
+        };
+        liteClient.getDispatcher().getExecutorService().execute(runnable);
         return response;
     }
 
     @Override
     protected LiteClient initLiteClient() {
-        return new URLConnectionLite();
+        return liteClient;
     }
 
     @Override
