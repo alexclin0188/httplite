@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import alexclin.httplite.HttpLite.Method;
+import alexclin.httplite.Method;
 
 @Documented
 @Target(METHOD)

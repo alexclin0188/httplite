@@ -1,6 +1,7 @@
 package alexclin.httplite.retrofit;
 
-import java.io.File;
+import android.text.TextUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -13,16 +14,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.annotation.Body;
 import alexclin.httplite.annotation.Cancel;
-import alexclin.httplite.annotation.Form;
-import alexclin.httplite.annotation.Forms;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
-import alexclin.httplite.annotation.IntoFile;
-import alexclin.httplite.annotation.JsonField;
-import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
+import alexclin.httplite.annotation.Path;
 import alexclin.httplite.annotation.Progress;
 import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;
@@ -46,7 +42,7 @@ class ProcessorFactory {
 
     static {
         methodProcessorList.add(new HttpMethodProcessor());
-        annotationRuleList.add(new BasicRule());
+        annotationRuleList.add(new BasicAnnotationRule());
         paramterProcessorList.add(new ListenerParamProcessor());
         paramterProcessorList.add(new BasicProcessors.BodyProcessor());
         paramterProcessorList.add(new BasicProcessors.FormProcessor());
@@ -83,15 +79,15 @@ class ProcessorFactory {
         throw new RuntimeException("unkown paramter annotation:" + annotation + ", to use custom annotaion, please set custom ParameterProcessor/ParamMiscProcessor in Retrofit");
     }
 
-    private static boolean isBasicHttpAnnoation(Annotation annotation) {
+    public static boolean isBasicHttpAnnoation(Annotation annotation) {
         return (annotation instanceof GET) || (annotation instanceof POST) || (annotation instanceof HTTP);
     }
 
-    private static HttpLite.Method getHttpAnnoationMethod(Annotation annotation) {
+    public static alexclin.httplite.Method getHttpAnnoationMethod(Annotation annotation) {
         if (annotation instanceof GET) {
-            return HttpLite.Method.GET;
+            return alexclin.httplite.Method.GET;
         } else if (annotation instanceof POST) {
-            return HttpLite.Method.GET;
+            return alexclin.httplite.Method.GET;
         } else if (annotation instanceof HTTP) {
             return ((HTTP) annotation).method();
         }
@@ -106,10 +102,10 @@ class ProcessorFactory {
         @Override
         public void process(Annotation annotation, Retrofit retrofit, Request request) {
             if (annotation instanceof GET) {
-                retrofit.setMethod(request, HttpLite.Method.GET);
+                retrofit.setMethod(request, alexclin.httplite.Method.GET);
                 retrofit.setUrl(request, ((GET) annotation).value());
             } else if (annotation instanceof POST) {
-                retrofit.setMethod(request, HttpLite.Method.POST);
+                retrofit.setMethod(request, alexclin.httplite.Method.POST);
                 retrofit.setUrl(request, ((POST) annotation).value());
             } else if (annotation instanceof HTTP) {
                 retrofit.setMethod(request, ((HTTP) annotation).method());
@@ -159,97 +155,10 @@ class ProcessorFactory {
         }
     }
 
-    static class BasicRule implements AnnotationRule {
-
-        @Override
-        public void checkMethod(Method checkMethod) throws RuntimeException {
-            Type[] methodParameterTypes = checkMethod.getGenericParameterTypes();
-            Annotation[][] methodParameterAnnotationArrays = checkMethod.getParameterAnnotations();
-            Annotation[] methodAnnotations = checkMethod.getAnnotations();
-            boolean hasHttpAnnotation = false;
-            HttpLite.Method method = null;
-            for (Annotation annotation : methodAnnotations) {
-                boolean isBasicHttp = isBasicHttpAnnoation(annotation);
-                method = getHttpAnnoationMethod(annotation);
-                if (!isBasicHttp) continue;
-                if (hasHttpAnnotation) {
-                    String info = Util.printArray("You can use only one http annotation on each method but threre is:%s", methodAnnotations);
-                    throw Util.methodError(checkMethod,info);
-                } else {
-                    hasHttpAnnotation = true;
-                }
-            }
-            if (!hasHttpAnnotation) {
-                String info = Util.printArray("You must set one http annotation on each method but threre is:%s", methodAnnotations);
-                throw Util.methodError(checkMethod,info);
-            }
-
-            boolean isFileResturnOrCallback = Util.getTypeParameter(methodParameterTypes[methodParameterTypes.length-1])== File.class;
-            boolean allowBody = Request.permitsRequestBody(method);
-            boolean requireBody = Request.requiresRequestBody(method);
-            boolean hasBodyAnnotation = false;
-            boolean hasFormAnnotation = false;
-            boolean hasMultipartAnnotation = false;
-            boolean hasIntoFile = false;
-            boolean hasJsonField = false;
-            for (Annotation[] annotations : methodParameterAnnotationArrays) {
-                for (Annotation annotation : annotations) {
-                    if (annotation instanceof Body) {
-                        if (hasBodyAnnotation) {
-                            throw Util.methodError(checkMethod, "You can use @Body annoation on method not more than once");
-                        }else if (!allowBody) {
-                            throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
-                        }
-                        hasBodyAnnotation = true;
-                    } else if ((annotation instanceof Form) || (annotation instanceof Forms)) {
-                        if (!allowBody) {
-                            throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
-                        }
-                        hasFormAnnotation = true;
-                    } else if ((annotation instanceof Multipart)) {
-                        if (!allowBody) {
-                            throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
-                        }
-                        hasMultipartAnnotation = true;
-                    } else if (annotation instanceof IntoFile) {
-                        if (!isFileResturnOrCallback)
-                            throw Util.methodError(checkMethod,"Use @InfoFile must with last parameter (Callback<File>) or (Clazz<File> and return file)");
-                        hasIntoFile = true;
-                    } else if (annotation instanceof JsonField){
-                        if (!allowBody) {
-                            throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
-                        }
-                        hasJsonField = true;
-                    }
-                    if (hasFormAnnotation&&hasBodyAnnotation) {
-                        throw Util.methodError(checkMethod,"You can not use @Body and @Form/Forms on on the same one method");
-                    } else if (hasMultipartAnnotation&&hasBodyAnnotation) {
-                        throw Util.methodError(checkMethod,"You can not use @Body and @Multipart on on the same one method");
-                    } else if(hasJsonField&&hasBodyAnnotation){
-                        throw Util.methodError(checkMethod,"You can not use @Body and @JsonField on on the same one method");
-                    } else if(hasFormAnnotation&&hasMultipartAnnotation){
-                        throw Util.methodError(checkMethod,"You can not use @Form/Forms and @Multipart on on the same one method");
-                    } else if(hasFormAnnotation&&hasJsonField){
-                        throw Util.methodError(checkMethod,"You can not use @JsonFile and @Multipart on on the same one method");
-                    } else if(hasMultipartAnnotation&&hasJsonField){
-                        throw Util.methodError(checkMethod,"You can not use @Form/Forms and @JsonField on on the same one method");
-                    }
-                }
-            }
-
-            if(isFileResturnOrCallback&&!hasIntoFile){
-                throw Util.methodError(checkMethod,"Use last parameter (Callback<File>) or (Clazz<File> and return file), method must has @IntoFile paramter");
-            }
-
-            if(requireBody && !(hasBodyAnnotation||hasFormAnnotation||hasMultipartAnnotation||hasJsonField)){
-                throw Util.methodError(checkMethod,"Http method:%s must has body parameter such as:@Form/Forms @Multipart @Body @JsonField",method);
-            }
-        }
-    }
-
     abstract static class ObjectsProcessor implements ParameterProcessor{
         @Override
         public void process(Annotation annotation, Request request, Object value) {
+            if(value==null) return;
             Class clazz = value.getClass();
             if(Util.isSubType(clazz, Collection.class)){
                 Collection collection = (Collection) value;
@@ -260,6 +169,7 @@ class ProcessorFactory {
             }else if(clazz.getGenericSuperclass() instanceof GenericArrayType){
                 Object[] objects = (Object[]) value;
                 for(Object obj:objects){
+                    if(obj==null) return;
                     performProcess(annotation,request,obj);
                 }
             }else {
@@ -268,9 +178,15 @@ class ProcessorFactory {
         }
 
         @Override
-        public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {}
+        public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {
+            if(TextUtils.isEmpty(value(annotation))){
+                throw Util.methodError(method,"The annotation {@%s(value) value} must not be null",annotation);
+            }
+        }
 
         abstract void performProcess(Annotation annotation, Request request, Object value);
+
+        abstract String value(Annotation annotation);
     }
 
     abstract static class MapProcessor implements ParameterProcessor{
@@ -281,7 +197,7 @@ class ProcessorFactory {
             Map<String,?> map = (Map<String,?>) value;
             for(String key:map.keySet()){
                 Object object = map.get(key);
-                if(key==null|| object==null) return;
+                if(TextUtils.isEmpty(key)|| object==null) return;
                 performProcess(annotation, request,key, object);
             }
         }

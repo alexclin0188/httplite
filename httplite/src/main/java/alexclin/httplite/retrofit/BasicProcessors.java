@@ -46,6 +46,11 @@ class BasicProcessors {
         }
 
         @Override
+        String value(Annotation annotation) {
+            return ((Form)annotation).value();
+        }
+
+        @Override
         public boolean support(Annotation annotation) {
             return (annotation instanceof Form);
         }
@@ -72,6 +77,11 @@ class BasicProcessors {
         }
 
         @Override
+        String value(Annotation annotation) {
+            return ((Header)annotation).value();
+        }
+
+        @Override
         public boolean support(Annotation annotation) {
             return annotation instanceof Header;
         }
@@ -95,6 +105,11 @@ class BasicProcessors {
         @Override
         void performProcess(Annotation annotation, Request request, Object value) {
             request.param(((Param)annotation).value(),value.toString(),((Param)annotation).encoded());
+        }
+
+        @Override
+        String value(Annotation annotation) {
+            return ((Param)annotation).value();
         }
 
         @Override
@@ -133,6 +148,8 @@ class BasicProcessors {
         public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {
             if(parameterType!=String.class){
                 throw Util.methodError(method,"Parameter with @Path must be type String");
+            }else if(parameterType==String.class&&(TextUtils.isEmpty(((Path) annotation).value()))){
+                throw Util.methodError(method,"The annotation {@Path(value) value} must not be null when @Path use with type String");
             }
         }
     }
@@ -141,7 +158,6 @@ class BasicProcessors {
 
         @Override
         void performProcess(Annotation annotation, Request request, String key, Object value) {
-            if(key==null||value==null) return;
             request.pathHolder(key,value.toString(),((Paths)annotation).encoded());
         }
 
@@ -240,12 +256,9 @@ class BasicProcessors {
                     int argPos = pair.first;
                     int annotationPos = pair.second;
                     if(args[argPos]==null) continue;
-                    String value = args[argPos].toString();
-                    if(TextUtils.isEmpty(value)) continue;
                     JsonField annotation = (JsonField) annotations[argPos][annotationPos];
                     String key = annotation.value();
-                    if (TextUtils.isEmpty(key)) continue;
-                    object.put(key, value);
+                    object.put(key,args[argPos]);
                 }
                 request.body(MediaType.APPLICATION_JSON,object.toString());
             } catch (JSONException e) {
@@ -260,9 +273,16 @@ class BasicProcessors {
 
         @Override
         public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {
-            if(parameterType!=String.class){
+            if(!jsonSupportType(parameterType)){
                 throw Util.methodError(method,"Annoation @JsonField only support parameter type String");
+            }if(TextUtils.isEmpty(((JsonField)annotation).value())){
+                throw Util.methodError(method,"The annotation {@JsonField(value) value} must not be null");
             }
+        }
+
+        private boolean jsonSupportType(Type type){
+            return type==String.class || type == JSONObject.class || type == int.class || type == long.class || type == double.class
+                    || type == short.class || Util.isSubType(type,Number.class);
         }
     }
 }

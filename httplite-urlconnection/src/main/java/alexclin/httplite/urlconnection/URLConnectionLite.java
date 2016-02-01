@@ -20,6 +20,7 @@ import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
+import alexclin.httplite.Method;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
@@ -77,14 +78,14 @@ public class URLConnectionLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public void execute(String url, HttpLite.Method method, Map<String, List<String>> headers, RequestBody body, Object tag, ResultCallback callback, Runnable preWork) {
+    public void execute(String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag, ResultCallback callback, Runnable preWork) {
         LogUtil.e("Before Execute url:"+url);
         URLTask task = new URLTask(this, url, method, headers, body, tag,callback.getCall(),callback, preWork);
         getDispatcher().dispatch(task);
     }
 
     @Override
-    public Response executeSync(Request request, String url, HttpLite.Method method, Map<String, List<String>> headers, RequestBody body, Object tag) throws Exception {
+    public Response executeSync(Request request, String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag) throws Exception {
         URLTask task = new URLTask(this, url, method, headers, body, tag, request,null,null);
         return getDispatcher().execute(task);
     }

@@ -10,7 +10,7 @@ import java.util.Map;
 
 import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
-import alexclin.httplite.HttpLite.Method;
+import alexclin.httplite.Method;
 import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
@@ -94,8 +94,9 @@ public interface ApiService {
     void putJsonBody(
             @Path("holde_test") String holder,
             @JsonField("field1") String field1,
-            @JsonField("field2") String field2,
-            @JsonField("field3") String field3,
+            @JsonField("field2") int field2,
+            @JsonField("field3") Double field3,
+            @JsonField("field4") long field4,
             Callback<ExRequestInfo> callback
     );
 

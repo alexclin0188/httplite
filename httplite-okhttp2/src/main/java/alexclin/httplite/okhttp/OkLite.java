@@ -26,6 +26,7 @@ import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
+import alexclin.httplite.Method;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.ResultCallback;
 import alexclin.httplite.okhttp.wrapper.CallWrapper;
@@ -64,7 +65,7 @@ public class OkLite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    public void execute(final String url, final HttpLite.Method method, final Map<String, List<String>> headers, final RequestBody body, final Object tag, final ResultCallback callback, final Runnable preWork) {
+    public void execute(final String url, final Method method, final Map<String, List<String>> headers, final RequestBody body, final Object tag, final ResultCallback callback, final Runnable preWork) {
         if(preWork!=null){
             mClient.getDispatcher().getExecutorService().execute(new Runnable() {
                 @Override
@@ -78,7 +79,7 @@ public class OkLite extends HttpLiteBuilder implements LiteClient{
         }
     }
 
-    private void executeInternal(String url, HttpLite.Method method, Map<String, List<String>> headers, RequestBody body, Object tag, final ResultCallback callback){
+    private void executeInternal(String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag, final ResultCallback callback){
         Request.Builder rb = createRequestBuilder(url, method, headers, body, tag);
         new CallWrapper(mClient,rb.build(),callback).enqueue(new Callback() {
             @Override
@@ -93,7 +94,7 @@ public class OkLite extends HttpLiteBuilder implements LiteClient{
         });
     }
 
-    private Request.Builder createRequestBuilder(String url, HttpLite.Method method, Map<String, List<String>> headers, RequestBody body, Object tag) {
+    private Request.Builder createRequestBuilder(String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag) {
         Request.Builder rb = new Request.Builder().url(url).tag(tag);
         Headers okheader = createHeader(headers);
         if(okheader!=null){
@@ -127,7 +128,7 @@ public class OkLite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    public alexclin.httplite.Response executeSync(alexclin.httplite.Request request, String url, HttpLite.Method method, Map<String, List<String>> headers, RequestBody body, Object tag) throws IOException{
+    public alexclin.httplite.Response executeSync(alexclin.httplite.Request request, String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag) throws IOException{
         Request.Builder rb = createRequestBuilder(url,method,headers,body,tag);
         return new ResponseWrapper(mClient.newCall(rb.build()).execute(),request);
     }

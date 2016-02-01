@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 
 import alexclin.httplite.HttpLite;
+import alexclin.httplite.Method;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
@@ -27,7 +28,7 @@ public class URLTask {
 
     private URLConnectionLite lite;
     private String url;
-    private HttpLite.Method method;
+    private Method method;
     private Map<String, List<String>> headers;
     private RequestBody requestBody;
     private Object tag;
@@ -40,7 +41,7 @@ public class URLTask {
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLConnectionLite lite,String url, HttpLite.Method method, Map<String, List<String>> headers, RequestBody body,
+    public URLTask(URLConnectionLite lite,String url, Method method, Map<String, List<String>> headers, RequestBody body,
                    Object tag, Request request,ResultCallback callback,Runnable runnable) {
         this.url = url;
         this.method = method;

@@ -105,7 +105,7 @@ public abstract class Retrofit {
 
     public abstract Request makeRequest();
 
-    public abstract Request setMethod(Request request,HttpLite.Method method);
+    public abstract Request setMethod(Request request,alexclin.httplite.Method method);
 
     public abstract Request setUrl(Request request, String url);
 

@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.HttpLite.Method;
 import alexclin.httplite.exception.IllegalOperationException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.CancelListener;

@@ -159,7 +159,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_retrofit7:
-                apiService.putJsonBody("JsonPath", "jfield1", "jvalue2", "jjjj3", new Callback<ExRequestInfo>() {
+                apiService.putJsonBody("JsonPath", "123", 3, 5.0,10, new Callback<ExRequestInfo>() {
                     @Override
                     public void onSuccess(ExRequestInfo result, Map<String, List<String>> headers) {
                         LogUtil.e("Result:" + result);

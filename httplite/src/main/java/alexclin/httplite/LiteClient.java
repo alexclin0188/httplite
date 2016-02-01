@@ -3,7 +3,6 @@ package alexclin.httplite;
 import android.util.Pair;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.List;
@@ -13,7 +12,6 @@ import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
-import alexclin.httplite.HttpLite.Method;
 
 /**
  * alexclin.httplite
