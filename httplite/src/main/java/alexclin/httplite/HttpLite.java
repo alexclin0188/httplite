@@ -44,13 +44,15 @@ public class HttpLite {
     private CallFactory callFactory;
 
     private Retrofit retrofit;
+    private final boolean isRelease;
 
-    HttpLite(LiteClient client, String baseUrl, boolean useLiteRetry, int maxRetryCount, CookieStore cookieStore,CallFactory factory) {
+    HttpLite(LiteClient client, String baseUrl, boolean useLiteRetry, int maxRetryCount, CookieStore cookieStore,CallFactory factory,boolean release) {
         this.client = client;
         this.parserMap = new HashMap<>();
         this.baseUrl = baseUrl;
         this.useLiteRetry = useLiteRetry;
         this.maxRetryCount = maxRetryCount;
+        this.isRelease = release;
         if(cookieStore!=null){
             cookieManager = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
         }
@@ -254,6 +256,11 @@ public class HttpLite {
         @Override
         public Call makeCall(Request request) {
             return request.method(request.method,null);
+        }
+
+        @Override
+        public boolean isReleaseMode() {
+            return lite.isRelease;
         }
     }
 }

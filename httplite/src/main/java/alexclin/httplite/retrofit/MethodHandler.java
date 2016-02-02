@@ -58,8 +58,10 @@ public class MethodHandler {
             ParameterProcessor[] processors = new ParameterProcessor[annotationCount];
             for(int j=0;j<parameterAnnotations.length;j++){
                 AbsParamProcessor processor  = ProcessorFactory.paramProcessor(parameterAnnotations[j]);
-                if(check) processor.checkParameters(method,parameterAnnotations[j],parameterType);
-                if(processor instanceof ParameterProcessor){
+                if(check && processor!=null) processor.checkParameters(method,parameterAnnotations[j],parameterType);
+                if(processor==null){
+                    processors[j] = null;
+                }else if(processor instanceof ParameterProcessor){
                     processors[j] = (ParameterProcessor) processor;
                 }else{
                     processors[j] = null;
@@ -138,7 +140,8 @@ public class MethodHandler {
         Request request = retrofit.makeRequest();
         int maCount = methodProcessors.length;
         for(int i=0;i<maCount;i++){
-            methodProcessors[i].process(methodAnnotations[i],retrofit,request);
+            MethodProcessor processor = methodProcessors[i];
+            if(processor!=null) processor.process(methodAnnotations[i],retrofit,request);
         }
         int length = args.length;
         for(int i=0;i<length;i++){

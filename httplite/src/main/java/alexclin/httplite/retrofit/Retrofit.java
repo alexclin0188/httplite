@@ -23,8 +23,6 @@ public abstract class Retrofit {
 
     private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();
 
-    private boolean isReleaseMode = false;
-
     private final List<MethodListener> methodListenerList = new CopyOnWriteArrayList<>();
 
     @SuppressWarnings("unchecked")
@@ -111,13 +109,7 @@ public abstract class Retrofit {
 
     public abstract Call makeCall(Request request);
 
-    public void setReleaseMode(boolean isReleaseMode) {
-        this.isReleaseMode = isReleaseMode;
-    }
-
-    public boolean isReleaseMode() {
-        return isReleaseMode;
-    }
+    public abstract boolean isReleaseMode();
 
     public static void registerParamterProcessor(ParameterProcessor processor) {
         if (processor != null && !ProcessorFactory.paramterProcessorList.contains(processor)) {

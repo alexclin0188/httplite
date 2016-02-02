@@ -25,17 +25,3 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':httplite')
 }
-
-def VERSION_NAME = '1.0_beta1'
-def JAR_NAME = 'httplite-urlite' +VERSION_NAME+'.jar'
-
-task makeJar(type: Jar, dependsOn: ['build']) {
-    archiveName = JAR_NAME
-    from('build/intermediates/classes/release/')
-    destinationDir = file('build/outputs/libs/')
-    exclude('**/BuildConfig.class')
-    exclude('**/BuildConfig\$*.class')
-    exclude('**/R.class')
-    exclude('**/R\$*.class')
-    include('alexclin/httplite/**/*.class')
-}

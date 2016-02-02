@@ -21,3 +21,50 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+def httplite_version = '1.0_beta1'
+def okhttp2_version = '1.0_beta1'
+def urlite_version = '1.0_beta1'
+
+task makeHttplite(type: Jar) {
+    project('httplite').task('build').execute()
+    archiveName = 'httplite' +httplite_version+'.jar'
+    from('httplite/build/intermediates/classes/release/')
+    destinationDir = file('releaselib/')
+    exclude('**/BuildConfig.class')
+    exclude('**/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+    include('alexclin/httplite/**/*.class')
+}
+
+task makeHttpOk2Lib(type: Jar) {
+    project('httplite-okhttp2').task('build').execute()
+    archiveName = 'httplite-oklite' +okhttp2_version+'.jar'
+    from('httplite-okhttp2/build/intermediates/classes/release/')
+    destinationDir = file('releaselib/')
+    exclude('**/BuildConfig.class')
+    exclude('**/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+    include('alexclin/httplite/**/*.class')
+}
+
+task makeHttpUrl(type: Jar) {
+    project('httplite-urlconnection').task('build').execute()
+    archiveName = 'httplite-urlite' +urlite_version+'.jar'
+    from('httplite-urlconnection/build/intermediates/classes/release/')
+    destinationDir = file('releaselib/')
+    exclude('**/BuildConfig.class')
+    exclude('**/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+    include('alexclin/httplite/**/*.class')
+}
+
+task makeJar {
+    delete rootProject.file('releaselib')
+    makeHttplite.execute()
+    makeHttpOk2Lib.execute()
+    makeHttpUrl.execute()
+}

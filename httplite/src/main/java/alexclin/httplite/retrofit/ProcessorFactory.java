@@ -63,6 +63,7 @@ class ProcessorFactory {
     }
 
     static MethodProcessor methodProcessor(Annotation annotation) {
+        if(isSystemAnnotation(annotation)) return null;
         for (MethodProcessor processor : methodProcessorList) {
             if (processor.support(annotation)) return processor;
         }
@@ -70,6 +71,7 @@ class ProcessorFactory {
     }
 
     static AbsParamProcessor paramProcessor(Annotation annotation) {
+        if(isSystemAnnotation(annotation)) return null;
         for (ParameterProcessor processor : paramterProcessorList) {
             if (processor.support(annotation)) return processor;
         }
@@ -92,6 +94,11 @@ class ProcessorFactory {
             return ((HTTP) annotation).method();
         }
         return null;
+    }
+
+    public static boolean isSystemAnnotation(Annotation annotation){
+        String packageName = annotation.getClass().getName();
+        return packageName.startsWith("java.lang.annotation") || packageName.startsWith("android.support.") || packageName.startsWith("android.annotation.");
     }
 
     /**

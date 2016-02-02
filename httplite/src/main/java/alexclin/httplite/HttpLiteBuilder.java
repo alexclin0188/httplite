@@ -30,6 +30,7 @@ public abstract class HttpLiteBuilder implements CallFactory{
     private int writeTimeout = 10_000;
     private boolean useLiteRetry;
     private CookieStore cookieStore;
+    private boolean isRelase;
 
     protected abstract LiteClient initLiteClient();
 
@@ -37,7 +38,7 @@ public abstract class HttpLiteBuilder implements CallFactory{
         LiteClient client = initLiteClient();
         client.setConfig(proxy,proxySelector,socketFactory,sslSocketFactory,hostnameVerifier,followSslRedirects,followRedirects,
                 useLiteRetry?0:maxRetryCount,connectTimeout,readTimeout,writeTimeout);
-        return new HttpLite(client,baseUrl,useLiteRetry,maxRetryCount,cookieStore,this);
+        return new HttpLite(client,baseUrl,useLiteRetry,maxRetryCount,cookieStore,this,isRelase);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -165,6 +166,11 @@ public abstract class HttpLiteBuilder implements CallFactory{
 
     public HttpLiteBuilder useCookie(CookieStore cookieStore){
         this.cookieStore = cookieStore;
+        return this;
+    }
+
+    public HttpLiteBuilder setRelease(boolean isRelase){
+        this.isRelase = isRelase;
         return this;
     }
 

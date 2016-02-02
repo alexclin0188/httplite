@@ -3,6 +3,7 @@ package alexclin.httplite.retrofit;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -282,7 +283,8 @@ class BasicProcessors {
 
         private boolean jsonSupportType(Type type){
             return type==String.class || type == JSONObject.class || type == int.class || type == long.class || type == double.class
-                    || type == short.class || Util.isSubType(type,Number.class);
+                    || type == short.class || Util.isSubType(type,Number.class) || type == boolean.class || type == Boolean.class
+                    || type == JSONArray.class;
         }
     }
 }
