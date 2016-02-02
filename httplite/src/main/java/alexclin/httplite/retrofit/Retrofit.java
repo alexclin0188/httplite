@@ -3,6 +3,7 @@ package alexclin.httplite.retrofit;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +22,9 @@ import alexclin.httplite.util.Util;
  */
 public abstract class Retrofit {
 
-    private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();
+    private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();  //TODO LinkedHashMap合不合适？
 
-    private final List<MethodListener> methodListenerList = new CopyOnWriteArrayList<>();
+    private MethodListener methodListener;
 
     @SuppressWarnings("unchecked")
     public final <T> T create(final Class<T> service){
@@ -57,26 +58,13 @@ public abstract class Retrofit {
     }
 
     protected void dispatchMethodEvent(Method method, Retrofit retrofit, Object... args){
-        if(!methodListenerList.isEmpty()){
-            for(MethodListener listener:methodListenerList){
-                listener.onMethod(method,retrofit,args);
-            }
-        }
-    }
-
-    public void registerMethodListener(MethodListener methodListener){
-        if(methodListener!=null && !methodListenerList.contains(methodListener))
-            methodListenerList.add(methodListener);
-    }
-
-    public void unregisterMethodListener(MethodListener methodListener){
         if(methodListener!=null){
-            methodListenerList.remove(methodListener);
+            methodListener.onMethod(method,retrofit,args);
         }
     }
 
-    public void clearMethodListener(){
-        methodListenerList.clear();
+    public void setMethodListener(MethodListener methodListener){
+        this.methodListener = methodListener;
     }
 
     private static boolean isDefaultMethod(Method method){
@@ -123,6 +111,16 @@ public abstract class Retrofit {
         }
     }
 
+    public static void unregisterParamterProcessor(Class<? extends ParameterProcessor> clazz) {
+        Iterator<ParameterProcessor> iterator = ProcessorFactory.paramterProcessorList.iterator();
+        while (iterator.hasNext()){
+            ParameterProcessor processor = iterator.next();
+            if(processor.getClass()==clazz){
+                iterator.remove();
+            }
+        }
+    }
+
     public static void registerParamMiscProcessor(ParamMiscProcessor processor) {
         if (processor != null && !ProcessorFactory.paramMiscProcessors.contains(processor)) {
             ProcessorFactory.paramMiscProcessors.add(processor);
@@ -132,6 +130,16 @@ public abstract class Retrofit {
     public static void unregisterParamMiscProcessor(ParamMiscProcessor processor) {
         if (processor != null) {
             ProcessorFactory.paramMiscProcessors.remove(processor);
+        }
+    }
+
+    public static void unregisterParamMiscProcessor(Class<? extends ParamMiscProcessor> clazz) {
+        Iterator<ParamMiscProcessor> iterator = ProcessorFactory.paramMiscProcessors.iterator();
+        while (iterator.hasNext()){
+            ParamMiscProcessor processor = iterator.next();
+            if(processor.getClass()==clazz){
+                iterator.remove();
+            }
         }
     }
 
@@ -147,6 +155,16 @@ public abstract class Retrofit {
         }
     }
 
+    public static void unregisterMethodProcessor(Class<? extends MethodProcessor> clazz) {
+        Iterator<MethodProcessor> iterator = ProcessorFactory.methodProcessorList.iterator();
+        while (iterator.hasNext()){
+            MethodProcessor processor = iterator.next();
+            if(processor.getClass()==clazz){
+                iterator.remove();
+            }
+        }
+    }
+
     public static void registerAnnotationRule(AnnotationRule rule) {
         if (rule != null && !ProcessorFactory.annotationRuleList.contains(rule)) {
             ProcessorFactory.annotationRuleList.add(rule);
@@ -156,6 +174,16 @@ public abstract class Retrofit {
     public static void unregisterAnnotationRule(AnnotationRule rule) {
         if (rule != null) {
             ProcessorFactory.annotationRuleList.remove(rule);
+        }
+    }
+
+    public static void unregisterAnnotationRule(Class<? extends AnnotationRule> clazz) {
+        Iterator<AnnotationRule> iterator = ProcessorFactory.annotationRuleList.iterator();
+        while (iterator.hasNext()){
+            AnnotationRule processor = iterator.next();
+            if(processor.getClass()==clazz){
+                iterator.remove();
+            }
         }
     }
 }
