@@ -22,9 +22,9 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-def httplite_version = '1.0_beta1'
-def okhttp2_version = '1.0_beta1'
-def urlite_version = '1.0_beta1'
+def httplite_version = '1.0beta'
+def okhttp2_version = '1.0beta'
+def urlite_version = '1.0beta'
 
 task makeHttplite(type: Jar) {
     project('httplite').task('build').execute()
@@ -40,7 +40,7 @@ task makeHttplite(type: Jar) {
 
 task makeHttpOk2Lib(type: Jar) {
     project('httplite-okhttp2').task('build').execute()
-    archiveName = 'httplite-oklite' +okhttp2_version+'.jar'
+    archiveName = 'httplite-ok2lite' +okhttp2_version+'.jar'
     from('httplite-okhttp2/build/intermediates/classes/release/')
     destinationDir = file('releaselib/')
     exclude('**/BuildConfig.class')
@@ -51,7 +51,7 @@ task makeHttpOk2Lib(type: Jar) {
 }
 
 task makeHttpUrl(type: Jar) {
-    project('httplite-urlconnection').task('build').execute()
+    project('httplite-url').task('build').execute()
     archiveName = 'httplite-urlite' +urlite_version+'.jar'
     from('httplite-urlconnection/build/intermediates/classes/release/')
     destinationDir = file('releaselib/')

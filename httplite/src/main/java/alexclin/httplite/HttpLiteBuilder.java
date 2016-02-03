@@ -15,7 +15,7 @@ import javax.net.ssl.SSLSocketFactory;
  * @author alexclin
  * @date 16/1/1 10:56
  */
-public abstract class HttpLiteBuilder implements CallFactory{
+public abstract class HttpLiteBuilder{
     private String baseUrl;
     private Proxy proxy;
     private ProxySelector proxySelector;
@@ -31,14 +31,16 @@ public abstract class HttpLiteBuilder implements CallFactory{
     private boolean useLiteRetry;
     private CookieStore cookieStore;
     private boolean isRelase;
+    protected CallFactory callFactory;
 
     protected abstract LiteClient initLiteClient();
 
     public final HttpLite build(){
         LiteClient client = initLiteClient();
+        if(callFactory==null) callFactory = new HttpCall.Factory();
         client.setConfig(proxy,proxySelector,socketFactory,sslSocketFactory,hostnameVerifier,followSslRedirects,followRedirects,
                 useLiteRetry?0:maxRetryCount,connectTimeout,readTimeout,writeTimeout);
-        return new HttpLite(client,baseUrl,useLiteRetry,maxRetryCount,cookieStore,this,isRelase);
+        return new HttpLite(client,baseUrl,useLiteRetry,maxRetryCount,cookieStore,callFactory,isRelase);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -172,10 +174,5 @@ public abstract class HttpLiteBuilder implements CallFactory{
     public HttpLiteBuilder setRelease(boolean isRelase){
         this.isRelase = isRelase;
         return this;
-    }
-
-    @Override
-    public Call newCall(Request request) {
-        return new HttpCall(request);
     }
 }

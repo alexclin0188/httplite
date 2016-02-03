@@ -1,42 +1,23 @@
 package alexclin.httplite.sample;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
-
-import com.example.FileInfo;
-import com.example.Result;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.HttpLite;
-import alexclin.httplite.HttpLiteBuilder;
-import alexclin.httplite.Request;
-import alexclin.httplite.listener.Callback;
-import alexclin.httplite.okhttp.OkLite;
 import alexclin.httplite.sample.event.ChangeFragEvent;
 import alexclin.httplite.sample.frag.CustomFrag;
 import alexclin.httplite.sample.frag.DownloadFrag;
 import alexclin.httplite.sample.frag.GetFrag;
 import alexclin.httplite.sample.frag.PostFrag;
 import alexclin.httplite.sample.frag.RetrofitFrag;
-import alexclin.httplite.sample.json.JacksonParser;
-import alexclin.httplite.sample.model.ZhihuData;
-import alexclin.httplite.sample.retrofit.TestRetrofit;
-import alexclin.httplite.urlconnection.URLConnectionLite;
-import alexclin.httplite.util.LogUtil;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import de.greenrobot.event.EventBus;

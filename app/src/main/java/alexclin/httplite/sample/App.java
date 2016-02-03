@@ -7,14 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
-import alexclin.httplite.Request;
-import alexclin.httplite.Response;
-import alexclin.httplite.mock.MockHandler;
-import alexclin.httplite.mock.MockLite;
-import alexclin.httplite.mock.MockResponse;
-import alexclin.httplite.okhttp.OkLite;
 import alexclin.httplite.sample.json.JacksonParser;
-import alexclin.httplite.urlconnection.URLConnectionLite;
+import alexclin.httplite.urlconnection.URLite;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -33,7 +27,7 @@ public class App extends Application {
         LogUtil.setDebug(true);
         baseUrl = "http://192.168.99.238:10080/";
 //        HttpLiteBuilder builder = OkLite.create();
-        HttpLiteBuilder builder = URLConnectionLite.create();
+        HttpLiteBuilder builder = URLite.create();
 //      HttpLiteBuilder  builder = MockLite.mock(new MockHandler() {
 //            @Override
 //            public <T> void mock(Request request, MockResponse<T> response) throws Exception {

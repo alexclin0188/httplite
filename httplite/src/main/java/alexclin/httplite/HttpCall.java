@@ -108,4 +108,12 @@ public class HttpCall implements Call{
             lite.getClient().execute(request.url,request.method,request.headers,request.body,request.tag,callback,preWork);
         }
     }
+
+    public static class Factory implements CallFactory{
+
+        @Override
+        public Call newCall(Request request) {
+            return new HttpCall(request);
+        }
+    }
 }

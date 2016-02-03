@@ -1,4 +1,4 @@
-package alexclin.httplite.mock;
+package alexclin.httplite.urlconnection;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -26,20 +26,19 @@ public class MockResponse<T> {
     private Map<String, List<String>> headers;
     private Response response;
     private Handle handle;
-    private volatile boolean isCanceled;
 
-    private Request request;
+    private MockCall call;
     private ProgressListener mProgressListener;
     private RetryListener mRetryListener;
     private CancelListener mCancelListener;
 
-    MockResponse(Clazz<T> clazz,Request request) {
+    MockResponse(Clazz<T> clazz,MockCall call) {
         this.clazz = clazz;
         this.handle = new Handle();
-        this.request = request;
-        this.mProgressListener = request.getProgressListener();
-        this.mRetryListener = request.getRetryListener();
-        this.mCancelListener = request.getCancelListener();
+        this.call = call;
+        this.mProgressListener = call.request.getProgressListener();
+        this.mRetryListener = call.request.getRetryListener();
+        this.mCancelListener = call.request.getCancelListener();
     }
 
     void performCallback(Callback<T> callback) {
@@ -79,7 +78,7 @@ public class MockResponse<T> {
     }
 
     public boolean isCanceled() {
-        return isCanceled;
+        return call.isCanceled();
     }
 
     public final void mockRetry(final int tryCount, final int maxCount) {
@@ -105,12 +104,12 @@ public class MockResponse<T> {
     }
 
     public final void mockCancel() {
-        isCanceled = true;
+        call.cancel();
         HttpLite.runOnMainThread(new Runnable() {
             @Override
             public void run() {
                 if (mCancelListener != null)
-                    mCancelListener.onCancel(request);
+                    mCancelListener.onCancel(call.request);
             }
         });
     }
@@ -118,13 +117,15 @@ public class MockResponse<T> {
     class Handle implements DownloadHandle {
         @Override
         public final void pause() {
-            isCanceled = true;
+            mockCancel();
         }
 
         @Override
         public final void resume() {
-            isCanceled = false;
-            //TODO
+            if(!call.isExecuted()){
+                call.reset();
+                call.dispatch();
+            }
         }
     }
 }

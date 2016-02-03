@@ -9,14 +9,12 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import alexclin.httplite.HttpLite;
 import alexclin.httplite.Method;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.util.LogUtil;
 
 /**
  * alexclin.httplite.urlconnection
@@ -24,9 +22,9 @@ import alexclin.httplite.util.LogUtil;
  * @author alexclin
  * @date 16/1/2 19:39
  */
-public class URLTask {
+public class URLTask implements Task{
 
-    private URLConnectionLite lite;
+    private URLite lite;
     private String url;
     private Method method;
     private Map<String, List<String>> headers;
@@ -41,7 +39,7 @@ public class URLTask {
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLConnectionLite lite,String url, Method method, Map<String, List<String>> headers, RequestBody body,
+    public URLTask(URLite lite,String url, Method method, Map<String, List<String>> headers, RequestBody body,
                    Object tag, Request request,ResultCallback callback,Runnable runnable) {
         this.url = url;
         this.method = method;

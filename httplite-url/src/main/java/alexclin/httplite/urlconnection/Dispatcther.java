@@ -37,7 +37,7 @@ public class Dispatcther {
      */
     private final Deque<AsyncWrapper> runningCalls = new ArrayDeque<>();
 
-    private final Deque<URLTask> executedCalls = new ArrayDeque<>();
+    private final Deque<Task> executedCalls = new ArrayDeque<>();
 
     public Dispatcther() {
     }
@@ -46,21 +46,21 @@ public class Dispatcther {
         this.executorService = executorService;
     }
 
-    void dispatch(URLTask task) {
+    void dispatch(Task task) {
         dispatchInnerMain(new AsyncWrapper(task));
     }
 
-    Response execute(URLTask task) throws Exception{
+    Response execute(Task task) throws Exception{
         executedCalls.offer(task);
         Response response = task.execute();
         executedCalls.remove(task);
         return response;
     }
 
-    public synchronized ExecutorService getExecutorService() {
+    synchronized ExecutorService getExecutorService() {
         if (executorService == null) {
             executorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
-                    new SynchronousQueue<Runnable>(), Util.threadFactory("URLConnectionLite Dispatcher", false));
+                    new SynchronousQueue<Runnable>(), Util.threadFactory("URLite Dispatcher", false));
         }
         return executorService;
     }
@@ -109,7 +109,7 @@ public class Dispatcther {
             }
         }
 
-        for (URLTask call : executedCalls) {
+        for (Task call : executedCalls) {
             if (Util.equal(tag, call.tag())) {
                 call.cancel();
                 executedCalls.remove(call);
@@ -156,9 +156,9 @@ public class Dispatcther {
     }
 
     private class AsyncWrapper implements Runnable {
-        private URLTask realTask;
+        private Task realTask;
 
-        public AsyncWrapper(URLTask realTask) {
+        public AsyncWrapper(Task realTask) {
             this.realTask = realTask;
         }
 

@@ -1,4 +1,4 @@
-package alexclin.httplite.mock;
+package alexclin.httplite.urlconnection;
 
 import alexclin.httplite.Request;
 

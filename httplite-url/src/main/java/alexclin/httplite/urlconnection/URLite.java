@@ -16,7 +16,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
@@ -25,7 +24,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
-import alexclin.httplite.urlconnection.util.OkHostnameVerifier;
+import alexclin.httplite.urlconnection.ssl.OkHostnameVerifier;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -34,7 +33,7 @@ import alexclin.httplite.util.LogUtil;
  * @author alexclin
  * @date 16/1/1 20:53
  */
-public class URLConnectionLite extends HttpLiteBuilder implements LiteClient {
+public class URLite extends HttpLiteBuilder implements LiteClient {
     Proxy proxy;
     ProxySelector proxySelector;
     SocketFactory socketFactory;
@@ -50,14 +49,20 @@ public class URLConnectionLite extends HttpLiteBuilder implements LiteClient {
     private Dispatcther mDispatcher;
 
     public static HttpLiteBuilder create() {
-        return new URLConnectionLite();
+        return new URLite();
     }
 
-    public URLConnectionLite() {
+    public static HttpLiteBuilder mock(MockHandler mockHandler){
+        URLite urLite = new URLite();
+        urLite.callFactory = new MockCall.Factory(mockHandler,urLite);
+        return urLite;
+    }
+
+    public URLite() {
         mDispatcher = new Dispatcther();
     }
 
-    public Dispatcther getDispatcher() {
+    Dispatcther getDispatcher() {
         return mDispatcher;
     }
 
@@ -204,4 +209,5 @@ public class URLConnectionLite extends HttpLiteBuilder implements LiteClient {
     public HostnameVerifier getDefaultHostnameVerifier() {
         return OkHostnameVerifier.INSTANCE;
     }
+
 }

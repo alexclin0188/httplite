@@ -15,7 +15,7 @@
  *  limitations under the License.
  */
 
-package alexclin.httplite.urlconnection.util;
+package alexclin.httplite.urlconnection.ssl;
 
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;

@@ -95,9 +95,9 @@ public interface ApiService {
 ```java
 HttpLiteBuilder builder = OkLite.create(); //okhttp作为http实现类库，推荐
 //或者
-HttpLiteBuilder builder = URLConnectionLite.create(); //使用URLConnection实现的http
+HttpLiteBuilder builder = URLite.create(); //使用URLConnection实现的http
 //另外提供一个本地mock模拟功能
-HttpLiteBuilder  builder = MockLite.mock(new MockHandler() {
+HttpLiteBuilder  builder = URLite.mock(new MockHandler() {
             @Override
             public <T> void mock(Request request, MockResponse<T> response) throws Exception {
                 //TODO 模拟数据
