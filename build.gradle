@@ -26,12 +26,12 @@ def httplite_version = '1.0beta'
 def okhttp2_version = '1.0beta'
 def okhttp3_version = '1.0beta'
 def urlite_version = '1.0beta'
+def libDir = 'build/libs'
 
-task makeHttplite(type: Jar) {
-    project('httplite').task('build').execute()
+task makeHttplite(type: Jar, dependsOn: ':httplite:build') {
     archiveName = 'httplite' +httplite_version+'.jar'
     from('httplite/build/intermediates/classes/release/')
-    destinationDir = file('releaselib/')
+    destinationDir = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -39,11 +39,10 @@ task makeHttplite(type: Jar) {
     include('alexclin/httplite/**/*.class')
 }
 
-task makeHttpOk2Lib(type: Jar) {
-    project('httplite-okhttp2').task('build').execute()
+task makeHttpOk2Lib(type: Jar,dependsOn: ':httplite-okhttp2:build') {
     archiveName = 'httplite-ok2lite' +okhttp2_version+'.jar'
     from('httplite-okhttp2/build/intermediates/classes/release/')
-    destinationDir = file('releaselib/')
+    destinationDir = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -51,11 +50,10 @@ task makeHttpOk2Lib(type: Jar) {
     include('alexclin/httplite/**/*.class')
 }
 
-task makeHttpOk3Lib(type: Jar) {
-    project('httplite-okhttp3').task('build').execute()
-    archiveName = 'httplite-ok3lite' +okhttp2_version+'.jar'
+task makeHttpOk3Lib(type: Jar,dependsOn: ':httplite-okhttp3:build') {
+    archiveName = 'httplite-ok3lite' +okhttp3_version+'.jar'
     from('httplite-okhttp3/build/intermediates/classes/release/')
-    destinationDir = file('releaselib/')
+    destinationDir = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -63,11 +61,10 @@ task makeHttpOk3Lib(type: Jar) {
     include('alexclin/httplite/**/*.class')
 }
 
-task makeHttpUrl(type: Jar) {
-    project('httplite-url').task('build').execute()
+task makeHttpUrl(type: Jar,dependsOn: ':httplite-url:build') {
     archiveName = 'httplite-urlite' +urlite_version+'.jar'
-    from('httplite-urlconnection/build/intermediates/classes/release/')
-    destinationDir = file('releaselib/')
+    from('httplite-url/build/intermediates/classes/release/')
+    destinationDir = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -75,10 +72,6 @@ task makeHttpUrl(type: Jar) {
     include('alexclin/httplite/**/*.class')
 }
 
-task makeJar {
-    delete rootProject.file('releaselib')
-    makeHttplite.execute()
-    makeHttpOk2Lib.execute()
-    makeHttpOk3Lib.execute()
-    makeHttpUrl.execute()
+task makeJar (dependsOn:[clean,makeHttplite,makeHttpOk2Lib,makeHttpOk3Lib,makeHttpUrl]){
+
 }
