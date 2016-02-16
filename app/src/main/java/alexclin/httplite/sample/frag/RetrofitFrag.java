@@ -4,7 +4,6 @@ import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,16 +25,14 @@ import alexclin.httplite.Request;
 import alexclin.httplite.ResultCallback;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
-import alexclin.httplite.okhttp.OkLite;
+import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.json.JacksonParser;
 import alexclin.httplite.sample.model.ZhihuData;
 import alexclin.httplite.sample.retrofit.ApiService;
 import alexclin.httplite.sample.retrofit.ExMergeCallback;
 import alexclin.httplite.sample.retrofit.ExRequestInfo;
-import alexclin.httplite.sample.retrofit.MergeCallback;
 import alexclin.httplite.sample.retrofit.MergeListener;
-import alexclin.httplite.sample.retrofit.TestRetrofit;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -181,7 +178,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private HttpLite initHttpLite(){
         if(this.httpLite!=null) return this.httpLite;
         String baseUrl = "http://192.168.99.238:10080/";
-        HttpLiteBuilder builder = OkLite.create();
+        HttpLiteBuilder builder = Ok2Lite.create();
         HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时

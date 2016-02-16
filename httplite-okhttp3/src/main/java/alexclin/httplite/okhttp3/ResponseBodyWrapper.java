@@ -1,6 +1,6 @@
-package alexclin.httplite.okhttp.wrapper;
+package alexclin.httplite.okhttp3;
 
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.ResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +8,7 @@ import java.io.InputStream;
 import alexclin.httplite.MediaType;
 
 /**
- * alexclin.httplite.okhttp.wrapper
+ * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
  *
  * @author alexclin
  * @date 16/1/1 15:00

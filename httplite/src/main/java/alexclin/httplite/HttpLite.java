@@ -37,7 +37,6 @@ public class HttpLite {
     private String baseUrl;
     private int maxRetryCount;
     private boolean useLiteRetry;
-    private CookieManager cookieManager;
     private RequestFilter mRequestFilter;
     private ResponseFilter mResponseFilter;
     private Executor customDownloadExecutor;
@@ -46,16 +45,13 @@ public class HttpLite {
     private Retrofit retrofit;
     private final boolean isRelease;
 
-    HttpLite(LiteClient client, String baseUrl, boolean useLiteRetry, int maxRetryCount, CookieStore cookieStore,CallFactory factory,boolean release) {
+    HttpLite(LiteClient client, String baseUrl, boolean useLiteRetry, int maxRetryCount,CallFactory factory,boolean release) {
         this.client = client;
         this.parserMap = new HashMap<>();
         this.baseUrl = baseUrl;
         this.useLiteRetry = useLiteRetry;
         this.maxRetryCount = maxRetryCount;
         this.isRelease = release;
-        if(cookieStore!=null){
-            cookieManager = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
-        }
         this.callFactory = factory;
     }
 
@@ -74,14 +70,6 @@ public class HttpLite {
 
     boolean isUseLiteRetry(){
         return useLiteRetry;
-    }
-
-    boolean isUseCookie(){
-        return cookieManager!=null;
-    }
-
-    public CookieManager getCookieManager(){
-        return cookieManager;
     }
 
     public Request url(String url){
@@ -168,37 +156,6 @@ public class HttpLite {
 
     public Retrofit getRetrofit() {
         return retrofit;
-    }
-
-    void processCookie(String url,Map<String,List<String>> headers){
-        if(!isUseCookie()){
-            return;
-        }
-        try {
-            CookieManager cookieManager = getCookieManager();
-            Map<String, List<String>> singleMap =
-                    cookieManager.get(URI.create(url), new HashMap<String, List<String>>(0));
-            List<String> cookies = singleMap.get("Cookie");
-            if (cookies != null) {
-                headers.put("Cookie", Collections.singletonList(TextUtils.join(";", cookies)));
-            }
-        } catch (Throwable ex) {
-            LogUtil.e(ex.getMessage(), ex);
-        }
-    }
-
-    void saveCookie(String url, Map<String, List<String>> headers) {
-        if(!isUseCookie()){
-            return;
-        }
-        try {
-            CookieManager cookieManager = getCookieManager();
-            if (headers != null) {
-                cookieManager.put(URI.create(url), headers);
-            }
-        } catch (Throwable ex) {
-            LogUtil.e(ex.getMessage(), ex);
-        }
     }
 
     RequestFilter getRequestFilter() {

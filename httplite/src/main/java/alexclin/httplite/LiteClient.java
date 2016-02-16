@@ -3,6 +3,7 @@ package alexclin.httplite;
 import android.util.Pair;
 
 import java.io.File;
+import java.net.CookieHandler;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.List;
@@ -21,9 +22,9 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public interface LiteClient {
 
-    void execute(String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag, ResultCallback callback,Runnable preWork);
+    void execute(Request request, ResultCallback callback,Runnable preWork);
 
-    Response executeSync(Request request,String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag) throws Exception;
+    Response executeSync(Request request) throws Exception;
 
     void cancel(Object tag);
 
@@ -43,6 +44,5 @@ public interface LiteClient {
 
     RequestBody createFormBody(List<Pair<String,String>> paramList, List<Pair<String,String>> encodedParamList);
 
-    void setConfig(Proxy proxy, ProxySelector proxySelector, SocketFactory socketFactory, SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier,
-                   boolean followSslRedirects, boolean followRedirects, int maxRetryCount, int connectTimeout, int readTimeout, int writeTimeout);
-    }
+    void setConfig(ClientSettings settings);
+}

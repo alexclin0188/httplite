@@ -25,11 +25,6 @@ import alexclin.httplite.exception.CanceledException;
 public class URLTask implements Task{
 
     private URLite lite;
-    private String url;
-    private Method method;
-    private Map<String, List<String>> headers;
-    private RequestBody requestBody;
-    private Object tag;
     private Request request;
     private int retryCount;
 
@@ -39,13 +34,7 @@ public class URLTask implements Task{
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLite lite,String url, Method method, Map<String, List<String>> headers, RequestBody body,
-                   Object tag, Request request,ResultCallback callback,Runnable runnable) {
-        this.url = url;
-        this.method = method;
-        this.headers = headers;
-        this.requestBody = body;
-        this.tag = tag;
+    public URLTask(URLite lite,Request request,ResultCallback callback,Runnable runnable) {
         this.request = request;
         this.lite = lite;
         this.callback = callback;
@@ -57,15 +46,16 @@ public class URLTask implements Task{
             preWork.run();
         }
         Response response = null;
-        while (retryCount<=lite.maxRetry && !isCanceled()){
+        int maxRetry = lite.settings.getMaxRetryCount();
+        while (retryCount<= maxRetry&& !isCanceled()){
             try {
                 if(retryCount>0){
-                    callback.onRetry(retryCount,lite.maxRetry);
+                    callback.onRetry(retryCount,maxRetry);
                 }
                 retryCount++;
                 response = execute();
             }catch (Exception e) {
-                if(retryCount>lite.maxRetry || e instanceof CanceledException){
+                if(retryCount>maxRetry || e instanceof CanceledException){
                     callback.onFailed(e);
                     return;
                 }
@@ -82,29 +72,30 @@ public class URLTask implements Task{
     }
 
     public Response execute() throws Exception {
-        URL url = new URL(this.url);
+        String urlStr = request.getUrl();
+        URL url = new URL(urlStr);
         HttpURLConnection connection;
-        if (lite.proxy != null) {
-            connection = (HttpURLConnection) url.openConnection(lite.proxy);
+        if (lite.settings.getProxy() != null) {
+            connection = (HttpURLConnection) url.openConnection(lite.settings.getProxy());
         } else {
             connection = (HttpURLConnection) url.openConnection();
         }
         assertCenceled();
-        connection.setReadTimeout(lite.readTimeout);
-        connection.setConnectTimeout(lite.connectTimeout);
-        connection.setInstanceFollowRedirects(lite.followRedirects);
+        connection.setReadTimeout(lite.settings.getReadTimeout());
+        connection.setConnectTimeout(lite.settings.getConnectTimeout());
+        connection.setInstanceFollowRedirects(lite.settings.isFollowRedirects());
 
         if (connection instanceof HttpsURLConnection) {
             HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
             httpsURLConnection.setSSLSocketFactory(lite.sslSocketFactory);
             httpsURLConnection.setHostnameVerifier(lite.hostnameVerifier);
         }
-
-        if (headers!=null) {
+        lite.processCookie(urlStr,request.getHeaders());
+        if (request.getHeaders()!=null&&!request.getHeaders().isEmpty()) {
             boolean first;
-            for (String name : headers.keySet()) {
+            for (String name : request.getHeaders().keySet()) {
                 first = true;
-                for (String value : headers.get(name)) {
+                for (String value : request.getHeaders().get(name)) {
                     if (first) {
                         connection.setRequestProperty(name, value);
                         first = false;
@@ -114,10 +105,10 @@ public class URLTask implements Task{
                 }
             }
         }
-        connection.setRequestMethod(method.name());
-        if(Request.permitsRequestBody(method)&&requestBody!=null){
-            connection.setRequestProperty("Content-Type", requestBody.contentType().toString());
-            long contentLength = requestBody.contentLength();
+        connection.setRequestMethod(request.getMethod().name());
+        if(Request.permitsRequestBody(request.getMethod())&&request.getBody()!=null){
+            connection.setRequestProperty("Content-Type", request.getBody().contentType().toString());
+            long contentLength = request.getBody().contentLength();
             if (contentLength < 0) {
                 connection.setChunkedStreamingMode(256 * 1024);
             } else {
@@ -131,9 +122,10 @@ public class URLTask implements Task{
             }
             connection.setRequestProperty("Content-Length", String.valueOf(contentLength));
             connection.setDoOutput(true);
-            requestBody.writeTo(connection.getOutputStream());
+            request.getBody().writeTo(connection.getOutputStream());
         }
         Response response = new URLResponse(connection,request);
+        lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
         return response;
     }
@@ -145,7 +137,7 @@ public class URLTask implements Task{
     }
 
     public Object tag(){
-        return tag;
+        return request.getTag();
     }
 
     public void cancel(){

@@ -1,11 +1,11 @@
-package alexclin.httplite.okhttp.wrapper;
+package alexclin.httplite.okhttp2;
 
 import com.squareup.okhttp.MediaType;
 
 import java.nio.charset.Charset;
 
 /**
- * alexclin.httplite.okhttp.wrapper
+ * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
  *
  * @author alexclin
  * @date 16/1/1 14:39

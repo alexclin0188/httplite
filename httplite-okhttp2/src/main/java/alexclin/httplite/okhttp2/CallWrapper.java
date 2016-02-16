@@ -1,4 +1,4 @@
-package alexclin.httplite.okhttp.wrapper;
+package alexclin.httplite.okhttp2;
 
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.OkHttpClient;
@@ -7,7 +7,7 @@ import com.squareup.okhttp.Request;
 import alexclin.httplite.ResultCallback;
 
 /**
- * alexclin.httplite.okhttp.wrapper
+ * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
  *
  * @author alexclin
  * @date 16/1/2 17:12

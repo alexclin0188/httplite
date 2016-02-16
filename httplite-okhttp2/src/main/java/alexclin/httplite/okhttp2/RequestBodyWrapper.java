@@ -1,4 +1,4 @@
-package alexclin.httplite.okhttp.wrapper;
+package alexclin.httplite.okhttp2;
 
 import com.squareup.okhttp.RequestBody;
 

@@ -1,5 +1,8 @@
 package alexclin.httplite;
 
+import java.io.File;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.ProxySelector;
@@ -17,30 +20,20 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public abstract class HttpLiteBuilder{
     private String baseUrl;
-    private Proxy proxy;
-    private ProxySelector proxySelector;
-    private SocketFactory socketFactory;
-    private SSLSocketFactory sslSocketFactory;
-    private HostnameVerifier hostnameVerifier;
-    private boolean followSslRedirects = true;
-    private boolean followRedirects = true;
-    private int maxRetryCount = 2;
-    private int connectTimeout = 10_000;
-    private int readTimeout = 10_000;
-    private int writeTimeout = 10_000;
     private boolean useLiteRetry;
-    private CookieStore cookieStore;
     private boolean isRelase;
     protected CallFactory callFactory;
+
+    private ClientSettings settings = new ClientSettings();
 
     protected abstract LiteClient initLiteClient();
 
     public final HttpLite build(){
         LiteClient client = initLiteClient();
         if(callFactory==null) callFactory = new HttpCall.Factory();
-        client.setConfig(proxy,proxySelector,socketFactory,sslSocketFactory,hostnameVerifier,followSslRedirects,followRedirects,
-                useLiteRetry?0:maxRetryCount,connectTimeout,readTimeout,writeTimeout);
-        return new HttpLite(client,baseUrl,useLiteRetry,maxRetryCount,cookieStore,callFactory,isRelase);
+        settings.maxRetryCount = useLiteRetry?0:settings.maxRetryCount;
+        client.setConfig(settings);
+        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,callFactory,isRelase);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -54,7 +47,7 @@ public abstract class HttpLiteBuilder{
         long millis = unit.toMillis(timeout);
         if (millis > Integer.MAX_VALUE) throw new IllegalArgumentException("Timeout too large.");
         if (millis == 0 && timeout > 0) throw new IllegalArgumentException("Timeout too small.");
-        connectTimeout = (int) millis;
+        settings.connectTimeout = (int) millis;
         return this;
     }
 
@@ -64,7 +57,7 @@ public abstract class HttpLiteBuilder{
         long millis = unit.toMillis(timeout);
         if (millis > Integer.MAX_VALUE) throw new IllegalArgumentException("Timeout too large.");
         if (millis == 0 && timeout > 0) throw new IllegalArgumentException("Timeout too small.");
-        readTimeout = (int) millis;
+        settings.readTimeout = (int) millis;
         return this;
     }
 
@@ -78,7 +71,7 @@ public abstract class HttpLiteBuilder{
         long millis = unit.toMillis(timeout);
         if (millis > Integer.MAX_VALUE) throw new IllegalArgumentException("Timeout too large.");
         if (millis == 0 && timeout > 0) throw new IllegalArgumentException("Timeout too small.");
-        writeTimeout = (int) millis;
+        settings.writeTimeout = (int) millis;
         return this;
     }
 
@@ -88,7 +81,7 @@ public abstract class HttpLiteBuilder{
      * it is by default). To disable proxy use completely, call {@code setProxy(Proxy.NO_PROXY)}.
      */
     public HttpLiteBuilder setProxy(Proxy proxy) {
-        this.proxy = proxy;
+        settings.proxy = proxy;
         return this;
     }
 
@@ -101,7 +94,7 @@ public abstract class HttpLiteBuilder{
      * used.
      */
     public HttpLiteBuilder setProxySelector(ProxySelector proxySelector) {
-        this.proxySelector = proxySelector;
+        settings.proxySelector = proxySelector;
         return this;
     }
 
@@ -114,7 +107,7 @@ public abstract class HttpLiteBuilder{
      * used.
      */
     public HttpLiteBuilder setSocketFactory(SocketFactory socketFactory) {
-        this.socketFactory = socketFactory;
+        settings.socketFactory = socketFactory;
         return this;
     }
 
@@ -124,7 +117,7 @@ public abstract class HttpLiteBuilder{
      * <p>If unset, a lazily created SSL socket factory will be used.
      */
     public HttpLiteBuilder setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
-        this.sslSocketFactory = sslSocketFactory;
+        settings.sslSocketFactory = sslSocketFactory;
         return this;
     }
 
@@ -135,7 +128,7 @@ public abstract class HttpLiteBuilder{
      * <p>If unset, a default hostname verifier will be used.
      */
     public HttpLiteBuilder setHostnameVerifier(HostnameVerifier hostnameVerifier) {
-        this.hostnameVerifier = hostnameVerifier;
+        settings.hostnameVerifier = hostnameVerifier;
         return this;
     }
 
@@ -146,18 +139,18 @@ public abstract class HttpLiteBuilder{
      * HttpURLConnection}'s default.
      */
     public HttpLiteBuilder setFollowSslRedirects(boolean followProtocolRedirects) {
-        this.followSslRedirects = followProtocolRedirects;
+        settings.followSslRedirects = followProtocolRedirects;
         return this;
     }
 
     /** Configure this client to follow redirects. If unset, redirects be followed. */
     public HttpLiteBuilder setFollowRedirects(boolean followRedirects) {
-        this.followRedirects = followRedirects;
+        settings.followRedirects = followRedirects;
         return this;
     }
 
     public HttpLiteBuilder setMaxRetryCount(int maxRetryCount) {
-        this.maxRetryCount = maxRetryCount<1?1:maxRetryCount;
+        settings.maxRetryCount = maxRetryCount<1?1:maxRetryCount;
         return this;
     }
 
@@ -167,12 +160,23 @@ public abstract class HttpLiteBuilder{
     }
 
     public HttpLiteBuilder useCookie(CookieStore cookieStore){
-        this.cookieStore = cookieStore;
+        settings.cookieHandler = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
+        return this;
+    }
+
+    public HttpLiteBuilder useCookie(CookieStore cookieStore,CookiePolicy policy){
+        settings.cookieHandler = new CookieManager(cookieStore, policy);
         return this;
     }
 
     public HttpLiteBuilder setRelease(boolean isRelase){
         this.isRelase = isRelase;
+        return this;
+    }
+
+    public HttpLiteBuilder setCache(File dir,long maxCacheSize){
+        settings.cacheDir = dir;
+        settings.cacheMaxSize = maxCacheSize;
         return this;
     }
 }

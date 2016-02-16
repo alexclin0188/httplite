@@ -24,18 +24,24 @@ import alexclin.httplite.util.Util;
  * @date 16/1/31 10:21
  */
 public final class Request {
+    public static final int NO_CACHE = 0;
+    public static final int FORCE_CACHE = -1;
+    public static final int UNSPECIFIED_CACHE = -100;
+
     String url;
     Method method;
-    Map<String,List<String>> headers;
-    Map<String,Pair<String,Boolean>> params;
-    RequestBody body;
-    Object tag;
+    private Map<String,List<String>> headers;
+    private Map<String,Pair<String,Boolean>> params;
+    private RequestBody body;
+    private Object tag;
 
     ProgressListener progressListener;
     CancelListener cancelListener;
     RetryListener retryListener;
 
     HttpLite lite;
+
+    private int cacheExpiredTime = UNSPECIFIED_CACHE;
 
     private FormBuilder formBuilder;
     private MultipartBuilder multipartBuilder;
@@ -53,7 +59,7 @@ public final class Request {
         this.lite = lite;
     }
 
-    private Map<String,List<String>> getHeaders(){
+    public Map<String,List<String>> getHeaders(){
         if(headers==null){
             headers = new HashMap<>();
         }
@@ -196,6 +202,11 @@ public final class Request {
         return this;
     }
 
+    public Request cacheExpire(int expire){
+        this.cacheExpiredTime = expire;
+        return this;
+    }
+
     public Call get() {
         return method(Method.GET, null);
     }
@@ -320,7 +331,6 @@ public final class Request {
         if((this.body!=null||body!=null)&&(formBuilder!=null||multipartBuilder!=null)){
             throw new IllegalOperationException("You cannot not use multipart/from and raw RequestBody on the same call");
         }
-        url = buildUrlAndParams(url, params);
         if(formBuilder!=null){
             this.body = formBuilder.build(lite.getClient());
         }else if(multipartBuilder!=null){
@@ -328,7 +338,7 @@ public final class Request {
         }
     }
 
-    private String buildUrlAndParams(String url, Map<String, Pair<String,Boolean>> params) {
+    private String buildUrlAndParams(String url) {
         if(url==null){
             throw new NullPointerException("Url is null for this Request");
         }
@@ -384,6 +394,10 @@ public final class Request {
     }
 
     public String getUrl() {
+        return buildUrlAndParams(url);
+    }
+
+    public String rawUrl() {
         return url;
     }
 
@@ -413,6 +427,10 @@ public final class Request {
 
     public RetryListener getRetryListener() {
         return retryListener;
+    }
+
+    public int getCacheExpiredTime() {
+        return cacheExpiredTime;
     }
 
     public Request intoFile(String path,boolean autoResume){

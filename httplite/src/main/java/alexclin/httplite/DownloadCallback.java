@@ -243,7 +243,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
     @Override
     public void run() {
-        processHeaders(call.request.headers);
+        processHeaders(call.request.getHeaders());
     }
 
     private static String getResponseFileName(Response response) {

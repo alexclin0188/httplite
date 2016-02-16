@@ -96,10 +96,6 @@ public abstract class ResultCallback<T> {
         });
     }
 
-    public final Request getCall() {
-        return call.request;
-    }
-
     protected final void retry() {
         retryCount++;
         call.excuteSelf(this);

@@ -58,7 +58,6 @@ public class HttpCall implements Call{
         HttpLite lite = request.lite;
         ResultCallback rcb = new HttpCallback<T>(callback,this,type);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(request, rcb);
-        lite.processCookie(request.url, request.headers);
         return rcb;
     }
 
@@ -68,7 +67,6 @@ public class HttpCall implements Call{
             throw new IllegalArgumentException("to execute Callback<File>, you must call intoFile() on Request before execute");
         }
         final DownloadCallback rcb = new DownloadCallback(callback,this,params);
-        request.lite.processCookie(request.url, request.headers);
         return rcb;
     }
 
@@ -79,12 +77,8 @@ public class HttpCall implements Call{
         }
         HttpLite lite = request.lite;
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(request,callback);
-        lite.processCookie(request.url,request.headers);
         if(preWork!=null) preWork.run();
-        Response response = lite.getClient().executeSync(request, request.url, request.method, request.headers, request.body, request.tag);
-        if(response!=null){
-            lite.saveCookie(request.url,response.headers());
-        }
+        Response response = lite.getClient().executeSync(request);
         if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(request, response);
         return response;
     }
@@ -105,7 +99,7 @@ public class HttpCall implements Call{
                 }
             });
         }else{
-            lite.getClient().execute(request.url,request.method,request.headers,request.body,request.tag,callback,preWork);
+            lite.getClient().execute(request,callback,preWork);
         }
     }
 

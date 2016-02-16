@@ -126,7 +126,7 @@ HttpLiteBuilder  builder = URLite.mock(new MockHandler() {
                 .setHostnameVerifier(..)
                 .baseUrl("http://xxx.xxx.xxx")  //BaseUrl,用于拼接完整的Url
                 .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
-                .setRelease(true)   //设置是否是Release状态，是Release状态会关闭对接口函数定义的检查，提升效率
+                .setRelease(false)   //设置是否是Release状态，是Release状态会关闭对接口函数定义的检查，提升效率
                 .build();
     httpLite.addResponseParser(new JacksonParser()); //添加ResponseParser实现结果解析
     httpLite.setBaseUrl("http://192.168.99.238:10080/");
@@ -162,7 +162,7 @@ HttpLiteBuilder  builder = URLite.mock(new MockHandler() {
 
 * 2.Release版本请设置HttpLiteBuilder.setRelease(true)，创建的HttpLite和对应的Retrofit会关闭接口Annotation的定义检查（develop时请打开），减少反射带来的性能消耗
 
-### 自定义注解的使用
+### 支持自定义注解的使用
 
 ParameterProcessor/ParamMiscProcessor 实现对参数注解的检查和处理
 
@@ -179,7 +179,7 @@ AnnotationRule 定义对整个方法的注解和参数的检查处理
 
 具体自定义使用请参考BasicAnnotationRule/BasicProcessors/ProcessorFactory源码
 
-### 直接使用http方法
+### 直接使用HttpLite的http方法
 
 解析String返回结果
 

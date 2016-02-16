@@ -26,7 +26,7 @@ public class App extends Application {
         super.onCreate();
         LogUtil.setDebug(true);
         baseUrl = "http://192.168.99.238:10080/";
-//        HttpLiteBuilder builder = OkLite.create();
+//        HttpLiteBuilder builder = Ok2Lite.create();
         HttpLiteBuilder builder = URLite.create();
 //      HttpLiteBuilder  builder = MockLite.mock(new MockHandler() {
 //            @Override

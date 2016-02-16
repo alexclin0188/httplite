@@ -1,11 +1,17 @@
 package alexclin.httplite.urlconnection;
 
+import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
+import java.net.CookieHandler;
+import java.net.CookieManager;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.net.URI;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +22,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import alexclin.httplite.ClientSettings;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
@@ -34,17 +41,9 @@ import alexclin.httplite.util.LogUtil;
  * @date 16/1/1 20:53
  */
 public class URLite extends HttpLiteBuilder implements LiteClient {
-    Proxy proxy;
-    ProxySelector proxySelector;
-    SocketFactory socketFactory;
+    ClientSettings settings;
     SSLSocketFactory sslSocketFactory;
     HostnameVerifier hostnameVerifier;
-    boolean followSslRedirects;
-    boolean followRedirects;
-    int maxRetry;
-    int connectTimeout;
-    int readTimeout;
-    int writeTimeout;
 
     private Dispatcther mDispatcher;
 
@@ -67,31 +66,22 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public void setConfig(Proxy proxy, ProxySelector proxySelector, SocketFactory socketFactory, SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier,
-                          boolean followSslRedirects, boolean followRedirects, int maxRetry, int connectTimeout, int readTimeout, int writeTimeout) {
-        this.proxy = proxy;
-        this.proxySelector = proxySelector;
-        this.socketFactory = socketFactory;
-        this.hostnameVerifier = hostnameVerifier == null ? getDefaultHostnameVerifier() : hostnameVerifier;
-        this.sslSocketFactory = sslSocketFactory == null ? getDefaultSSLSocketFactory() : sslSocketFactory;
-        this.followSslRedirects = followSslRedirects;
-        this.followRedirects = followRedirects;
-        this.maxRetry = maxRetry;
-        this.connectTimeout = connectTimeout;
-        this.readTimeout = readTimeout;
-        this.writeTimeout = writeTimeout;
+    public void setConfig(ClientSettings settings) {
+        this.hostnameVerifier = settings.getHostnameVerifier() == null ? getDefaultHostnameVerifier() : settings.getHostnameVerifier();
+        this.sslSocketFactory = settings.getSslSocketFactory() == null ? getDefaultSSLSocketFactory() : settings.getSslSocketFactory();
+        this.settings = settings;
     }
 
     @Override
-    public void execute(String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag, ResultCallback callback, Runnable preWork) {
-        LogUtil.e("Before Execute url:"+url);
-        URLTask task = new URLTask(this, url, method, headers, body, tag,callback.getCall(),callback, preWork);
+    public void execute(Request request, ResultCallback callback, Runnable preWork) {
+        LogUtil.e("Before Execute url:"+request.getUrl());
+        URLTask task = new URLTask(this, request,callback, preWork);
         getDispatcher().dispatch(task);
     }
 
     @Override
-    public Response executeSync(Request request, String url, Method method, Map<String, List<String>> headers, RequestBody body, Object tag) throws Exception {
-        URLTask task = new URLTask(this, url, method, headers, body, tag, request,null,null);
+    public Response executeSync(Request request) throws Exception {
+        URLTask task = new URLTask(this,request,null,null);
         return getDispatcher().execute(task);
     }
 
@@ -210,4 +200,42 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return OkHostnameVerifier.INSTANCE;
     }
 
+    void processCookie(String url,Map<String,List<String>> headers){
+        if(!isUseCookie()){
+            return;
+        }
+        try {
+            CookieHandler cookieManager = getCookieHandler();
+            Map<String, List<String>> singleMap =
+                    cookieManager.get(URI.create(url), new HashMap<String, List<String>>(0));
+            List<String> cookies = singleMap.get("Cookie");
+            if (cookies != null) {
+                headers.put("Cookie", Collections.singletonList(TextUtils.join(";", cookies)));
+            }
+        } catch (Throwable ex) {
+            LogUtil.e(ex.getMessage(), ex);
+        }
+    }
+
+    void saveCookie(String url, Map<String, List<String>> headers) {
+        if(!isUseCookie()){
+            return;
+        }
+        try {
+            CookieHandler cookieManager = getCookieHandler();
+            if (headers != null) {
+                cookieManager.put(URI.create(url), headers);
+            }
+        } catch (Throwable ex) {
+            LogUtil.e(ex.getMessage(), ex);
+        }
+    }
+
+    private boolean isUseCookie() {
+        return settings.getCookieHandler()!=null;
+    }
+
+    private CookieHandler getCookieHandler(){
+        return settings.getCookieHandler();
+    }
 }

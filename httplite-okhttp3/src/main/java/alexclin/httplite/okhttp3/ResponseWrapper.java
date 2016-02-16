@@ -1,6 +1,6 @@
-package alexclin.httplite.okhttp.wrapper;
+package alexclin.httplite.okhttp3;
 
-import com.squareup.okhttp.Response;
+import okhttp3.Response;
 
 import java.util.List;
 import java.util.Map;
@@ -9,7 +9,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.ResponseBody;
 
 /**
- * alexclin.httplite.okhttp.wrapper
+ * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
  *
  * @author alexclin
  * @date 16/1/1 15:02
