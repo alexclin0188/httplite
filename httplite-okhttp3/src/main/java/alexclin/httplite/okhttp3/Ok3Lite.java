@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.ClientSettings;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
@@ -55,23 +56,29 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    public void execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
+    public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
+        final HandleImpl handle = new HandleImpl(request);
         if(preWork!=null){
             mClient.dispatcher().executorService().execute(new Runnable() {
                 @Override
                 public void run() {
                     preWork.run();
-                    executeInternal(request,callback);
+                    if(!handle.isCanceled()){
+                        Call call = executeInternal(request,callback);
+                        handle.setRealCall(call);
+                    }
                 }
             });
         }else{
-            executeInternal(request,callback);
+            handle.setRealCall(executeInternal(request, callback));
         }
+        return handle;
     }
 
-    private void executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
+    private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
         okhttp3.Request.Builder rb = createRequestBuilder(request);
-        new CallWrapper(mClient,rb.build(),callback).enqueue(new Callback() {
+        Call call = new CallWrapper(mClient,rb.build(),callback);
+        call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 callback.onFailed(e);
@@ -79,9 +86,10 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
 
             @Override
             public void onResponse(Call call, okhttp3.Response response) throws IOException {
-                callback.onResponse(new ResponseWrapper(response,request));
+                callback.onResponse(new ResponseWrapper(response, request));
             }
         });
+        return call;
     }
 
     private okhttp3.Request.Builder createRequestBuilder(alexclin.httplite.Request request) {

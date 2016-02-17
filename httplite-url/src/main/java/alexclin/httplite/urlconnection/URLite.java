@@ -23,6 +23,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import alexclin.httplite.ClientSettings;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
@@ -73,10 +74,11 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public void execute(Request request, ResultCallback callback, Runnable preWork) {
+    public Handle execute(Request request, ResultCallback callback, Runnable preWork) {
         LogUtil.e("Before Execute url:"+request.getUrl());
         URLTask task = new URLTask(this, request,callback, preWork);
         getDispatcher().dispatch(task);
+        return task;
     }
 
     @Override

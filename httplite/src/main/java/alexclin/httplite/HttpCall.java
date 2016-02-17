@@ -20,13 +20,13 @@ public class HttpCall implements Call{
     }
 
     @SuppressWarnings("unchecked")
-    public <T> void execute(Callback<T> callback){
+    public <T> Handle execute(Callback<T> callback){
         Type type = Util.type(Callback.class, callback);
         if(type==File.class){
-            download((Callback<File>)callback);
+            return download((Callback<File>)callback);
         }else{
             ResultCallback rcb = createHttpCalback(callback,type,null);
-            excuteSelf(rcb);
+            return excuteSelf(rcb);
         }
     }
 
@@ -83,7 +83,7 @@ public class HttpCall implements Call{
         return response;
     }
 
-    <T> void excuteSelf(final ResultCallback<T> callback){
+    <T> Handle excuteSelf(final ResultCallback<T> callback){
         HttpLite lite = request.lite;
         boolean isDownload = callback instanceof DownloadCallback;
         final Runnable preWork = isDownload?(DownloadCallback)callback:null;
@@ -98,8 +98,9 @@ public class HttpCall implements Call{
                     }
                 }
             });
+            return (DownloadCallback)callback;
         }else{
-            lite.getClient().execute(request,callback,preWork);
+            return lite.getClient().execute(request,callback,preWork);
         }
     }
 

@@ -127,5 +127,25 @@ public class MockResponse<T> {
                 call.dispatch();
             }
         }
+
+        @Override
+        public Request request() {
+            return call.request();
+        }
+
+        @Override
+        public void cancel() {
+            call.cancel();
+        }
+
+        @Override
+        public boolean isExecuted() {
+            return call.isExecuted();
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return call.isCanceled();
+        }
     }
 }

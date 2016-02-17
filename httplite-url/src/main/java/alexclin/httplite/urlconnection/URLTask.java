@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import alexclin.httplite.Handle;
 import alexclin.httplite.Method;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
@@ -22,7 +23,7 @@ import alexclin.httplite.exception.CanceledException;
  * @author alexclin
  * @date 16/1/2 19:39
  */
-public class URLTask implements Task{
+public class URLTask implements Task,Handle{
 
     private URLite lite;
     private Request request;
@@ -138,6 +139,11 @@ public class URLTask implements Task{
 
     public Object tag(){
         return request.getTag();
+    }
+
+    @Override
+    public Request request() {
+        return request;
     }
 
     public void cancel(){

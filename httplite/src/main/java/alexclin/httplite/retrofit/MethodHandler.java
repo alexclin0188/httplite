@@ -14,6 +14,7 @@ import java.util.Map;
 import alexclin.httplite.Call;
 import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.Util;
@@ -115,8 +116,8 @@ public class MethodHandler {
                     throw Util.methodError(method, "the return type must be same as the type T in Clazz<T> when you use Clazz<T> as last param type");
                 }
             }else if(Util.isSubType(lastParamType,Callback.class)){
-                if(returnType != void.class && returnType != DownloadHandle.class){
-                    throw Util.methodError(method, "the method define in the interface must return void or DownloadHandle");
+                if(returnType != void.class && returnType != DownloadHandle.class && returnType != Handle.class){
+                    throw Util.methodError(method, "the method define in the interface must return void or Handle/DownloadHandle");
                 }
                 if(typeParam!=File.class && returnType == DownloadHandle.class){
                     throw Util.methodError(method, "the interface method return DownloadHandle must use type Callback<File> as last param type");
@@ -169,8 +170,8 @@ public class MethodHandler {
             if(returnType==DownloadHandle.class){
                 return call.download((Callback<File>)lastParam);
             }else{
-                call.execute((Callback)lastParam);
-                return null;
+                Object result = call.execute((Callback) lastParam);
+                return (returnType==Handle.class)?result:null;
             }
         }
     }

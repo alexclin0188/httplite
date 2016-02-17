@@ -22,9 +22,9 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-def httplite_version = '1.0beta'
-def okhttp2_version = '1.0beta'
-def okhttp3_version = '1.0beta'
+def httplite_version = '1.0'
+def okhttp2_version = '1.0'
+def okhttp3_version = '1.0'
 def urlite_version = '1.0beta'
 def libDir = 'build/libs'
 

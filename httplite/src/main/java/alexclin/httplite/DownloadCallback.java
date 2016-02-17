@@ -37,6 +37,8 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
     private ThreadLocal<Boolean> threadCancel;
 
+    private volatile boolean isExecuted = false;
+
     public DownloadCallback(Callback<File> mCallback,HttpCall call,DownloadParams params) {
         super(mCallback,call);
         this.params = params;
@@ -50,6 +52,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
         } catch (Exception e) {
             postFailed(e);
         }
+        isExecuted = true;
     }
 
     @Override
@@ -295,6 +298,26 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
         call.excuteSelf(this);
     }
 
+    @Override
+    public Request request() {
+        return call.request;
+    }
+
+    @Override
+    public void cancel() {
+        isCanceled = true;
+    }
+
+    @Override
+    public boolean isExecuted() {
+        return isExecuted;
+    }
+
+    @Override
+    public boolean isCanceled() {
+        return isCanceled;
+    }
+
     public static class DownloadParams{
         private File parentDir;
         private File targetFile;
@@ -310,18 +333,6 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
         public String getPath() {
             return parentDir.getAbsolutePath();
-        }
-
-        public String getFileName() {
-            return targetFile.getName();
-        }
-
-        public boolean isAutoResume() {
-            return autoResume;
-        }
-
-        public boolean isAutoRename() {
-            return autoRename;
         }
     }
 }

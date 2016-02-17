@@ -1,7 +1,16 @@
 package alexclin.httplite.okhttp3;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.net.CookieHandler;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
@@ -22,13 +31,80 @@ public class CookieJarImpl implements CookieJar {
 
     @Override
     public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-        //TODO
-        //cookieHandler.put(url.uri(),);
+        try {
+            cookieHandler.put(url.uri(),cookiesToMap(cookies));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public List<Cookie> loadForRequest(HttpUrl url) {
-        //TODO
-        return null;
+        try {
+            Map<String, List<String>> map = cookieHandler.get(url.uri(),new HashMap<String, List<String>>(0));
+            return mapToCookies(map);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private List<Cookie> mapToCookies(Map<String, List<String>> map) {
+        if(map==null||map.isEmpty()) return null;
+        List<Cookie> cookieList = new ArrayList<>();
+        for(List<String> list:map.values()){
+            if(list.size()>0){
+                Cookie cookie = fromJson(list.get(0));
+                if(cookie!=null) cookieList.add(cookie);
+            }
+        }
+        return cookieList.isEmpty()?null:cookieList;
+    }
+
+    private Map<String, List<String>> cookiesToMap(List<Cookie> cookies) {
+        if(cookies==null||cookies.isEmpty()) return null;
+        Map<String, List<String>> map = new IdentityHashMap<>();
+        for(Cookie cookie:cookies){
+            String json = toJson(cookie);
+            if(json!=null){
+                map.put(cookie.name(), Collections.singletonList(json));
+            }
+        }
+        return map.isEmpty()?null:map;
+    }
+
+    private Cookie fromJson(String json){
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+            Cookie.Builder builder = new Cookie.Builder();
+            builder.name(jsonObject.getString("name"));
+            builder.value(jsonObject.getString("value"));
+            builder.domain(jsonObject.getString("domain"));
+            builder.path(jsonObject.getString("path"));
+            builder.expiresAt(jsonObject.getLong("expiresAt"));
+            if(jsonObject.getBoolean("secure")) builder.secure();
+            if(jsonObject.getBoolean("httpOnly")) builder.httpOnly();
+            return builder.build();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String toJson(Cookie cookie){
+        try {
+            JSONObject jobj = new JSONObject();
+            jobj.put("name",cookie.name());
+            jobj.put("value",cookie.value());
+            jobj.put("domain",cookie.domain());
+            jobj.put("path",cookie.path());
+            jobj.put("expiresAt",cookie.expiresAt());
+            jobj.put("secure",cookie.secure());
+            jobj.put("httpOnly",cookie.httpOnly());
+            return jobj.toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -6,6 +6,7 @@ import alexclin.httplite.Call;
 import alexclin.httplite.CallFactory;
 import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
@@ -17,7 +18,7 @@ import alexclin.httplite.listener.Callback;
  * @author alexclin
  * @date 16/1/29 21:38
  */
-public class MockCall implements Call, Task {
+public class MockCall implements Call, Task ,Handle{
     Request request;
     private Factory factory;
     private Runnable runnable;
@@ -30,8 +31,9 @@ public class MockCall implements Call, Task {
     }
 
     @Override
-    public <T> void execute(Callback<T> callback) {
+    public <T> Handle execute(Callback<T> callback) {
         mock(request, callback);
+        return this;
     }
 
     @Override
@@ -118,6 +120,11 @@ public class MockCall implements Call, Task {
     @Override
     public boolean isExecuted() {
         return isEecuted;
+    }
+
+    @Override
+    public Request request() {
+        return request;
     }
 
     @Override

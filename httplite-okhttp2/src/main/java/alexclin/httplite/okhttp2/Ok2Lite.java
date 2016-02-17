@@ -4,6 +4,7 @@ import android.util.Pair;
 
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.CacheControl;
+import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.FormEncodingBuilder;
 import com.squareup.okhttp.Headers;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.ClientSettings;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
@@ -56,36 +58,43 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    public void execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
+    public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
+        final HandleImpl handle = new HandleImpl(request);
         if(preWork!=null){
             mClient.getDispatcher().getExecutorService().execute(new Runnable() {
                 @Override
                 public void run() {
                     preWork.run();
-                    executeInternal(request,callback);
+                    if(!handle.isCanceled()){
+                        Call call = executeInternal(request,callback);
+                        handle.setRealCall(call);
+                    }
                 }
             });
         }else{
-            executeInternal(request,callback);
+            handle.setRealCall(executeInternal(request, callback));
         }
+        return handle;
     }
 
-    private void executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
-        Request.Builder rb = createRequestBuilder(request);
-        new CallWrapper(mClient,rb.build(),callback).enqueue(new Callback() {
+    private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
+        com.squareup.okhttp.Request.Builder rb = Ok2Lite.createRequestBuilder(request);
+        Call realCall = new CallWrapper(mClient,rb.build(),callback);
+        realCall.enqueue(new Callback() {
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(com.squareup.okhttp.Request request, IOException e) {
                 callback.onFailed(e);
             }
 
             @Override
             public void onResponse(Response response) throws IOException {
-                callback.onResponse(new ResponseWrapper(response,request));
+                callback.onResponse(new ResponseWrapper(response, request));
             }
         });
+        return realCall;
     }
 
-    private Request.Builder createRequestBuilder(alexclin.httplite.Request request) {
+    static Request.Builder createRequestBuilder(alexclin.httplite.Request request) {
         Request.Builder rb = new Request.Builder().url(request.getUrl()).tag(request.getTag());
         Headers okheader = createHeader(request.getHeaders());
         if(okheader!=null){
@@ -228,7 +237,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         return new MediaTypeWrapper(oktype);
     }
 
-    private Headers createHeader(Map<String, List<String>> headers){
+    private static Headers createHeader(Map<String, List<String>> headers){
         if(headers!=null&&!headers.isEmpty()){
             Headers.Builder hb = new Headers.Builder();
             for(String key:headers.keySet()){

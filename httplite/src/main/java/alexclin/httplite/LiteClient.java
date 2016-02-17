@@ -22,7 +22,7 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public interface LiteClient {
 
-    void execute(Request request, ResultCallback callback,Runnable preWork);
+    Handle execute(Request request, ResultCallback callback,Runnable preWork);
 
     Response executeSync(Request request) throws Exception;
 
