@@ -1,5 +1,6 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
+import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 
 /**
@@ -9,6 +10,7 @@ import alexclin.httplite.Response;
  * @date 16/2/3 18:49
  */
 public interface Task {
+    Request request();
     void executeAsync();
     Response execute() throws Exception;
     Object tag();

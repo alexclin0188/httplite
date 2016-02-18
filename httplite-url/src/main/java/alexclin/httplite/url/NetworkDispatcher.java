@@ -1,4 +1,4 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -18,7 +18,7 @@ import alexclin.httplite.util.Util;
  * @author alexclin
  * @date 16/1/2 19:19
  */
-public class Dispatcther {
+public class NetworkDispatcher implements Dispatcher{
 
     private int maxRequests = 64;
 
@@ -39,18 +39,20 @@ public class Dispatcther {
 
     private final Deque<Task> executedCalls = new ArrayDeque<>();
 
-    public Dispatcther() {
+    public NetworkDispatcher() {
+        this(null);
     }
 
-    public Dispatcther(ExecutorService executorService) {
+    public NetworkDispatcher(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
-    void dispatch(Task task) {
+    public void dispatch(Task task) {
         dispatchInnerMain(new AsyncWrapper(task));
     }
 
-    Response execute(Task task) throws Exception{
+    @Override
+    public Response execute(Task task) throws Exception{
         executedCalls.offer(task);
         Response response = task.execute();
         executedCalls.remove(task);

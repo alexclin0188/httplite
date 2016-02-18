@@ -1,38 +1,25 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
 import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.Proxy;
-import java.net.ProxySelector;
 import java.net.URI;
-import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.net.SocketFactory;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import alexclin.httplite.ClientSettings;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
-import alexclin.httplite.Method;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
-import alexclin.httplite.urlconnection.ssl.OkHostnameVerifier;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -43,53 +30,49 @@ import alexclin.httplite.util.LogUtil;
  */
 public class URLite extends HttpLiteBuilder implements LiteClient {
     ClientSettings settings;
-    SSLSocketFactory sslSocketFactory;
-    HostnameVerifier hostnameVerifier;
 
-    private Dispatcther mDispatcher;
+    private NetworkDispatcher mNetDispatcher;
+    private CacheDispatcher mCacheDispatcher;
 
     public static HttpLiteBuilder create() {
         return new URLite();
     }
 
-    public static HttpLiteBuilder mock(MockHandler mockHandler){
+    public static HttpLiteBuilder mock(MockHandler mockHandler) {
         URLite urLite = new URLite();
-        urLite.callFactory = new MockCall.Factory(mockHandler,urLite);
+        urLite.callFactory = new MockCall.Factory(mockHandler, urLite);
         return urLite;
     }
 
     public URLite() {
-        mDispatcher = new Dispatcther();
-    }
-
-    Dispatcther getDispatcher() {
-        return mDispatcher;
+        mNetDispatcher = new NetworkDispatcher();
+        mCacheDispatcher = new CacheDispatcher(mNetDispatcher,null);
     }
 
     @Override
     public void setConfig(ClientSettings settings) {
-        this.hostnameVerifier = settings.getHostnameVerifier() == null ? getDefaultHostnameVerifier() : settings.getHostnameVerifier();
-        this.sslSocketFactory = settings.getSslSocketFactory() == null ? getDefaultSSLSocketFactory() : settings.getSslSocketFactory();
         this.settings = settings;
+        mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
     }
 
     @Override
     public Handle execute(Request request, ResultCallback callback, Runnable preWork) {
-        LogUtil.e("Before Execute url:"+request.getUrl());
-        URLTask task = new URLTask(this, request,callback, preWork);
-        getDispatcher().dispatch(task);
+        LogUtil.e("Before Execute url:" + request.getUrl());
+        URLTask task = new URLTask(this, request, callback, preWork);
+        dispatchTask(task);
         return task;
     }
 
     @Override
     public Response executeSync(Request request) throws Exception {
-        URLTask task = new URLTask(this,request,null,null);
-        return getDispatcher().execute(task);
+        URLTask task = new URLTask(this, request, null, null);
+        return dispatchTaskSync(task);
     }
 
     @Override
     public void cancel(Object tag) {
-        mDispatcher.cancel(tag);
+        mCacheDispatcher.cancel(tag);
+        mNetDispatcher.cancel(tag);
     }
 
     @Override
@@ -169,41 +152,8 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return this;
     }
 
-    public static SSLSocketFactory getDefaultSSLSocketFactory() {
-        //TODO
-        // 信任所有证书
-        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-
-            @Override
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {
-            }
-        }};
-
-        try {
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, null);
-            SSLSocketFactory factory = sslContext.getSocketFactory();
-            return factory;
-        } catch (Throwable ex) {
-            LogUtil.e(ex.getMessage(), ex);
-        }
-        return null;
-    }
-
-    public HostnameVerifier getDefaultHostnameVerifier() {
-        return OkHostnameVerifier.INSTANCE;
-    }
-
-    void processCookie(String url,Map<String,List<String>> headers){
-        if(!isUseCookie()){
+    void processCookie(String url, Map<String, List<String>> headers) {
+        if (!isUseCookie()) {
             return;
         }
         try {
@@ -220,7 +170,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     void saveCookie(String url, Map<String, List<String>> headers) {
-        if(!isUseCookie()){
+        if (!isUseCookie()) {
             return;
         }
         try {
@@ -234,10 +184,40 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     private boolean isUseCookie() {
-        return settings.getCookieHandler()!=null;
+        return settings.getCookieHandler() != null;
     }
 
-    private CookieHandler getCookieHandler(){
+    private CookieHandler getCookieHandler() {
         return settings.getCookieHandler();
+    }
+
+    private void dispatchTask(Task task) {
+        if (task.request().canCache()) {
+            mCacheDispatcher.dispatch(task);
+        } else {
+            mNetDispatcher.dispatch(task);
+        }
+    }
+
+    private Response dispatchTaskSync(Task task) throws Exception {
+        if (task.request().canCache())
+            return mCacheDispatcher.execute(task);
+        else
+            return mNetDispatcher.execute(task);
+    }
+
+    boolean isCacheAble(Task task) {
+        return task.request().canCache() && mCacheDispatcher != null;
+    }
+
+    public Response createCacheResponse(Response response) {
+        if (mCacheDispatcher != null)
+            return mCacheDispatcher.cacheResponse(response);
+        else
+            return response;
+    }
+
+    public NetworkDispatcher getNetDispatcher() {
+        return mNetDispatcher;
     }
 }

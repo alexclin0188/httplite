@@ -1,4 +1,4 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import java.io.File;
 
@@ -85,7 +85,7 @@ public class MockCall implements Call, Task ,Handle{
     }
 
     void dispatch() {
-        factory.liteClient.getDispatcher().dispatch(this);
+        factory.liteClient.getNetDispatcher().dispatch(this);
     }
 
     void reset() {

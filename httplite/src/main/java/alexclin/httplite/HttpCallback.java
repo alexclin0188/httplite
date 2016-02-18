@@ -25,7 +25,7 @@ import alexclin.httplite.listener.ResponseParser;
  * @author alexclin
  * @date 15/12/31 21:27
  */
-class HttpCallback<T> extends ResultCallback{
+class HttpCallback<T> extends ResultCallback<T>{
     enum ParseType{
         RAW,Bitmap,String,Object
     }

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -35,6 +36,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -499,5 +502,35 @@ public final class Util {
 
     public static Type getTypeParameter(Type type){
         return getTypeParameter(type,0);
+    }
+
+    public static String md5Hex(String s) {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            byte[] md5bytes = messageDigest.digest(s.getBytes("UTF-8"));
+            return bytes2hex(md5bytes);
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            LogUtil.e("md5 failed",e);
+            return null;
+        }
+    }
+
+    /**
+     * 方式三
+     *
+     * @param bytes
+     * @return
+     */
+    public static String bytes2hex(byte[] bytes)
+    {
+        final String HEX = "0123456789abcdef";
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes){
+            // 取出这个字节的高4位，然后与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
+            sb.append(HEX.charAt((b >> 4) & 0x0f));
+            // 取出这个字节的低位，与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
+            sb.append(HEX.charAt(b & 0x0f));
+        }
+        return sb.toString();
     }
 }

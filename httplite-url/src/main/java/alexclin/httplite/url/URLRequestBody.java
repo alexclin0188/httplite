@@ -1,4 +1,4 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;

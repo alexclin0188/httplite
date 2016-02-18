@@ -6,6 +6,8 @@ import android.util.Pair;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +30,21 @@ public final class Request {
     public static final int FORCE_CACHE = -1;
     public static final int UNSPECIFIED_CACHE = -100;
 
+    private static final Comparator<Pair<String,Pair<String,Boolean>>> paramComparable = new Comparator<Pair<String, Pair<String, Boolean>>>() {
+
+        @Override
+        public int compare(Pair<String, Pair<String, Boolean>> lhs, Pair<String, Pair<String, Boolean>> rhs) {
+            if(lhs.first.equals(rhs.first)){
+                return lhs.second.first.compareTo(rhs.second.first);
+            }
+            return lhs.first.compareTo(rhs.first);
+        }
+    };
+
     String url;
     Method method;
     private Map<String,List<String>> headers;
-    private Map<String,Pair<String,Boolean>> params;
+    private List<Pair<String,Pair<String,Boolean>>> params;
     private RequestBody body;
     private Object tag;
 
@@ -122,9 +135,9 @@ public final class Request {
 
     public Request param(String name,String value,boolean encoded){
         if(params==null){
-            params = new HashMap<>();
+            params = new ArrayList<>();
         }
-        params.put(name, new Pair<String, Boolean>(value, encoded));
+        params.add(new Pair<>(name, new Pair<>(value, encoded)));
         return this;
     }
 
@@ -357,12 +370,13 @@ public final class Request {
                     sb.append("&");
                 }
             }
+            Collections.sort(params,paramComparable);
             boolean first = true;
             String value;
-            for (String key : params.keySet()){
-                Pair<String,Boolean> pair = params.get(key);
-                key = pair.second?key:Uri.encode(key,Util.UTF_8.name());
-                value = pair.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
+            for (Pair<String,Pair<String,Boolean>> pair : params){
+                Pair<String,Boolean> pairValue = pair.second;
+                String key = pairValue.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
+                value = pairValue.second?pairValue.first:Uri.encode(pairValue.first,Util.UTF_8.name());
                 if(first){
                     sb.append(key).append("=").append(value);
                     first = false;
@@ -405,7 +419,7 @@ public final class Request {
         return method;
     }
 
-    public Map<String, Pair<String,Boolean>> getParams() {
+    public List<Pair<String,Pair<String,Boolean>>> getParams() {
         return params;
     }
 
@@ -463,6 +477,10 @@ public final class Request {
 
     public DownloadCallback.DownloadParams getDownloadParams() {
         return downloadParams;
+    }
+
+    public boolean canCache(){
+        return method==Method.GET && cacheExpiredTime!=NO_CACHE;
     }
 }
 

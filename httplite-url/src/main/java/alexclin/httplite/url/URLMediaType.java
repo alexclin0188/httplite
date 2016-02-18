@@ -1,4 +1,4 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import java.nio.charset.Charset;
 import java.util.Locale;

@@ -4,6 +4,7 @@ package alexclin.httplite;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
@@ -116,4 +117,9 @@ public abstract class ResultCallback<T> {
     }
 
     abstract T praseResponse(Response response) throws Exception;
+
+    public void callCancelAndFailed(){
+        onCancel();
+        postFailed(new CanceledException("Request is canceled"));
+    }
 }

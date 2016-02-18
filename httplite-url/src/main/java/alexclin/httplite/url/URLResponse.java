@@ -1,17 +1,13 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseBody;
-import alexclin.httplite.util.IOUtil;
 
 /**
  * alexclin.httplite.urlconnection

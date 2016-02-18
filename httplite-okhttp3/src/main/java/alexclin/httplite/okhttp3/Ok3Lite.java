@@ -66,6 +66,8 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
                     if(!handle.isCanceled()){
                         Call call = executeInternal(request,callback);
                         handle.setRealCall(call);
+                    }else{
+                        callback.callCancelAndFailed();
                     }
                 }
             });

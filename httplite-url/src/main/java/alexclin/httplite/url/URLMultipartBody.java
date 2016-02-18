@@ -1,4 +1,4 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import android.net.Uri;
 

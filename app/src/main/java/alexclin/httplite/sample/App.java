@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.sample.json.JacksonParser;
-import alexclin.httplite.urlconnection.URLite;
+import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;
 
 /**

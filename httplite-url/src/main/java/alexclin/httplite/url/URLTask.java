@@ -1,18 +1,14 @@
-package alexclin.httplite.urlconnection;
+package alexclin.httplite.url;
 
 import android.os.Build;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import alexclin.httplite.Handle;
-import alexclin.httplite.Method;
 import alexclin.httplite.Request;
-import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
 import alexclin.httplite.exception.CanceledException;
@@ -66,7 +62,7 @@ public class URLTask implements Task,Handle{
             }
         }
         if(!isCanceled()){
-            callback.onResponse(response);
+            onResponse(response);
         }else{
             callback.onFailed(new CanceledException("URLTask has been canceled"));
         }
@@ -88,8 +84,8 @@ public class URLTask implements Task,Handle{
 
         if (connection instanceof HttpsURLConnection) {
             HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
-            httpsURLConnection.setSSLSocketFactory(lite.sslSocketFactory);
-            httpsURLConnection.setHostnameVerifier(lite.hostnameVerifier);
+            httpsURLConnection.setSSLSocketFactory(lite.settings.getSslSocketFactory());
+            httpsURLConnection.setHostnameVerifier(lite.settings.getHostnameVerifier());
         }
         lite.processCookie(urlStr,request.getHeaders());
         if (request.getHeaders()!=null&&!request.getHeaders().isEmpty()) {
@@ -128,6 +124,9 @@ public class URLTask implements Task,Handle{
         Response response = new URLResponse(connection,request);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
+        if(lite.isCacheAble(this)){
+            response = lite.createCacheResponse(response);
+        }
         return response;
     }
 
@@ -158,5 +157,9 @@ public class URLTask implements Task,Handle{
 
     public boolean isExecuted() {
         return isExecuted;
+    }
+
+    public void onResponse(Response response){
+        callback.onResponse(response);
     }
 }

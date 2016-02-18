@@ -26,6 +26,7 @@ import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.ResultCallback;
+import alexclin.httplite.exception.CanceledException;
 
 /**
  * alexclin.httplite.okhttp
@@ -68,6 +69,8 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
                     if(!handle.isCanceled()){
                         Call call = executeInternal(request,callback);
                         handle.setRealCall(call);
+                    }else{
+                        callback.callCancelAndFailed();
                     }
                 }
             });

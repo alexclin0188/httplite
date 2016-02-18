@@ -25,7 +25,7 @@ public class HttpCall implements Call{
         if(type==File.class){
             return download((Callback<File>)callback);
         }else{
-            ResultCallback rcb = createHttpCalback(callback,type,null);
+            ResultCallback rcb = createHttpCalback(callback, type);
             return excuteSelf(rcb);
         }
     }
@@ -39,9 +39,9 @@ public class HttpCall implements Call{
         Type type = clazz.type();
         ResultCallback<T> callback;
         if(type==File.class) {
-            callback = (ResultCallback<T>)(createDownloadCallback(null,(Clazz<File>)clazz));
+            callback = (ResultCallback<T>)(this.<File>createDownloadCallback(null));
         }else{
-            callback = createHttpCalback(null,type,clazz);
+            callback = this.<T>createHttpCalback(null, type);
         }
         Response response = executeSyncInner(callback);
         return callback.praseResponse(response);
@@ -49,25 +49,24 @@ public class HttpCall implements Call{
 
     @Override
     public DownloadHandle download(Callback<File> callback) {
-        final DownloadCallback rcb = createDownloadCallback(callback, null);
+        final DownloadCallback rcb = createDownloadCallback(callback);
         excuteSelf(rcb);
         return rcb;
     }
 
-    private <T> ResultCallback createHttpCalback(Callback<T> callback,Type type,Clazz<T> clazz) {
+    private <T> ResultCallback createHttpCalback(Callback<T> callback,Type type) {
         HttpLite lite = request.lite;
-        ResultCallback rcb = new HttpCallback<T>(callback,this,type);
+        ResultCallback<T> rcb = new HttpCallback<>(callback,this,type);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(request, rcb);
         return rcb;
     }
 
-    private DownloadCallback createDownloadCallback(Callback<File> callback,Clazz<File> clazz) {
+    private DownloadCallback createDownloadCallback(Callback<File> callback) {
         DownloadCallback.DownloadParams params = request.getDownloadParams();
         if(params==null){
             throw new IllegalArgumentException("to execute Callback<File>, you must call intoFile() on Request before execute");
         }
-        final DownloadCallback rcb = new DownloadCallback(callback,this,params);
-        return rcb;
+        return new DownloadCallback(callback,this,params);
     }
 
     private Response executeSyncInner(ResultCallback callback) throws Exception{
