@@ -5,6 +5,7 @@ import android.util.Pair;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -12,7 +13,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.url.cache.URLCache;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -65,7 +65,15 @@ public class CacheDispatcher extends Thread implements Dispatcher{
 
     @Override
     public void cancel(Object tag) {
-        //TODO
+        for(Task task:mCacheQueue){
+            if(Util.equal(tag,task.tag())) task.cancel();
+        }
+        for(Queue<Pair<Task,Boolean>> queue:mWaitingRequests.values()){
+            for(Pair<Task,Boolean> pair:queue){
+                Task task = pair.first;
+                if(Util.equal(tag,task.tag())) task.cancel();
+            }
+        }
     }
 
     public Response cacheResponse(Response response) {
@@ -101,7 +109,7 @@ public class CacheDispatcher extends Thread implements Dispatcher{
         }
     }
 
-    private String getCacheKey(Request request){
+    public static String getCacheKey(Request request){
         return Util.md5Hex(request.getUrl());
     }
 
@@ -148,15 +156,59 @@ public class CacheDispatcher extends Thread implements Dispatcher{
                     networkDispatcher.dispatch(task);
                     continue;
                 }
-                networkDispatcher.getExecutorService().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((URLTask)task).onResponse(response);
-                    }
-                });
+                networkDispatcher.dispatch(new CacheTask(task,response));
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void addCacheHeaders(Request request){
+        cache.addCacheHeaders(request);
+    }
+
+    static class CacheTask implements Task{
+        private Task task;
+        private Response response;
+
+        public CacheTask(Task task,Response response) {
+            this.task = task;
+            this.response = response;
+        }
+
+        @Override
+        public Request request() {
+            return task.request();
+        }
+
+        @Override
+        public void executeAsync() {
+            ((URLTask)task).onResponse(response);
+        }
+
+        @Override
+        public Response execute() throws Exception {
+            return response;
+        }
+
+        @Override
+        public Object tag() {
+            return task.tag();
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return task.isCanceled();
+        }
+
+        @Override
+        public boolean isExecuted() {
+            return true;
+        }
+
+        @Override
+        public void cancel() {
+            task.cancel();
         }
     }
 }

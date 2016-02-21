@@ -30,6 +30,12 @@ public class URLResponseBody implements ResponseBody {
         }
     }
 
+    public URLResponseBody(String mediaType,long length,InputStream inputStream) {
+        this.type = URLMediaType.parse(mediaType);
+        this.contentLength = length;
+        this.stream = inputStream;
+    }
+
     @Override
     public MediaType contentType() {
         return type;

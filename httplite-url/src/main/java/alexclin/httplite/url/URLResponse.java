@@ -1,6 +1,7 @@
 package alexclin.httplite.url;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,14 @@ public class URLResponse implements Response {
         headers = urlConnection.getHeaderFields();
         this.request = request;
         this.body = new URLResponseBody(urlConnection);
+    }
+
+    public URLResponse(int code,String message,Map<String,List<String>> headers,String mediaType,long length,InputStream inputStream,Request request){
+        this.code = code;
+        this.message = message;
+        this.headers = headers;
+        this.request = request;
+        this.body = new URLResponseBody(mediaType,length,inputStream);
     }
 
     @Override

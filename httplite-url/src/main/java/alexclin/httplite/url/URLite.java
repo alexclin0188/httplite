@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.URI;
 import java.util.Collections;
@@ -20,6 +21,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
+import alexclin.httplite.url.cache.UrlCache;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -33,6 +35,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
 
     private NetworkDispatcher mNetDispatcher;
     private CacheDispatcher mCacheDispatcher;
+    private URLCache mCache;
 
     public static HttpLiteBuilder create() {
         return new URLite();
@@ -46,13 +49,20 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
 
     public URLite() {
         mNetDispatcher = new NetworkDispatcher();
-        mCacheDispatcher = new CacheDispatcher(mNetDispatcher,null);
     }
 
     @Override
     public void setConfig(ClientSettings settings) {
         this.settings = settings;
         mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
+        if(settings.getCacheDir()!=null){
+            try {
+                mCache = new UrlCache(settings.getCacheDir(),settings.getCacheMaxSize());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if(mCache!=null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher,mCache);
+        }
     }
 
     @Override
@@ -215,6 +225,10 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
             return mCacheDispatcher.cacheResponse(response);
         else
             return response;
+    }
+
+    public void addCacheHeaders(Request request){
+        if(mCacheDispatcher!=null) mCacheDispatcher.addCacheHeaders(request);
     }
 
     public NetworkDispatcher getNetDispatcher() {

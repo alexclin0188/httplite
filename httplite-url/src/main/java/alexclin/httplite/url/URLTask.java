@@ -69,6 +69,7 @@ public class URLTask implements Task,Handle{
     }
 
     public Response execute() throws Exception {
+        if(lite.isCacheAble(this)) lite.addCacheHeaders(request);
         String urlStr = request.getUrl();
         URL url = new URL(urlStr);
         HttpURLConnection connection;
