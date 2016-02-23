@@ -21,7 +21,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
-import alexclin.httplite.url.cache.UrlCache;
+import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -57,7 +57,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
         if(settings.getCacheDir()!=null){
             try {
-                mCache = new UrlCache(settings.getCacheDir(),settings.getCacheMaxSize());
+                mCache = new CacheImpl(settings.getCacheDir(),settings.getCacheMaxSize());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -220,7 +220,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return task.request().canCache() && mCacheDispatcher != null;
     }
 
-    public Response createCacheResponse(Response response) {
+    public Response createCacheResponse(Response response) throws IOException{
         if (mCacheDispatcher != null)
             return mCacheDispatcher.cacheResponse(response);
         else

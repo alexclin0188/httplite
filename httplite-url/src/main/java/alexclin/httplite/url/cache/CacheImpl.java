@@ -11,7 +11,7 @@ import alexclin.httplite.url.URLCache;
 /**
  * URLCacheImpl
  */
-public class UrlCache implements URLCache{
+public class CacheImpl implements URLCache{
 
     private static final int MAX_CONTENT_LENGTH = 5 * 1024 * 1024;
     private static final int APP_VERSION = 1;
@@ -20,12 +20,12 @@ public class UrlCache implements URLCache{
     private DiskLruCache cache;
     private ByteArrayPool pool;
 
-    public UrlCache(File directory, long maxSize,ByteArrayPool pool) throws IOException{
+    public CacheImpl(File directory, long maxSize, ByteArrayPool pool) throws IOException{
         cache = DiskLruCache.open(directory,APP_VERSION,2,maxSize,2048);
         this.pool = pool;
     }
 
-    public UrlCache(File directory, long maxSize) throws IOException{
+    public CacheImpl(File directory, long maxSize) throws IOException{
         this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE));
     }
 
@@ -33,8 +33,13 @@ public class UrlCache implements URLCache{
     public Response get(Request request) throws IOException {
         String key = CacheDispatcher.getCacheKey(request);
         DiskLruCache.Snapshot snapshot = cache.get(key);
-        CacheEntry entry = CacheEntryParser.newEntry(snapshot,pool,request);
-        if(entry.isExpired()) return null;
+        CacheEntry entry = CacheEntryParser.newEntry(snapshot, pool, request);
+        if (request.getCacheExpiredTime() == Request.FORCE_CACHE) {
+            return entry.getResponse();
+        }
+        if ((request.getCacheExpiredTime() > 0 && entry.getLastModified() + request.getCacheExpiredTime() * 1000 > System.currentTimeMillis())
+                || entry.isExpired())
+            return null;
         return entry.getResponse();
     }
 
@@ -51,12 +56,12 @@ public class UrlCache implements URLCache{
         }
         String cacheKey = CacheDispatcher.getCacheKey(response.request());
         DiskLruCache.Snapshot snapshot = cache.get(cacheKey);
-        if(snapshot==null) return;
+        if (snapshot == null) return;
         DiskLruCache.Editor editor = null;
         try {
             editor = snapshot.edit();
             CacheEntry entry = CacheEntryParser.parseCacheEntry(response);
-            CacheEntryParser.writeEntryTo(entry,editor);
+            CacheEntryParser.writeEntryTo(entry, editor);
             editor.commit();
         } catch (IOException e) {
             abortQuietly(editor);

@@ -13,6 +13,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
+import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -76,16 +77,25 @@ public class CacheDispatcher extends Thread implements Dispatcher{
         }
     }
 
-    public Response cacheResponse(Response response) {
+    public Response cacheResponse(Response response) throws IOException {
         String cacheKey = getCacheKey(response.request());
-        if(cacheKey!=null){
+        if (cacheKey != null) {
             try {
-                cache.put(response);
-                response = cache.get(response.request());
-            } catch (IOException e) {
-                e.printStackTrace();
+                if (response.code() < 300) {
+                    try {
+                        cache.put(response);
+                        response = cache.get(response.request());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else if (response.code() == HttpException.SC_NOT_MODIFIED) {
+                    return cache.get(response.request());
+                } else {
+                    cache.remove(response.request());
+                }
+            } finally {
+                notifyTaskFinish(cacheKey);
             }
-            notifyTaskFinish(cacheKey);
         }
         return response;
     }
