@@ -15,7 +15,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 
 /**
- * alexclin.httplite
+ * LiteClient
  *
  * @author alexclin
  * @date 15/12/31 17:14

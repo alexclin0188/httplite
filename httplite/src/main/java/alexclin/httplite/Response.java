@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * alexclin.httplite
+ * Response
  *
  * @author  alexclin
  * @date 16/1/1 10:11

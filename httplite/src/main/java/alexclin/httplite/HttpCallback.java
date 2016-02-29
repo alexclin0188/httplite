@@ -20,7 +20,7 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ResponseParser;
 
 /**
- * alexclin.httplite
+ * HttpCallback
  *
  * @author alexclin
  * @date 15/12/31 21:27

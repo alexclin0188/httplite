@@ -24,7 +24,7 @@ import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.LogUtil;
 
 /**
- * alexclin.httplite
+ * DownloadCallback
  *
  * @author:alexclin
  * @date 16/1/1 19:12

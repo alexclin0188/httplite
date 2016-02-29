@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * alexclin.httplite
+ * RequestBody
  *
  * @author alexclin
  * @date 16/1/1 10:11

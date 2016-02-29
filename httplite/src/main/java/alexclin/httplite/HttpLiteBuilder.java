@@ -13,7 +13,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
- * alexclin.httplite
+ * HttpLiteBuilder
  *
  * @author alexclin
  * @date 16/1/1 10:56

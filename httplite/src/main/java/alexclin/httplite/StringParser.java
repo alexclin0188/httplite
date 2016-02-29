@@ -1,12 +1,11 @@
 package alexclin.httplite;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 
 import alexclin.httplite.listener.ResponseParser;
 
 /**
- * alexclin.httplite
+ * StringParser
  *
  * @author alexclin
  * @date 16/1/1 23:08

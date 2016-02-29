@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * alexclin.httplite
+ * MultipartBuilder
  *
  * @author alexclin
  * @date 16/1/1 17:18

@@ -13,7 +13,7 @@ import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.RetryListener;
 
 /**
- * alexclin.httplite
+ * ResultCallback
  *
  * @author alexclin
  * @date 16/1/1 19:05

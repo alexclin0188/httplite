@@ -24,7 +24,7 @@ import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.util.LogUtil;
 
 /**
- * alexclin.httplite
+ * HttpLite
  *
  * @author alexclin
  * @date 15/12/31 17:13

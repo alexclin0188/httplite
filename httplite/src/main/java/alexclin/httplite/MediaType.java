@@ -3,7 +3,7 @@ package alexclin.httplite;
 import java.nio.charset.Charset;
 
 /**
- * alexclin.httplite
+ * MediaType
  *
  * @author alexclin
  * @date 16/1/1 14:29

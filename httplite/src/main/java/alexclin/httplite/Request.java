@@ -20,7 +20,7 @@ import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.Util;
 
 /**
- * alexclin.httplite
+ * Request
  *
  * @author: alexclin
  * @date 16/1/31 10:21
