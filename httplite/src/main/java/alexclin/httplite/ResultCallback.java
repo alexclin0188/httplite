@@ -1,6 +1,7 @@
 package alexclin.httplite;
 
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -30,11 +31,13 @@ public abstract class ResultCallback<T> {
 
     public final void onResponse(Response response){
         ResponseFilter filter = getLite().getResponseFilter();
-        if(filter!=null) filter.onResponse(call.request,response);
+        if(filter!=null) filter.onResponse(getLite(),call.request,response);
         handleResponse(response);
     }
 
     protected abstract void handleResponse(Response response);
+
+    protected abstract Type resultType();
 
     public final void onFailed(Exception e) {
         if (canRetry()) {

@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,6 +54,11 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
             postFailed(e);
         }
         isExecuted = true;
+    }
+
+    @Override
+    protected Type resultType() {
+        return File.class;
     }
 
     @Override

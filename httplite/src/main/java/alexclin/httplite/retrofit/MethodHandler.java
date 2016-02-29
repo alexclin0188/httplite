@@ -17,6 +17,7 @@ import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
 
 /**
@@ -137,7 +138,7 @@ public class MethodHandler {
         return isSync;
     }
 
-    public Object invoke(Retrofit retrofit,Object... args) throws Exception{
+    public Object invoke(Retrofit retrofit,RequestFilter filter,Object... args) throws Exception{
         Request request = retrofit.makeRequest();
         int maCount = methodProcessors.length;
         for(int i=0;i<maCount;i++){
@@ -158,11 +159,12 @@ public class MethodHandler {
                 processor.process(request,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
             }
         }
-        return performReturn(retrofit,request,returnType,args[args.length-1]);
+        return performReturn(retrofit,filter,request,returnType,args[args.length-1]);
     }
 
     @SuppressWarnings("unchecked")
-    private Object performReturn(Retrofit retrofit,Request request, Type returnType,Object lastParam) throws Exception{
+    private Object performReturn(Retrofit retrofit,RequestFilter filter,Request request, Type returnType,Object lastParam) throws Exception{
+        if(filter!=null) filter.onRequest(retrofit.lite(),request,returnType);
         Call call = retrofit.makeCall(request);
         if(isSyncMethod){
             return call.executeSync((Clazz)lastParam);

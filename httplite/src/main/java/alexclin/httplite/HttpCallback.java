@@ -60,6 +60,11 @@ class HttpCallback<T> extends ResultCallback<T>{
         }
     }
 
+    @Override
+    protected Type resultType() {
+        return type;
+    }
+
     private boolean isSuccess(Response response) {
         int code = response.code();
         return code >= 200 && code < 300;

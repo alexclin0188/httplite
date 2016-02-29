@@ -12,6 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import alexclin.httplite.Call;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
 
 /**
@@ -27,7 +28,7 @@ public abstract class Retrofit {
     private MethodListener methodListener;
 
     @SuppressWarnings("unchecked")
-    public final <T> T create(final Class<T> service){
+    public final <T> T create(final Class<T> service,final RequestFilter filter){
         Util.validateServiceInterface(service);
         if (!isReleaseMode()) {
             eagerlyValidateMethods(service);
@@ -45,7 +46,7 @@ public abstract class Retrofit {
                             return invokeDefaultMethod(method, service, proxy, args);
                         }
                         dispatchMethodEvent(method,Retrofit.this,args);
-                        return loadMethodHandler(method).invoke(Retrofit.this,args);
+                        return loadMethodHandler(method).invoke(Retrofit.this,filter,args);
                     }
                 });
     }
@@ -98,6 +99,8 @@ public abstract class Retrofit {
     public abstract Call makeCall(Request request);
 
     public abstract boolean isReleaseMode();
+
+    public abstract HttpLite lite();
 
     public static void registerParamterProcessor(ParameterProcessor processor) {
         if (processor != null && !ProcessorFactory.paramterProcessorList.contains(processor)) {

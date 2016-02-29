@@ -13,6 +13,7 @@ import com.example.Result;
 import com.example.UserInfo;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -190,7 +191,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .addResponseParser(new JacksonParser());
         lite.setRequestFilter(new RequestFilter() {
             @Override
-            public void onRequest(Request request, ResultCallback callback) {
+            public void onRequest(HttpLite lite,Request request, Type type) {
                 request.header("handle","misc");
             }
         });

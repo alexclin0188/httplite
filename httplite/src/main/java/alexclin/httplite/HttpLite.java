@@ -147,11 +147,15 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz){
+        return retrofit(clazz,null);
+    }
+
+    public <T> T retrofit(Class<T> clazz,RequestFilter filter){
         if(retrofit==null)
-        synchronized (this){
-            if(retrofit==null) retrofit = new RetrofitImpl(this);
-        }
-        return retrofit.create(clazz);
+            synchronized (this){
+                if(retrofit==null) retrofit = new RetrofitImpl();
+            }
+        return retrofit.create(clazz,filter);
     }
 
     public Retrofit getRetrofit() {
@@ -186,16 +190,11 @@ public class HttpLite {
         return callFactory.newCall(request);
     }
 
-    static class RetrofitImpl extends Retrofit{
-        private HttpLite lite;
-
-        public RetrofitImpl(HttpLite lite) {
-            this.lite = lite;
-        }
+    class RetrofitImpl extends Retrofit{
 
         @Override
         public Request makeRequest() {
-            return new Request(lite);
+            return new Request(HttpLite.this);
         }
 
         @Override
@@ -217,7 +216,12 @@ public class HttpLite {
 
         @Override
         public boolean isReleaseMode() {
-            return lite.isRelease;
+            return HttpLite.this.isRelease;
+        }
+
+        @Override
+        public HttpLite lite() {
+            return HttpLite.this;
         }
     }
 }

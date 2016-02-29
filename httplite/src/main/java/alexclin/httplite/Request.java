@@ -133,7 +133,12 @@ public final class Request {
         return param(name,value,false);
     }
 
+    public Request param(String name,Object value){
+        return param(name,value==null?null:value.toString(),false);
+    }
+
     public Request param(String name,String value,boolean encoded){
+        if(value==null) return this;
         if(params==null){
             params = new ArrayList<>();
         }
@@ -197,6 +202,7 @@ public final class Request {
     }
 
     public Request body(String mediaType,String content){
+        if(content==null) return this;
         this.body = lite.createRequestBody(lite.parse(mediaType), content);
         return this;
     }

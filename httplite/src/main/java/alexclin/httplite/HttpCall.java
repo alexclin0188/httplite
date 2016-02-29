@@ -57,7 +57,7 @@ public class HttpCall implements Call{
     private <T> ResultCallback createHttpCalback(Callback<T> callback,Type type) {
         HttpLite lite = request.lite;
         ResultCallback<T> rcb = new HttpCallback<>(callback,this,type);
-        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(request, rcb);
+        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
         return rcb;
     }
 
@@ -75,10 +75,10 @@ public class HttpCall implements Call{
             preWork = (DownloadCallback)callback;
         }
         HttpLite lite = request.lite;
-        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(request,callback);
+        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request,callback.resultType());
         if(preWork!=null) preWork.run();
         Response response = lite.getClient().executeSync(request);
-        if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(request, response);
+        if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
         return response;
     }
 
