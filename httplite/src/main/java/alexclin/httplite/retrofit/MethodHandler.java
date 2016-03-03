@@ -28,7 +28,7 @@ import alexclin.httplite.util.Util;
  */
 public class MethodHandler {
     private MethodProcessor[] methodProcessors;
-    private ParameterProcessor[][] paramterProcessors;
+    private ParameterProcessor[][] parameterProcessors;
     private Type returnType;
     private Annotation[][] methodParameterAnnotationArrays;
     private Annotation[] methodAnnotations;
@@ -51,7 +51,7 @@ public class MethodHandler {
         paramMiscProcessors = new HashMap<>();
 
         int count = methodParameterTypes.length;
-        paramterProcessors = new ParameterProcessor[count][];
+        parameterProcessors = new ParameterProcessor[count][];
         int annotationCount;
         for(int i=0;i<count;i++){
             Type parameterType = methodParameterTypes[i];
@@ -70,7 +70,7 @@ public class MethodHandler {
                     saveMiscProcessorAndPos((ParamMiscProcessor)processor,i,j);
                 }
             }
-            paramterProcessors[i] = processors;
+            parameterProcessors[i] = processors;
         }
         int macount = methodAnnotations.length;
         methodProcessors = new MethodProcessor[macount];
@@ -147,7 +147,7 @@ public class MethodHandler {
         }
         int length = args.length;
         for(int i=0;i<length;i++){
-            ParameterProcessor[] processors = paramterProcessors[i];
+            ParameterProcessor[] processors = parameterProcessors[i];
             Annotation[] parameterAnnotations = methodParameterAnnotationArrays[i];
             for(int j=0;j<parameterAnnotations.length;j++){
                 ParameterProcessor processor = processors[j];
@@ -164,11 +164,12 @@ public class MethodHandler {
 
     @SuppressWarnings("unchecked")
     private Object performReturn(Retrofit retrofit,RequestFilter filter,Request request, Type returnType,Object lastParam) throws Exception{
-        if(filter!=null) filter.onRequest(retrofit.lite(),request,returnType);
         Call call = retrofit.makeCall(request);
         if(isSyncMethod){
+            if(filter!=null) filter.onRequest(retrofit.lite(),request,((Clazz)lastParam).type());
             return call.executeSync((Clazz)lastParam);
         }else{
+            if(filter!=null) filter.onRequest(retrofit.lite(),request,Util.type(Callback.class,lastParam));
             if(returnType==DownloadHandle.class){
                 return call.download((Callback<File>)lastParam);
             }else{
