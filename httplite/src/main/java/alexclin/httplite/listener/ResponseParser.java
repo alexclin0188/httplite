@@ -1,15 +1,13 @@
 package alexclin.httplite.listener;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 
 import alexclin.httplite.Response;
 
 /**
- * alexclin.httplite
+ * ResponseParser
  *
- * @author alexclin
- * @date 16/1/1 21:15
+ * @author alexclin 16/1/1 21:15
  */
 public interface ResponseParser {
     boolean isSupported(Type type);

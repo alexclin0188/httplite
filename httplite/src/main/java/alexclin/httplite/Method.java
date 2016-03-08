@@ -3,8 +3,7 @@ package alexclin.httplite;
 /**
  * Method http method
  *
- * @author alexclin
- * @date 16/2/1 19:53
+ * @author alexclin at 16/2/1 19:53
  */
 public enum Method{
     GET,POST,PUT,DELETE,HEAD,PATCH

@@ -7,8 +7,7 @@ import alexclin.httplite.listener.Callback;
 /**
  * Call
  *
- * @author alexclin
- * @date 16/1/29 21:15
+ * @author alexclin at 16/1/29 21:15
  */
 public interface Call {
     <T> Handle execute(Callback<T> callback);

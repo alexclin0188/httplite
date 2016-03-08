@@ -6,8 +6,7 @@ import java.util.Map;
 /**
  * Response
  *
- * @author  alexclin
- * @date 16/1/1 10:11
+ * @author  alexclin  16/1/1 10:11
  */
 public interface Response {
     Request request();

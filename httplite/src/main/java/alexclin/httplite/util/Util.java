@@ -70,16 +70,7 @@ public final class Util {
      */
     public static final TimeZone UTC = TimeZone.getTimeZone("GMT");
 
-    /**
-     * Quick and dirty pattern to differentiate IP addresses from hostnames. This is an approximation
-     * of Android's private InetAddress#isNumeric API.
-     * <p>
-     * <p>This matches IPv6 addresses as a hex string containing at least one colon, and possibly
-     * including dots after the first colon. It matches IPv4 addresses as strings containing only
-     * decimal digits and dots. This pattern matches strings like "a:.23" and "54" that are neither IP
-     * addresses nor hostnames; they will be verified as IP addresses (which is a more strict
-     * verification).
-     */
+
     private static final Pattern VERIFY_AS_IP_ADDRESS = Pattern.compile(
             "([0-9a-fA-F]*:[0-9a-fA-F:.]*)|([\\d.]+)");
 
@@ -92,30 +83,18 @@ public final class Util {
         }
     }
 
-    /**
-     * Returns true if two possibly-null objects are equal.
-     */
     public static boolean equal(Object a, Object b) {
         return a == b || (a != null && a.equals(b));
     }
 
-    /**
-     * Returns an immutable copy of {@code list}.
-     */
     public static <T> List<T> immutableList(List<T> list) {
         return Collections.unmodifiableList(new ArrayList<>(list));
     }
 
-    /**
-     * Returns an immutable list containing {@code elements}.
-     */
     public static <T> List<T> immutableList(T... elements) {
         return Collections.unmodifiableList(Arrays.asList(elements.clone()));
     }
 
-    /**
-     * Returns an immutable copy of {@code map}.
-     */
     public static <K, V> Map<K, V> immutableMap(Map<K, V> map) {
         return Collections.unmodifiableMap(new LinkedHashMap<>(map));
     }
@@ -131,10 +110,6 @@ public final class Util {
         };
     }
 
-    /**
-     * Returns an array containing containing only elements found in {@code first}  and also in {@code
-     * second}. The returned elements are in the same order as in {@code first}.
-     */
     @SuppressWarnings("unchecked")
     public static <T> T[] intersect(Class<T> arrayType, T[] first, T[] second) {
         List<T> result = intersect(first, second);

@@ -3,8 +3,7 @@ package alexclin.httplite.exception;
 /**
  * alexclin.httplite.exception
  *
- * @author alexclin
- * @date 16/1/1 11:01
+ * @author alexclin 16/1/1 11:01
  */
 public class HttpException extends Exception{
     public static final int SC_ACCEPTED = 202;

@@ -22,8 +22,7 @@ import alexclin.httplite.listener.ResponseParser;
 /**
  * HttpCallback
  *
- * @author alexclin
- * @date 15/12/31 21:27
+ * @author alexclin at 15/12/31 21:27
  */
 class HttpCallback<T> extends ResultCallback<T>{
     enum ParseType{

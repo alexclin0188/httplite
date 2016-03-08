@@ -9,8 +9,7 @@ import alexclin.httplite.util.Util;
 /**
  * HttpCall
  *
- * @author alexclin
- * @date 16/1/26 22:12
+ * @author alexclin at 16/1/26 22:12
  */
 public class HttpCall implements Call{
     Request request;

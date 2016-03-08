@@ -26,8 +26,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * HttpLite
  *
- * @author alexclin
- * @date 15/12/31 17:13
+ * @author alexclin at 15/12/31 17:13
  */
 public class HttpLite {
     private static Handler sHandler = new Handler(Looper.getMainLooper());

@@ -9,8 +9,7 @@ import java.util.Map;
 /**
  * MultipartBuilder
  *
- * @author alexclin
- * @date 16/1/1 17:18
+ * @author alexclin  16/1/1 17:18
  */
 class MultipartBuilder {
     private String boundary;

@@ -6,8 +6,7 @@ import java.io.OutputStream;
 /**
  * RequestBody
  *
- * @author alexclin
- * @date 16/1/1 10:11
+ * @author alexclin 16/1/1 10:11
  */
 public interface RequestBody {
     /** Returns the Content-Type header for this body. */

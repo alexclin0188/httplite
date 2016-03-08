@@ -5,8 +5,7 @@ import java.nio.charset.Charset;
 /**
  * MediaType
  *
- * @author alexclin
- * @date 16/1/1 14:29
+ * @author alexclin at 16/1/1 14:29
  */
 public interface MediaType {
     /**

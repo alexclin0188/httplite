@@ -8,8 +8,7 @@ import java.util.List;
 /**
  * FormBuilder
  *
- * @author alexclin
- * @date 16/1/1 17:36
+ * @author alexclin at 16/1/1 17:36
  */
 class FormBuilder {
     private List<Pair<String,String>> paramList;

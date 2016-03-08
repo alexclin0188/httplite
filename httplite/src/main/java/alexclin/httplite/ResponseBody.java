@@ -7,8 +7,7 @@ import java.io.InputStream;
 /**
  * ResponseBody
  *
- * @author alexclin
- * @date 16/1/1 10:11
+ * @author alexclin  16/1/1 10:11
  */
 public interface ResponseBody extends Closeable{
     MediaType contentType();

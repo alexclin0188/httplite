@@ -17,8 +17,7 @@ import javax.net.ssl.SSLSocketFactory;
 /**
  * LiteClient
  *
- * @author alexclin
- * @date 15/12/31 17:14
+ * @author alexclin at 15/12/31 17:14
  */
 public interface LiteClient {
 

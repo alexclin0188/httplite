@@ -15,8 +15,7 @@ import alexclin.httplite.listener.RetryListener;
 /**
  * ResultCallback
  *
- * @author alexclin
- * @date 16/1/1 19:05
+ * @author alexclin  16/1/1 19:05
  */
 public abstract class ResultCallback<T> {
     protected volatile boolean isCanceled;

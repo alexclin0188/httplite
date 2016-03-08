@@ -12,8 +12,7 @@ import alexclin.httplite.ResultCallback;
 /**
  * RequestFilter
  *
- * @author alexclin
- * @date 16/1/18 21:37
+ * @author alexclin 16/1/18 21:37
  */
 public interface RequestFilter {
     void onRequest(HttpLite lite,Request request, Type resultType);

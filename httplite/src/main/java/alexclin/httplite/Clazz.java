@@ -10,8 +10,7 @@ import alexclin.httplite.util.Util;
 /**
  * Clazz
  *
- * @author alexclin
- * @date 16/1/29 20:29
+ * @author alexclin at 16/1/29 20:29
  */
 public abstract class Clazz<T> {
 

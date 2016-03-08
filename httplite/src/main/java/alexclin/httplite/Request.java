@@ -22,8 +22,7 @@ import alexclin.httplite.util.Util;
 /**
  * Request
  *
- * @author: alexclin
- * @date 16/1/31 10:21
+ * @author alexclin 16/1/31 10:21
  */
 public final class Request {
     public static final int NO_CACHE = 0;

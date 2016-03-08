@@ -6,10 +6,9 @@ import java.util.Map;
 import alexclin.httplite.Request;
 
 /**
- * alexclin.httplite
+ * Callback
  *
- * @author alexclin
- * @date 16/1/1 10:27
+ * @author alexclin 16/1/1 10:27
  */
 public interface Callback<T> {
     void onSuccess(T result,Map<String,List<String>> headers);

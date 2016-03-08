@@ -12,8 +12,7 @@ import javax.net.ssl.SSLSocketFactory;
 /**
  * ClientSettings
  *
- * @author alexclin
- * @date 16/2/5 13:30
+ * @author alexclin at 16/2/5 13:30
  */
 public final class ClientSettings {
     Proxy proxy;

@@ -7,8 +7,7 @@ import alexclin.httplite.listener.ResponseParser;
 /**
  * StringParser
  *
- * @author alexclin
- * @date 16/1/1 23:08
+ * @author alexclin  16/1/1 23:08
  */
 public abstract class StringParser implements ResponseParser{
 

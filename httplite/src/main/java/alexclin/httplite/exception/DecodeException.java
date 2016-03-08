@@ -3,8 +3,7 @@ package alexclin.httplite.exception;
 /**
  * alexclin.httplite.exception
  *
- * @author alexclin
- * @date 16/1/1 18:55
+ * @author alexclin 16/1/1 18:55
  */
 public class DecodeException extends Exception {
 

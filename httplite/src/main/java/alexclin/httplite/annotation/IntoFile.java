@@ -10,8 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * IntoFile
  *
- * @author alexclin
- * @date 16/1/30 09:47
+ * @author alexclin 16/1/30 09:47
  */
 @Documented
 @Target(PARAMETER)

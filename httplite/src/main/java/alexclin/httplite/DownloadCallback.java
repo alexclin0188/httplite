@@ -26,8 +26,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * DownloadCallback
  *
- * @author:alexclin
- * @date 16/1/1 19:12
+ * @author alexclin at 16/1/1 19:12
  */
 class DownloadCallback extends ResultCallback<File> implements Runnable,DownloadHandle{
     private static final int CHECK_SIZE = 512;

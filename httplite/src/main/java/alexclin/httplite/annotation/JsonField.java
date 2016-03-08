@@ -10,8 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * JsonField
  *
- * @author alexclin
- * @date 16/1/31 13:52
+ * @author alexclin  16/1/31 13:52
  */
 @Documented
 @Target(PARAMETER)
