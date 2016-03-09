@@ -36,5 +36,6 @@ dependencies {
     compile 'com.google.code.gson:gson:2.5'
     compile project(':httplite-url')
     compile project(':httplite-okhttp2')
+//    compile 'alexclin.httplite:httplite-okhttp2:1.0.0'
     compile project(':mockdata')
 }
