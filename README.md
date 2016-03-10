@@ -31,8 +31,8 @@ A android http library
 
 或者直接使用releaselib中的jar包
 
-* 1 okhttp2: httplite1.0.jar+httplite-ok2lite1.0.jar+<okhttp 2.x.x版本jar包>
-* 2 okhttp3: httplite1.0.jar+httplite-ok3lite1.0.jar+<okhttp 3.x.x版本jar包>
+* 1 okhttp2: httplite1.0.jar+httplite-ok2lite1.0.jar+okhttp 2.x.x版本jar包
+* 2 okhttp3: httplite1.0.jar+httplite-ok3lite1.0.jar+okhttp 3.x.x版本jar包
 * 3 url: httplite1.0.jar+httplite-urlite1.0.jar
 
 ### 使用接口定义API接口
