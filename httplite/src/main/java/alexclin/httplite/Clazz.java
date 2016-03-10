@@ -4,7 +4,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
 /**

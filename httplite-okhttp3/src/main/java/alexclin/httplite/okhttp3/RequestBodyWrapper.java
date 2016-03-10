@@ -1,11 +1,10 @@
 package alexclin.httplite.okhttp3;
 
-import okhttp3.RequestBody;
-
 import java.io.IOException;
 import java.io.OutputStream;
 
 import alexclin.httplite.MediaType;
+import okhttp3.RequestBody;
 import okio.BufferedSink;
 import okio.Okio;
 

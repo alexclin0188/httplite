@@ -2,16 +2,10 @@ package alexclin.httplite;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.CookieStore;
-import java.net.URI;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +14,8 @@ import java.util.concurrent.Executor;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
+import alexclin.httplite.mock.MockFactory;
 import alexclin.httplite.retrofit.Retrofit;
-import alexclin.httplite.util.LogUtil;
 
 /**
  * HttpLite
@@ -81,7 +75,11 @@ public class HttpLite {
     }
 
     public void cancel(Object tag){
-        this.client.cancel(tag);
+        if(callFactory instanceof MockFactory){
+            ((MockFactory)callFactory).cancel(tag);
+        }else{
+            this.client.cancel(tag);
+        }
     }
 
     public static void runOnMainThread(Runnable runnable){

@@ -1,11 +1,10 @@
 package alexclin.httplite.okhttp3;
 
-import okhttp3.ResponseBody;
-
 import java.io.IOException;
 import java.io.InputStream;
 
 import alexclin.httplite.MediaType;
+import okhttp3.ResponseBody;
 
 /**
  * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper

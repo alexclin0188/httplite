@@ -23,7 +23,6 @@ import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
-import alexclin.httplite.ResultCallback;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.okhttp2.Ok2Lite;

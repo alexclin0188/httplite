@@ -12,9 +12,9 @@ import alexclin.httplite.util.Util;
  * @author alexclin at 16/1/26 22:12
  */
 public class HttpCall implements Call{
-    Request request;
+    protected Request request;
 
-    HttpCall(Request request) {
+    protected HttpCall(Request request) {
         this.request = request;
     }
 
@@ -33,8 +33,14 @@ public class HttpCall implements Call{
         return executeSyncInner(null);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T executeSync(Clazz<T> clazz) throws Exception{
+        ResultCallback<T> callback = createResultCallback(clazz);
+        Response response = executeSyncInner(callback);
+        return parseResult(response, callback);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected  <T> ResultCallback<T> createResultCallback(Clazz<T> clazz) {
         Type type = clazz.type();
         ResultCallback<T> callback;
         if(type==File.class) {
@@ -42,8 +48,7 @@ public class HttpCall implements Call{
         }else{
             callback = this.<T>createHttpCalback(null, type);
         }
-        Response response = executeSyncInner(callback);
-        return callback.praseResponse(response);
+        return callback;
     }
 
     @Override
@@ -53,14 +58,22 @@ public class HttpCall implements Call{
         return rcb;
     }
 
-    private <T> ResultCallback createHttpCalback(Callback<T> callback,Type type) {
+    protected  <T> ResultCallback createHttpCalback(Callback<T> callback,Type type) {
         HttpLite lite = request.lite;
         ResultCallback<T> rcb = new HttpCallback<>(callback,this,type);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
         return rcb;
     }
 
-    private DownloadCallback createDownloadCallback(Callback<File> callback) {
+    protected <T> T parseResult(Response response, ResultCallback<T> callback) throws Exception{
+        return callback.praseResponse(response);
+    }
+
+    protected MediaType mediaType(String mediaType){
+        return request.lite.parse(mediaType);
+    }
+
+    protected DownloadCallback createDownloadCallback(Callback<File> callback) {
         DownloadCallback.DownloadParams params = request.getDownloadParams();
         if(params==null){
             throw new IllegalArgumentException("to execute Callback<File>, you must call intoFile() on Request before execute");

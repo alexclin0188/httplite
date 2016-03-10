@@ -1,52 +1,55 @@
-package alexclin.httplite.url;
+package alexclin.httplite.mock;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.HttpLite;
+import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
+import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 
 /**
- * MockResponse
+ * Mock
  *
- * @author alexclin
- * @date 16/1/29 20:38
+ * @author alexclin 16/1/29 20:38
  */
-public class MockResponse<T> {
+public class Mock<T> {
     private Clazz<T> clazz;
     private T result;
     private Map<String, List<String>> headers;
-    private Response response;
     private Handle handle;
 
+    private Response response;
     private MockCall call;
+
     private ProgressListener mProgressListener;
     private RetryListener mRetryListener;
     private CancelListener mCancelListener;
 
-    MockResponse(Clazz<T> clazz,MockCall call) {
+    Mock(Clazz<T> clazz, MockCall call) {
         this.clazz = clazz;
         this.handle = new Handle();
         this.call = call;
-        this.mProgressListener = call.request.getProgressListener();
-        this.mRetryListener = call.request.getRetryListener();
-        this.mCancelListener = call.request.getCancelListener();
+        this.mProgressListener = call.request().getProgressListener();
+        this.mRetryListener = call.request().getRetryListener();
+        this.mCancelListener = call.request().getCancelListener();
     }
 
     void performCallback(Callback<T> callback) {
         callback.onSuccess(result, headers);
-    }
-
-    Response response() {
-        return response;
     }
 
     Handle handle() {
@@ -62,19 +65,6 @@ public class MockResponse<T> {
             return clazz.type();
         }
         return null;
-    }
-
-    public boolean requestObject() {
-        return clazz != null;
-    }
-
-    public void mock(Response response) {
-        this.response = response;
-    }
-
-    public void mock(T result, Map<String, List<String>> headers) {
-        this.result = result;
-        this.headers = headers;
     }
 
     public boolean isCanceled() {
@@ -109,9 +99,57 @@ public class MockResponse<T> {
             @Override
             public void run() {
                 if (mCancelListener != null)
-                    mCancelListener.onCancel(call.request);
+                    mCancelListener.onCancel(call.request());
             }
         });
+    }
+
+    void processMock() throws Exception{
+        if(clazz==null||result!=null) return;
+        if(response==null) throw new TimeoutException("No response by mock");
+        if(responseType()==Response.class){
+            result = (T) response;
+            headers = response.headers();
+        }else{
+            mock(call.parseResultFrom(response,clazz),response.headers());
+        }
+    }
+
+    public final void mock(T result, Map<String, List<String>> headers) {
+        this.result = result;
+        this.headers = headers;
+    }
+
+    public final void mock(Response response) {
+        this.response = response;
+    }
+
+    public final void mockJson(String json){
+        mock(HttpException.SC_OK,"SUCCESS",null,new ByteArrayInputStream(json.getBytes()),call.prase(MediaType.APPLICATION_JSON));
+    }
+
+    public final void mock(String string){
+        mock(HttpException.SC_OK,"SUCCESS",null,new ByteArrayInputStream(string.getBytes()),call.prase(MediaType.TEXT_PLAIN));
+    }
+
+    public final void mock(InputStream stream){
+        mock(stream,MediaType.APPLICATION_STREAM);
+    }
+
+    public final void mock(InputStream stream,String mediaType){
+        mock(HttpException.SC_OK,"SUCCESS",null,stream,call.prase(mediaType));
+    }
+
+    public final void mock(int code,String msg,Map<String, List<String>> headers,InputStream stream,MediaType mediaType){
+        mock(new MockResponse(call.request(),0,"",headers,stream,mediaType));
+    }
+
+    public final void mock(File inFile) throws Exception{
+        mock(new FileInputStream(inFile));
+    }
+
+    public final void mock(File inFile,String mediaType) throws Exception{
+        mock(new FileInputStream(inFile),mediaType);
     }
 
     class Handle implements DownloadHandle {

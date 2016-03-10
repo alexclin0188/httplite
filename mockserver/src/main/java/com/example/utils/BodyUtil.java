@@ -8,9 +8,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Hashtable;
 
-import okio.Okio;
-import okio.Source;
-
 /**
  * BodyUtil
  *

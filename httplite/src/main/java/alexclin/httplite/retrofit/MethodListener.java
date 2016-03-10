@@ -2,8 +2,6 @@ package alexclin.httplite.retrofit;
 
 import java.lang.reflect.Method;
 
-import alexclin.httplite.HttpLite;
-
 /**
  * MethodListener
  *

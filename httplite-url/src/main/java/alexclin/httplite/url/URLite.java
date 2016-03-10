@@ -41,12 +41,6 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return new URLite();
     }
 
-    public static HttpLiteBuilder mock(MockHandler mockHandler) {
-        URLite urLite = new URLite();
-        urLite.callFactory = new MockCall.Factory(mockHandler, urLite);
-        return urLite;
-    }
-
     public URLite() {
         mNetDispatcher = new NetworkDispatcher();
     }

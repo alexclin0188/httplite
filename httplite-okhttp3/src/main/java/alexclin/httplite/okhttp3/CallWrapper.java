@@ -2,12 +2,11 @@ package alexclin.httplite.okhttp3;
 
 import java.io.IOException;
 
+import alexclin.httplite.ResultCallback;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-
-import alexclin.httplite.ResultCallback;
 import okhttp3.Response;
 
 /**

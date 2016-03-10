@@ -1,13 +1,9 @@
 package alexclin.httplite.listener;
 
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.RequestBody;
-import alexclin.httplite.ResultCallback;
 
 /**
  * RequestFilter

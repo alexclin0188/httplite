@@ -2,7 +2,6 @@ package alexclin.httplite.retrofit;
 
 import java.lang.annotation.Annotation;
 
-import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 
 /**

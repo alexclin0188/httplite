@@ -5,8 +5,6 @@ import com.example.Result;
 import com.example.UserInfo;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
@@ -15,11 +13,8 @@ import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
-import alexclin.httplite.annotation.Header;
-import alexclin.httplite.annotation.Headers;
 import alexclin.httplite.annotation.IntoFile;
 import alexclin.httplite.annotation.JsonField;
-import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Param;
 import alexclin.httplite.annotation.Path;
@@ -30,8 +25,6 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
-import alexclin.httplite.retrofit.MultiPart;
-import alexclin.httplite.sample.model.TestModel;
 import alexclin.httplite.sample.model.ZhihuData;
 
 /**

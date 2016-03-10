@@ -12,13 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
 import alexclin.httplite.annotation.POST;
-import alexclin.httplite.annotation.Path;
 import alexclin.httplite.annotation.Progress;
 import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;

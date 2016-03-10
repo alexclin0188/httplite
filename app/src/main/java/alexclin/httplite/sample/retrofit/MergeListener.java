@@ -1,7 +1,5 @@
 package alexclin.httplite.sample.retrofit;
 
-import android.util.Log;
-
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;

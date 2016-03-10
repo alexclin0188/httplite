@@ -1,9 +1,8 @@
 package alexclin.httplite.okhttp3;
 
-import okhttp3.Call;
-
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
+import okhttp3.Call;
 
 /**
  * HandleImpl

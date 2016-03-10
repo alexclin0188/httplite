@@ -12,6 +12,9 @@ import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
+import alexclin.httplite.listener.MockHandler;
+import alexclin.httplite.mock.MockFactory;
+
 /**
  * HttpLiteBuilder
  *
@@ -21,7 +24,6 @@ public abstract class HttpLiteBuilder{
     private String baseUrl;
     private boolean useLiteRetry;
     private boolean isRelase;
-    protected CallFactory callFactory;
 
     private ClientSettings settings = new ClientSettings();
 
@@ -29,10 +31,16 @@ public abstract class HttpLiteBuilder{
 
     public final HttpLite build(){
         LiteClient client = initLiteClient();
-        if(callFactory==null) callFactory = new HttpCall.Factory();
         settings.maxRetryCount = useLiteRetry?0:settings.maxRetryCount;
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,callFactory,isRelase);
+        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,new HttpCall.Factory(),isRelase);
+    }
+
+    public final HttpLite mock(MockHandler mockHandler){
+        LiteClient client = initLiteClient();
+        settings.maxRetryCount = useLiteRetry?0:settings.maxRetryCount;
+        client.setConfig(settings);
+        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,new MockFactory(mockHandler),isRelase);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){

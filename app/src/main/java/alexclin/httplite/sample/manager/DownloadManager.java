@@ -5,6 +5,7 @@ import android.content.Context;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.adapter.DownloadAdpater;
 

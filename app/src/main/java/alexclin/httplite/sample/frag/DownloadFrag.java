@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import alexclin.httplite.sample.R;
-import alexclin.httplite.sample.adapter.DownloadAdpater;
 import alexclin.httplite.sample.manager.DownloadManager;
 
 /**

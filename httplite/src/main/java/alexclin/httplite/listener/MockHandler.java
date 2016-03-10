@@ -1,6 +1,7 @@
-package alexclin.httplite.url;
+package alexclin.httplite.listener;
 
 import alexclin.httplite.Request;
+import alexclin.httplite.mock.Mock;
 
 /**
  * MockHandler
@@ -9,5 +10,5 @@ import alexclin.httplite.Request;
  * @date 16/1/29 20:33
  */
 public interface MockHandler {
-    <T> void mock(Request request,MockResponse<T> response) throws Exception;
+    <T> void mock(Request request,Mock<T> mock) throws Exception;
 }

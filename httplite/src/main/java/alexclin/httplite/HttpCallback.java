@@ -14,10 +14,10 @@ import java.util.Collection;
 import alexclin.httplite.exception.DecodeException;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.exception.ParserException;
-import alexclin.httplite.util.IOUtil;
-import alexclin.httplite.util.Util;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ResponseParser;
+import alexclin.httplite.util.IOUtil;
+import alexclin.httplite.util.Util;
 
 /**
  * HttpCallback

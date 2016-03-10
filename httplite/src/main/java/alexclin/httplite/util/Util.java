@@ -17,7 +17,6 @@ package alexclin.httplite.util;
 
 import android.text.TextUtils;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,8 +31,6 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.net.FileNameMap;
 import java.net.IDN;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -51,7 +48,6 @@ import java.util.regex.Pattern;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.MediaType;
-import alexclin.httplite.listener.Callback;
 
 /**
  * Junk drawer of utility methods.

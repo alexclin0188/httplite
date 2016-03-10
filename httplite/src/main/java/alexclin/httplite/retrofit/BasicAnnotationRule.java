@@ -5,7 +5,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.Body;
 import alexclin.httplite.annotation.Form;

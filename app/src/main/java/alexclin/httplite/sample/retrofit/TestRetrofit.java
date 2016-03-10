@@ -1,14 +1,7 @@
 package alexclin.httplite.sample.retrofit;
 
-import java.io.File;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-
-import alexclin.httplite.Clazz;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.sample.model.TestModel;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 

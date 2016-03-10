@@ -1,10 +1,6 @@
 package alexclin.httplite.retrofit;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-
-import alexclin.httplite.HttpLite;
 
 /**
  * AnnotationRule

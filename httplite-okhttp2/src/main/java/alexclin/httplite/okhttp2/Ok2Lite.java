@@ -26,7 +26,6 @@ import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.ResultCallback;
-import alexclin.httplite.exception.CanceledException;
 
 /**
  * alexclin.httplite.okhttp

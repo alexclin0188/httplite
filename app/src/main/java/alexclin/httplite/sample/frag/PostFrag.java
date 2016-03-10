@@ -31,7 +31,6 @@ import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.adapter.FileAdapter;
 import alexclin.httplite.util.LogUtil;
-import alexclin.httplite.util.Util;
 
 /**
  * PostFrag
