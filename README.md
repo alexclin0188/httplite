@@ -31,8 +31,8 @@ A android http library
 
 或者直接使用releaselib中的jar包
 
-* 1 okhttp2: httplite1.0.jar+httplite-ok2lite1.0.jar+<okhttp 2.x.x版本jar包>
-* 2 okhttp3: httplite1.0.jar+httplite-ok3lite1.0.jar+<okhttp 3.x.x版本jar包>
+* 1 okhttp2: httplite1.0.jar+httplite-ok2lite1.0.jar+okhttp 2.x.x版本jar包
+* 2 okhttp3: httplite1.0.jar+httplite-ok3lite1.0.jar+okhttp 3.x.x版本jar包
 * 3 url: httplite1.0.jar+httplite-urlite1.0.jar
 
 ### 使用接口定义API接口
@@ -184,7 +184,7 @@ HttpLiteBuilder  builder = URLite.mock(new MockHandler() {
     httplite.getRetrofit().setMethodListener(MethodListener methodListener);
 ```
 
-* 2.Release版本请设置HttpLiteBuilder.setRelease(true)，创建的HttpLite和对应的Retrofit会关闭接口Annotation的定义检查（develop时请打开），减少反射带来的性能消耗
+* 2.Release版本请设置HttpLiteBuilder.setRelease(true)，创建的HttpLite和对应的Retrofit会关闭接口Annotation的定义检查（develop时请打开），减少因对接口注解使用正确性检查行带来的性能消耗
 
 ### 支持自定义注解的使用
 
