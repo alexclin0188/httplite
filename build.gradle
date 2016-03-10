@@ -26,7 +26,7 @@ task clean(type: Delete) {
 def httplite_version = '1.0'
 def okhttp2_version = '1.0'
 def okhttp3_version = '1.0'
-def urlite_version = '1.0beta'
+def urlite_version = '1.0'
 def libDir = 'build/libs'
 
 task makeHttplite(type: Jar, dependsOn: ':httplite:build') {

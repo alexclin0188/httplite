@@ -11,6 +11,30 @@ A android http library
 
 ## 使用
 
+* Gradle
+
+使用okhttp 2.7.5作为http实现
+
+```
+    compile 'alexclin.httplite:httplite-okhttp2:1.0.0'
+```
+
+使用okhttp 3.2.0作为http实现
+```
+    compile 'alexclin.httplite:httplite-okhttp3:1.0.0'
+```
+
+使用系统URLConnection作为http实现
+```
+    compile 'alexclin.httplite:httplite-url:1.0.0'
+```
+
+或者直接使用releaselib中的jar包
+
+* 1 okhttp2: httplite1.0.jar+httplite-ok2lite1.0.jar+<okhttp 2.x.x版本jar包>
+* 2 okhttp3: httplite1.0.jar+httplite-ok3lite1.0.jar+<okhttp 3.x.x版本jar包>
+* 3 url: httplite1.0.jar+httplite-urlite1.0.jar
+
 ### 使用接口定义API接口
 
 使用接口+注解的方式来定义API接口, 思路来源于[Retrofit](https://github.com/square/retrofit)，具体实现稍有不同

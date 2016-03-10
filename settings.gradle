@@ -1,4 +1,4 @@
-include ':mockserver', ':mockdata',':app', ':httplite',':httplite-okhttp2', ':httplite-url', ':httplite-okhttp3'
+include ':app',':mockdata',':mockserver', ':httplite',':httplite-okhttp2', ':httplite-url', ':httplite-okhttp3'
 
 //
 

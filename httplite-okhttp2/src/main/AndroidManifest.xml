@@ -1,4 +1,4 @@
-<manifest package="alexclin.httplite.okhttp"
+<manifest package="alexclin.httplite.okhttp2"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
