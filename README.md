@@ -117,7 +117,9 @@ public interface ApiService {
 替换依赖只用替换如下部分即可
 
 ```java
-HttpLiteBuilder builder = OkLite.create(); //okhttp作为http实现类库，推荐
+HttpLiteBuilder builder = Ok2Lite.create(); //okhttp2作为http实现类库，推荐
+//或者
+HttpLiteBuilder builder = Ok3Lite.create(); //okhttp3作为http实现类库，推荐
 //或者
 HttpLiteBuilder builder = URLite.create(); //使用URLConnection实现的http
 //另外提供一个本地mock模拟功能
