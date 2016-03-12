@@ -39,10 +39,7 @@ public abstract class ResultCallback<T> {
     protected abstract Type resultType();
 
     public final void onFailed(Exception e) {
-        if (canRetry()) {
-            retry();
-        } else
-            postFailed(e);
+        postFailed(e);
     }
 
     public final void onRetry(final int tryCount, final int maxCount) {
@@ -99,26 +96,16 @@ public abstract class ResultCallback<T> {
         });
     }
 
-    protected final void retry() {
-        retryCount++;
-        call.excuteSelf(this);
-        onRetry(retryCount, getLite().getMaxRetryCount());
-    }
-
     final void reset(){
         retryCount = 0;
         isCanceled = false;
-    }
-
-    protected final boolean canRetry() {
-        return retryCount > getLite().getMaxRetryCount();
     }
 
     protected final HttpLite getLite(){
         return call.request.lite;
     }
 
-    abstract T praseResponse(Response response) throws Exception;
+    abstract T parseResponse(Response response) throws Exception;
 
     public void callCancelAndFailed(){
         onCancel();

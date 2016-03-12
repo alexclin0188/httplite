@@ -66,7 +66,7 @@ public class HttpCall implements Call{
     }
 
     protected <T> T parseResult(Response response, ResultCallback<T> callback) throws Exception{
-        return callback.praseResponse(response);
+        return callback.parseResponse(response);
     }
 
     protected MediaType mediaType(String mediaType){

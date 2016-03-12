@@ -42,7 +42,7 @@ class HttpCallback<T> extends ResultCallback<T>{
     protected void handleResponse(Response response) {
         try {
             if (isIgnoreStatus(type) || isSuccess(response)) {
-                postSuccess(praseResponse(response), response.headers());
+                postSuccess(parseResponse(response), response.headers());
             } else {
                 String message = response.message();
                 if(TextUtils.isEmpty(message)){
@@ -70,7 +70,7 @@ class HttpCallback<T> extends ResultCallback<T>{
     }
 
     @Override @SuppressWarnings("unchecked")
-    T praseResponse(Response response) throws Exception{
+    T parseResponse(Response response) throws Exception{
         int code = response.code();
         if(type==Boolean.class){
             return (T)Boolean.valueOf(code >= 200 && code < 300);

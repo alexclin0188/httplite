@@ -47,7 +47,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     @Override
     protected void handleResponse(Response response) {
         try {
-            File file = praseResponse(response);
+            File file = parseResponse(response);
             postSuccess(file,response.headers());
         } catch (Exception e) {
             postFailed(e);
@@ -61,7 +61,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     }
 
     @Override
-    File praseResponse(Response response) throws Exception {
+    File parseResponse(Response response) throws Exception {
         if(params.autoRename){
             String name = getResponseFileName(response);
             params.targetFile = renameTargetFile(name,params.targetFile);
