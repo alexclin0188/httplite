@@ -7,14 +7,13 @@ import com.squareup.okhttp.Request;
 import alexclin.httplite.ResultCallback;
 
 /**
- * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
+ * OkCall
  *
- * @author alexclin
- * @date 16/1/2 17:12
+ * @author alexclin 16/1/2 17:12
  */
-public class CallWrapper extends Call {
+public class OkCall extends Call {
     private ResultCallback callback;
-    public CallWrapper(OkHttpClient client, Request originalRequest,ResultCallback callback) {
+    public OkCall(OkHttpClient client, Request originalRequest, ResultCallback callback) {
         super(client, originalRequest);
         this.callback = callback;
     }

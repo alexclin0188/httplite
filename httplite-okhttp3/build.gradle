@@ -24,9 +24,9 @@ android {
 }
 
 dependencies {
-//    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'alexclin.httplite:httplite:1.0.0'
+    //    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile project(':httplite')
 }
 
 def mavenDesc = 'A android http library'
@@ -36,7 +36,7 @@ def issueUrl = "${siteUrl}/issues"
 
 group = "alexclin.httplite"
 def libname = "httplite-okhttp3"
-version "1.0.0"
+version "1.0.1"
 
 install {
     repositories.mavenInstaller {

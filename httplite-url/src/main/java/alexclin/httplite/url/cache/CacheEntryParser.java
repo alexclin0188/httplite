@@ -16,6 +16,7 @@
 
 package alexclin.httplite.url.cache;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,7 +30,7 @@ import java.util.TimeZone;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.url.URLResponse;
+import alexclin.httplite.url.URLite;
 
 /**
  * Utility methods for parsing HTTP headers.
@@ -186,7 +187,8 @@ public class CacheEntryParser {
         String mediaType = IOUtil.readString(dataIn);
         long contentLength = IOUtil.readLong(dataIn);
         byte[] bytes = IOUtil.streamToBytes(dataIn, (int) contentLength, pool);
-        entry.setResponse(new URLResponse(code,message,headers,mediaType,contentLength,new PoolingByteArrayInputSream(bytes,pool),request));
+        entry.setResponse(URLite.createResponse(code, message, headers, mediaType, contentLength,
+                new PoolingStream(bytes, pool), request));
         return entry;
     }
 
@@ -212,5 +214,19 @@ public class CacheEntryParser {
         alexclin.httplite.util.IOUtil.copy(response.body().stream(), dataOut);
         dataOut.flush();
         dataOut.close();
+    }
+
+    public static class PoolingStream extends ByteArrayInputStream {
+        private ByteArrayPool pool;
+        public PoolingStream(byte[] buf, ByteArrayPool pool) {
+            super(buf);
+            this.pool = pool;
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            pool.returnBuf(this.buf);
+        }
     }
 }

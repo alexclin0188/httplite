@@ -20,10 +20,9 @@ import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
- * alexclin.httplite.urlconnection
+ * URLMultipartBody
  *
- * @author alexclin
- * @date 16/1/2 20:00
+ * @author alexclin 16/1/2 20:00
  */
 public class URLMultipartBody implements RequestBody {
 

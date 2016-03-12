@@ -24,6 +24,8 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -143,7 +145,7 @@ final class IOUtil {
 	 * Reads the contents of an InputStream into a byte[].
 	 * */
 	public static byte[] streamToBytes(InputStream in, int length,ByteArrayPool pool) throws IOException {
-		byte[] bytes = null;
+		byte[] bytes;
 		if(pool==null)
 			bytes = new byte[length];
 		else
@@ -159,12 +161,31 @@ final class IOUtil {
 		return bytes;
 	}
 
-	public static void writeHeaders(OutputStream out,Map<String,List<String>> headers){
-		//TODO
+	public static void writeHeaders(OutputStream out,Map<String,List<String>> headers)throws IOException{
+		writeInt(out,headers.size());
+		for(String key:headers.keySet()){
+			List<String> list = headers.get(key);
+			writeString(out, key);
+			writeInt(out,list.size());
+			for(String string:list){
+				writeString(out,string);
+			}
+		}
 	}
 
-	public static Map<String,List<String>> readHeaders(InputStream in){
-		//TODO
-		return null;
+	public static Map<String,List<String>> readHeaders(InputStream in) throws IOException{
+		int length = readInt(in);
+		Map<String,List<String>> hashMap = new Hashtable<>();
+		for(int i=0;i<length;i++){
+			String key = readString(in);
+			int count = readInt(in);
+			List<String> list = new ArrayList<>(count);
+			for(int j=0;j<count;j++){
+				String value = readString(in);
+				list.add(value);
+			}
+			hashMap.put(key,list);
+		}
+		return hashMap;
 	}
 }

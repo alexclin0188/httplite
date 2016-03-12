@@ -88,7 +88,7 @@ public abstract class Retrofit {
         return handler;
     }
 
-    public abstract Request makeRequest();
+    public abstract Request makeRequest(String baseUrl);
 
     public abstract Request setMethod(Request request,alexclin.httplite.Method method);
 

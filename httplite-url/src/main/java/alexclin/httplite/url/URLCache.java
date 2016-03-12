@@ -8,8 +8,7 @@ import alexclin.httplite.Response;
 /**
  * URLCache
  *
- * @author alexclin
- * @date 16/2/17 20:41
+ * @author alexclin 16/2/17 20:41
  */
 public interface URLCache {
     Response get(Request request) throws IOException;

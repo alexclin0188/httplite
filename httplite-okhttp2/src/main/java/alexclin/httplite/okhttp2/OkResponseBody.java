@@ -8,17 +8,16 @@ import java.io.InputStream;
 import alexclin.httplite.MediaType;
 
 /**
- * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
+ * OkResponseBody
  *
- * @author alexclin
- * @date 16/1/1 15:00
+ * @author alexclin 16/1/1 15:00
  */
-public class ResponseBodyWrapper implements alexclin.httplite.ResponseBody {
+public class OkResponseBody implements alexclin.httplite.ResponseBody {
     private ResponseBody realBody;
     private MediaType type;
-    public ResponseBodyWrapper(ResponseBody realBody) {
+    public OkResponseBody(ResponseBody realBody) {
         this.realBody = realBody;
-        this.type = new MediaTypeWrapper(realBody.contentType());
+        this.type = new OkMediaType(realBody.contentType());
     }
 
     @Override

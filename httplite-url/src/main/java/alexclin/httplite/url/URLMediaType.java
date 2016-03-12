@@ -6,11 +6,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * alexclin.httplite.urlconnection
+ * URLMediaType
  *
  * shamelessly stolen from okhttp
- * @author alexclin
- * @date 16/1/2 19:32
+ * @author alexclin 16/1/2 19:32
  */
 public class URLMediaType implements alexclin.httplite.MediaType {
 

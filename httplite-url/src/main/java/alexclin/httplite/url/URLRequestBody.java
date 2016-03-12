@@ -13,10 +13,9 @@ import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
- * alexclin.httplite.urlconnection
+ * URLRequestBody
  *
- * @author alexclin
- * @date 16/1/2 19:32
+ * @author alexclin  16/1/2 19:32
  */
 public abstract class URLRequestBody implements RequestBody{
 

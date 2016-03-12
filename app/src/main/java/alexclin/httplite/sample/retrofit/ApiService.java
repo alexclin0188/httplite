@@ -9,6 +9,7 @@ import java.io.File;
 import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.Method;
+import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
@@ -30,9 +31,9 @@ import alexclin.httplite.sample.model.ZhihuData;
 /**
  * ApiService
  *
- * @author alexclin
- * @date 16/1/30 18:59
+ * @author alexclin 16/1/30 18:59
  */
+@BaseURL("")
 public interface ApiService {
     @POST("/login")
     void login(

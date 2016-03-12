@@ -28,12 +28,18 @@ import alexclin.httplite.RequestBody;
 import alexclin.httplite.ResultCallback;
 
 /**
- * alexclin.httplite.okhttp
+ * Ok2Lite
  *
- * @author alexclin
- * @date 16/1/1 17:16
+ * @author alexclin 16/1/1 17:16
  */
 public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
+    private static final Object ALL_TAG = new Object(){
+        @Override
+        public boolean equals(Object o) {
+            return true;
+        }
+    };
+
     public static HttpLiteBuilder create() {
         return create(null);
     }
@@ -59,7 +65,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
 
     @Override
     public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
-        final HandleImpl handle = new HandleImpl(request);
+        final OkHandle handle = new OkHandle(request);
         if(preWork!=null){
             mClient.getDispatcher().getExecutorService().execute(new Runnable() {
                 @Override
@@ -81,7 +87,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
 
     private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
         com.squareup.okhttp.Request.Builder rb = Ok2Lite.createRequestBuilder(request);
-        Call realCall = new CallWrapper(mClient,rb.build(),callback);
+        Call realCall = new OkCall(mClient,rb.build(),callback);
         realCall.enqueue(new Callback() {
             @Override
             public void onFailure(com.squareup.okhttp.Request request, IOException e) {
@@ -90,7 +96,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
 
             @Override
             public void onResponse(Response response) throws IOException {
-                callback.onResponse(new ResponseWrapper(response, request));
+                callback.onResponse(new OkResponse(response, request));
             }
         });
         return realCall;
@@ -107,13 +113,13 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
                 rb = rb.get();
                 break;
             case POST:
-                rb = rb.post(RequestBodyWrapper.wrapperLite(request.getBody()));
+                rb = rb.post(OkRequestBody.wrapperLite(request.getBody()));
                 break;
             case PUT:
-                rb = rb.put(RequestBodyWrapper.wrapperLite(request.getBody()));
+                rb = rb.put(OkRequestBody.wrapperLite(request.getBody()));
                 break;
             case PATCH:
-                rb = rb.patch(RequestBodyWrapper.wrapperLite(request.getBody()));
+                rb = rb.patch(OkRequestBody.wrapperLite(request.getBody()));
                 break;
             case HEAD:
                 rb = rb.head();
@@ -122,7 +128,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
                 if(request.getBody()==null){
                     rb = rb.delete();
                 }else{
-                    rb = rb.delete(RequestBodyWrapper.wrapperLite(request.getBody()));
+                    rb = rb.delete(OkRequestBody.wrapperLite(request.getBody()));
                 }
                 break;
         }
@@ -139,7 +145,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     @Override
     public alexclin.httplite.Response executeSync(alexclin.httplite.Request request) throws IOException{
         Request.Builder rb = createRequestBuilder(request);
-        return new ResponseWrapper(mClient.newCall(rb.build()).execute(),request);
+        return new OkResponse(mClient.newCall(rb.build()).execute(),request);
     }
 
     @Override
@@ -148,22 +154,27 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
+    public void cancelAll() {
+        mClient.getDispatcher().cancel(ALL_TAG);
+    }
+
+    @Override
     public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String,List<String>>,RequestBody>> headBodyList,
                                            List<Pair<String,String>> paramList, List<Pair<String,Pair<String,RequestBody>>> fileList){
         MultipartBuilder builder;
         if(boundary==null){
-            builder = new MultipartBuilder().type(MediaTypeWrapper.wrapperLite(type));
+            builder = new MultipartBuilder().type(OkMediaType.wrapperLite(type));
         }else {
-            builder = new MultipartBuilder(boundary).type(MediaTypeWrapper.wrapperLite(type));
+            builder = new MultipartBuilder(boundary).type(OkMediaType.wrapperLite(type));
         }
         if(bodyList!=null){
             for(RequestBody body:bodyList){
-                builder.addPart(RequestBodyWrapper.wrapperLite(body));
+                builder.addPart(OkRequestBody.wrapperLite(body));
             }
         }
         if(headBodyList!=null){
             for(Pair<Map<String,List<String>>,RequestBody> bodyPair:headBodyList){
-                builder.addPart(createHeader(bodyPair.first),RequestBodyWrapper.wrapperLite(bodyPair.second));
+                builder.addPart(createHeader(bodyPair.first), OkRequestBody.wrapperLite(bodyPair.second));
             }
         }
         if(paramList!=null){
@@ -173,10 +184,10 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         }
         if(fileList!=null){
             for(Pair<String,Pair<String,RequestBody>> pair:fileList){
-                builder.addFormDataPart(pair.first, pair.second.first, RequestBodyWrapper.wrapperLite(pair.second.second));
+                builder.addFormDataPart(pair.first, pair.second.first, OkRequestBody.wrapperLite(pair.second.second));
             }
         }
-        return new RequestBodyWrapper(builder.build());
+        return new OkRequestBody(builder.build());
     }
 
     public RequestBody createFormBody(List<Pair<String,String>> paramList, List<Pair<String,String>> encodedParamList){
@@ -191,7 +202,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
                 builder.addEncoded(param.first,param.second);
             }
         }
-        return new RequestBodyWrapper(builder.build());
+        return new OkRequestBody(builder.build());
     }
 
     @Override
@@ -210,10 +221,16 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         }
     }
 
+    @Override
+    public void shutDown() {
+        cancelAll();
+        mClient.getDispatcher().getExecutorService().shutdown();
+    }
+
     public RequestBody createRequestBody(MediaType contentType, String content) {
         com.squareup.okhttp.RequestBody requestBody =
-                com.squareup.okhttp.RequestBody.create(MediaTypeWrapper.wrapperLite(contentType),content);
-        return new RequestBodyWrapper(requestBody);
+                com.squareup.okhttp.RequestBody.create(OkMediaType.wrapperLite(contentType),content);
+        return new OkRequestBody(requestBody);
     }
 
     public RequestBody createRequestBody(final MediaType contentType, final byte[] content) {
@@ -223,20 +240,20 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     public RequestBody createRequestBody(final MediaType contentType, final byte[] content,
                                          final int offset, final int byteCount) {
         com.squareup.okhttp.RequestBody requestBody =
-                com.squareup.okhttp.RequestBody.create(MediaTypeWrapper.wrapperLite(contentType),content,offset,byteCount);
-        return new RequestBodyWrapper(requestBody);
+                com.squareup.okhttp.RequestBody.create(OkMediaType.wrapperLite(contentType),content,offset,byteCount);
+        return new OkRequestBody(requestBody);
     }
 
     public RequestBody createRequestBody(final MediaType contentType, final File file) {
         com.squareup.okhttp.RequestBody requestBody =
-                com.squareup.okhttp.RequestBody.create(MediaTypeWrapper.wrapperLite(contentType),file);
-        return new RequestBodyWrapper(requestBody);
+                com.squareup.okhttp.RequestBody.create(OkMediaType.wrapperLite(contentType),file);
+        return new OkRequestBody(requestBody);
     }
 
     @Override
     public MediaType parse(String type) {
         com.squareup.okhttp.MediaType oktype = com.squareup.okhttp.MediaType.parse(type);
-        return new MediaTypeWrapper(oktype);
+        return new OkMediaType(oktype);
     }
 
     private static Headers createHeader(Map<String, List<String>> headers){
@@ -252,5 +269,4 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         }
         return null;
     }
-
 }

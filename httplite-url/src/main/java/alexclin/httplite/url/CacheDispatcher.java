@@ -13,6 +13,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.exception.HttpException;
+import alexclin.httplite.internal.Dispatcher;
+import alexclin.httplite.internal.TaskDispatcher;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -22,20 +24,20 @@ import alexclin.httplite.util.Util;
  * @author alexclin
  * @date 16/2/18 19:42
  */
-public class CacheDispatcher extends Thread implements Dispatcher{
+public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
     private final PriorityBlockingQueue<Task> mCacheQueue = new PriorityBlockingQueue<>();
 
     private final Map<String, Queue<Pair<Task,Boolean>>> mWaitingRequests = new HashMap<>();
 
-    private NetworkDispatcher networkDispatcher;
+    private TaskDispatcher<Response> networkDispatcher;
 
     private URLCache cache;
 
     /** Used for telling us to die. */
     private volatile boolean mQuit = false;
 
-    public CacheDispatcher(NetworkDispatcher networkDispatcher,URLCache cache) {
+    public CacheDispatcher(TaskDispatcher networkDispatcher,URLCache cache) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
     }
@@ -46,7 +48,7 @@ public class CacheDispatcher extends Thread implements Dispatcher{
         }
     }
 
-    public Response execute(Task task) throws Exception{
+    public Response execute(Task<Response> task) throws Exception{
         if(!isSameKeyTaskRunning(task,true)){
             try {
                 return networkDispatcher.execute(task);
@@ -74,6 +76,24 @@ public class CacheDispatcher extends Thread implements Dispatcher{
                 if(Util.equal(tag,task.tag())) task.cancel();
             }
         }
+    }
+
+    @Override
+    public void cancelAll() {
+        for(Task task:mCacheQueue){
+            task.cancel();
+        }
+        for(Queue<Pair<Task,Boolean>> queue:mWaitingRequests.values()){
+            for(Pair<Task,Boolean> pair:queue){
+                Task task = pair.first;
+                task.cancel();
+            }
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        mQuit = true;
     }
 
     public Response cacheResponse(Response response) throws IOException {

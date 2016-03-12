@@ -14,7 +14,7 @@ import java.util.concurrent.Executor;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.mock.MockFactory;
+import alexclin.httplite.internal.MockCall;
 import alexclin.httplite.retrofit.Retrofit;
 
 /**
@@ -75,10 +75,26 @@ public class HttpLite {
     }
 
     public void cancel(Object tag){
-        if(callFactory instanceof MockFactory){
-            ((MockFactory)callFactory).cancel(tag);
+        if(callFactory instanceof MockCall.MockFactory){
+            ((MockCall.MockFactory)callFactory).cancel(tag);
         }else{
             this.client.cancel(tag);
+        }
+    }
+
+    public void cancelAll(){
+        if(callFactory instanceof MockCall.MockFactory){
+            ((MockCall.MockFactory)callFactory).cancelAll();
+        }else{
+            this.client.cancelAll();
+        }
+    }
+
+    public void shutDown(){
+        if(callFactory instanceof MockCall.MockFactory){
+            ((MockCall.MockFactory)callFactory).shutDown();
+        }else{
+            this.client.shutDown();
         }
     }
 
@@ -190,8 +206,10 @@ public class HttpLite {
     class RetrofitImpl extends Retrofit{
 
         @Override
-        public Request makeRequest() {
-            return new Request(HttpLite.this);
+        public Request makeRequest(String baseUrl) {
+            Request request = new Request(HttpLite.this);
+            request.baseUrl = baseUrl;
+            return request;
         }
 
         @Override

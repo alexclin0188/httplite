@@ -19,8 +19,7 @@ import okhttp3.HttpUrl;
 /**
  * CookieJarImpl
  *
- * @author alexclin
- * @date 16/2/16 20:54
+ * @author alexclin 16/2/16 20:54
  */
 public class CookieJarImpl implements CookieJar {
     private CookieHandler cookieHandler;

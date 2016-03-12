@@ -1,34 +1,31 @@
-package alexclin.httplite.mock;
+package alexclin.httplite.internal;
 
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseBody;
 
 /**
- * MockResponse
+ * ResponseImpl
  *
  * @author alexclin  16/3/10 21:13
  */
-public class MockResponse implements Response {
+public class ResponseImpl implements Response {
     private Request request;
     private Map<String, List<String>> headers;
     private ResponseBody body;
     private int code;
     private String msg;
 
-    public MockResponse(Request request,int code ,String msg,Map<String, List<String>> headers,InputStream inputStream,MediaType type) {
+    public ResponseImpl(Request request, int code, String msg, Map<String, List<String>> headers, ResponseBody body) {
         this.request = request;
         this.headers = headers;
         this.code = code;
         this.msg = msg;
-        this.body = new MockBody(inputStream,type);
+        this.body = body;
     }
 
     @Override
@@ -68,33 +65,4 @@ public class MockResponse implements Response {
     }
 }
 
-class MockBody implements ResponseBody{
-    private InputStream inputStream;
-    private MediaType mediaType;
 
-    MockBody(InputStream inputStream, MediaType mediaType) {
-        this.inputStream = inputStream;
-        this.mediaType = mediaType;
-    }
-
-    @Override
-    public MediaType contentType() {
-        return mediaType;
-    }
-
-    @Override
-    public long contentLength() throws IOException {
-        return inputStream.available();
-    }
-
-    @Override
-    public InputStream stream() throws IOException {
-        return inputStream;
-    }
-
-    @Override
-    public void close() throws IOException {
-        if(inputStream!=null)
-            inputStream.close();
-    }
-}

@@ -32,10 +32,11 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.3.1'
     compile 'com.google.code.gson:gson:2.5'
-//    compile project(':httplite-url')
-//    compile project(':httplite-okhttp2')
-    compile 'alexclin.httplite:httplite-okhttp2:1.0.0'
-    compile 'alexclin.httplite:httplite-okhttp3:1.0.0'
-    compile 'alexclin.httplite:httplite-url:1.0.0'
+    compile project(':httplite-url')
+    compile project(':httplite-okhttp2')
+    compile project(':httplite-okhttp3')
+//    compile 'alexclin.httplite:httplite-okhttp2:1.0.0'
+//    compile 'alexclin.httplite:httplite-okhttp3:1.0.0'
+//    compile 'alexclin.httplite:httplite-url:1.0.0'
     compile project(':mockdata')
 }

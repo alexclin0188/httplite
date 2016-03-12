@@ -20,6 +20,8 @@ public interface LiteClient {
 
     void cancel(Object tag);
 
+    void cancelAll();
+
     RequestBody createRequestBody(MediaType contentType, String content);
 
     RequestBody createRequestBody(final MediaType contentType, final byte[] content);
@@ -37,4 +39,6 @@ public interface LiteClient {
     RequestBody createFormBody(List<Pair<String,String>> paramList, List<Pair<String,String>> encodedParamList);
 
     void setConfig(ClientSettings settings);
+
+    void shutDown();
 }

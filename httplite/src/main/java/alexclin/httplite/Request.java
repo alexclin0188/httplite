@@ -40,6 +40,7 @@ public final class Request {
         }
     };
 
+    String baseUrl;
     String url;
     Method method;
     private Map<String,List<String>> headers;
@@ -356,12 +357,11 @@ public final class Request {
         }
     }
 
-    private String buildUrlAndParams(String url) {
+    private String buildUrlAndParams(String baseUrl,String url) {
         if(url==null){
             throw new NullPointerException("Url is null for this Request");
         }
-        String baseUrl = lite.getBaseUrl();
-        if(Util.isHttpPrefix(baseUrl)&&!Util.isHttpPrefix(url)){
+        if(!TextUtils.isEmpty(baseUrl)&&Util.isHttpPrefix(baseUrl)&&!Util.isHttpPrefix(url)){
             url = Util.appendString(baseUrl, url);
         }
         url = processPathHolders(url, pathHolders);
@@ -413,7 +413,7 @@ public final class Request {
     }
 
     public String getUrl() {
-        return buildUrlAndParams(url);
+        return buildUrlAndParams(TextUtils.isEmpty(baseUrl)?lite.getBaseUrl():baseUrl,url);
     }
 
     public String rawUrl() {

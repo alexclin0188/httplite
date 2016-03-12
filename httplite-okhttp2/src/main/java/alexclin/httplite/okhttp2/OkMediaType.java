@@ -5,15 +5,14 @@ import com.squareup.okhttp.MediaType;
 import java.nio.charset.Charset;
 
 /**
- * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
+ * OkMediaType
  *
- * @author alexclin
- * @date 16/1/1 14:39
+ * @author alexclin 16/1/1 14:39
  */
-public class MediaTypeWrapper implements alexclin.httplite.MediaType {
+public class OkMediaType implements alexclin.httplite.MediaType {
     private MediaType mediaType;
 
-    public MediaTypeWrapper(MediaType mediaType) {
+    public OkMediaType(MediaType mediaType) {
         this.mediaType = mediaType;
     }
 
@@ -43,8 +42,8 @@ public class MediaTypeWrapper implements alexclin.httplite.MediaType {
 
     public static MediaType wrapperLite(alexclin.httplite.MediaType type){
         if(type == null) return null;
-        if(type instanceof MediaTypeWrapper){
-           return ((MediaTypeWrapper)type).raw();
+        if(type instanceof OkMediaType){
+           return ((OkMediaType)type).raw();
         }else
             return MediaType.parse(type.toString());
     }

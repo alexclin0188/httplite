@@ -1,7 +1,7 @@
 package alexclin.httplite.listener;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.mock.Mock;
+import alexclin.httplite.internal.Mock;
 
 /**
  * MockHandler
@@ -11,4 +11,6 @@ import alexclin.httplite.mock.Mock;
  */
 public interface MockHandler {
     <T> void mock(Request request,Mock<T> mock) throws Exception;
+
+    boolean needMock(Request request);
 }

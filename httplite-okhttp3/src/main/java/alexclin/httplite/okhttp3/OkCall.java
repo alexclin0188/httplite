@@ -10,16 +10,15 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
+ * OkCall
  *
- * @author alexclin
- * @date 16/1/2 17:12
+ * @author alexclin 16/1/2 17:12
  */
-public class CallWrapper implements Call {
+public class OkCall implements Call {
     private Call realCall;
 
     private ResultCallback callback;
-    public CallWrapper(OkHttpClient client, Request originalRequest,ResultCallback callback) {
+    public OkCall(OkHttpClient client, Request originalRequest, ResultCallback callback) {
         this.realCall = client.newCall(originalRequest);
         this.callback = callback;
     }

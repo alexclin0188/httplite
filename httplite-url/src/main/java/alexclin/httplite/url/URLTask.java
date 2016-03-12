@@ -12,14 +12,14 @@ import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResultCallback;
 import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.internal.Dispatcher;
 
 /**
- * alexclin.httplite.urlconnection
+ * URLTask
  *
- * @author alexclin
- * @date 16/1/2 19:39
+ * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Task,Handle{
+public class URLTask implements Dispatcher.Task,Handle{
 
     private URLite lite;
     private Request request;
@@ -122,7 +122,7 @@ public class URLTask implements Task,Handle{
             connection.setDoOutput(true);
             request.getBody().writeTo(connection.getOutputStream());
         }
-        Response response = new URLResponse(connection,request);
+        Response response = URLite.createResponse(connection, request);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
         if(lite.isCacheAble(this)){

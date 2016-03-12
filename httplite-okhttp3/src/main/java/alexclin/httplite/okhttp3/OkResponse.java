@@ -1,24 +1,22 @@
-package alexclin.httplite.okhttp2;
-
-import com.squareup.okhttp.Response;
+package alexclin.httplite.okhttp3;
 
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.ResponseBody;
+import okhttp3.Response;
 
 /**
- * alexclin.httplite.okhttp.alexclin.httplite.okhttp3.wrapper
+ * OkResponse
  *
- * @author alexclin
- * @date 16/1/1 15:02
+ * @author alexclin 16/1/1 15:02
  */
-public class ResponseWrapper implements alexclin.httplite.Response {
+public class OkResponse implements alexclin.httplite.Response {
     private Response realResponse;
     private Request request;
 
-    public ResponseWrapper(Response realResponse, Request request) {
+    public OkResponse(Response realResponse, Request request) {
         this.realResponse = realResponse;
         this.request = request;
     }
@@ -55,6 +53,6 @@ public class ResponseWrapper implements alexclin.httplite.Response {
 
     @Override
     public ResponseBody body() {
-        return new ResponseBodyWrapper(realResponse.body());
+        return new OkResponseBody(realResponse.body());
     }
 }

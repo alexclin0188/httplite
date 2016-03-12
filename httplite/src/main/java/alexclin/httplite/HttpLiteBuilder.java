@@ -13,7 +13,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
-import alexclin.httplite.mock.MockFactory;
+import alexclin.httplite.internal.MockCall;
 
 /**
  * HttpLiteBuilder
@@ -40,7 +40,7 @@ public abstract class HttpLiteBuilder{
         LiteClient client = initLiteClient();
         settings.maxRetryCount = useLiteRetry?0:settings.maxRetryCount;
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,new MockFactory(mockHandler),isRelase);
+        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,new MockCall.MockFactory(mockHandler),isRelase);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){

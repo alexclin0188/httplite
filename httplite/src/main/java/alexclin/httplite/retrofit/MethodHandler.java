@@ -16,6 +16,7 @@ import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
+import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
@@ -34,6 +35,7 @@ public class MethodHandler {
     private Annotation[] methodAnnotations;
     private Map<ParamMiscProcessor,List<Pair<Integer,Integer>>> paramMiscProcessors;
     private boolean isSyncMethod;
+    private String baseUrl;
 
     public MethodHandler(Method method,boolean check) {
         if(check){
@@ -41,6 +43,12 @@ public class MethodHandler {
             for(AnnotationRule rule:annotationRules){
                 rule.checkMethod(method);
             }
+        }
+
+        Class<?> dc = method.getDeclaringClass();
+        BaseURL baseURL = dc.getAnnotation(BaseURL.class);
+        if(baseURL!=null){
+            this.baseUrl = baseURL.value();
         }
 
         returnType = method.getGenericReturnType();
@@ -139,7 +147,7 @@ public class MethodHandler {
     }
 
     public Object invoke(Retrofit retrofit,RequestFilter filter,Object... args) throws Exception{
-        Request request = retrofit.makeRequest();
+        Request request = retrofit.makeRequest(baseUrl);
         int maCount = methodProcessors.length;
         for(int i=0;i<maCount;i++){
             MethodProcessor processor = methodProcessors[i];

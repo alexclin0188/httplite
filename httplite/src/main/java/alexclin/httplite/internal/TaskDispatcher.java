@@ -1,4 +1,4 @@
-package alexclin.httplite.url;
+package alexclin.httplite.internal;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -8,17 +8,15 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.HttpLite;
-import alexclin.httplite.Response;
 import alexclin.httplite.util.Util;
 
 /**
- * alexclin.httplite.urlconnection
+ * TaskDispatcher
  *
  * @author alexclin
  * @date 16/1/2 19:19
  */
-public class NetworkDispatcher implements Dispatcher{
+public class TaskDispatcher<T> implements Dispatcher<T> {
 
     private int maxRequests = 64;
 
@@ -37,34 +35,44 @@ public class NetworkDispatcher implements Dispatcher{
      */
     private final Deque<AsyncWrapper> runningCalls = new ArrayDeque<>();
 
-    private final Deque<Task> executedCalls = new ArrayDeque<>();
+    private final Deque<Task> executingSyncCalls = new ArrayDeque<>();
 
-    public NetworkDispatcher() {
+    public TaskDispatcher() {
         this(null);
     }
 
-    public NetworkDispatcher(ExecutorService executorService) {
+    public TaskDispatcher(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
-    public void dispatch(Task task) {
-        dispatchInnerMain(new AsyncWrapper(task));
+    public void dispatch(Task<T> task) {
+        dispatchInner(new AsyncWrapper(task, this));
     }
 
     @Override
-    public Response execute(Task task) throws Exception{
-        executedCalls.offer(task);
-        Response response = task.execute();
-        executedCalls.remove(task);
-        return response;
+    public T execute(Task<T> task) throws Exception{
+        registerSyncCall(task);
+        try {
+            return task.execute();
+        } finally {
+            unregisterSyncCall(task);
+        }
     }
 
-    synchronized ExecutorService getExecutorService() {
+    public synchronized ExecutorService getExecutorService() {
         if (executorService == null) {
             executorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
                     new SynchronousQueue<Runnable>(), Util.threadFactory("URLite Dispatcher", false));
         }
         return executorService;
+    }
+
+    void registerSyncCall(Task task){
+        executingSyncCalls.offer(task);
+    }
+
+    void unregisterSyncCall(Task task) {
+        executingSyncCalls.remove(task);
     }
 
     /**
@@ -101,7 +109,6 @@ public class NetworkDispatcher implements Dispatcher{
         for (AsyncWrapper call : readyCalls) {
             if (Util.equal(tag, call.realTask.tag())) {
                 call.realTask.cancel();
-                readyCalls.remove(call);
             }
         }
 
@@ -111,26 +118,49 @@ public class NetworkDispatcher implements Dispatcher{
             }
         }
 
-        for (Task call : executedCalls) {
+        for (Task call : executingSyncCalls) {
             if (Util.equal(tag, call.tag())) {
                 call.cancel();
-                executedCalls.remove(call);
             }
         }
     }
 
-    public void dispatchInner(AsyncWrapper wrapper) {
+    @Override
+    public void cancelAll() {
+        for (AsyncWrapper call : readyCalls) {
+            call.realTask.cancel();
+        }
+
+        for (AsyncWrapper call : runningCalls) {
+            call.realTask.cancel();
+        }
+
+        for (Task call : executingSyncCalls) {
+            call.cancel();
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        if(executorService!=null){
+            executorService.shutdown();
+        }
+    }
+
+    public synchronized void dispatchInner(AsyncWrapper wrapper) {
         if (runningCalls.size() < maxRequests) {
             runningCalls.add(wrapper);
+            if(getExecutorService().isShutdown()) return;
             getExecutorService().submit(wrapper);
         } else {
             readyCalls.add(wrapper);
         }
     }
 
-    public void onFinished(AsyncWrapper wrapper) {
+    public synchronized void onFinished(AsyncWrapper wrapper) {
         runningCalls.remove(wrapper);
         do {
+            if(getExecutorService().isShutdown()) return;
             wrapper = readyCalls.poll();
             if(wrapper!=null&&!wrapper.realTask.isCanceled()&&!wrapper.realTask.isExecuted()){
                 dispatchInner(wrapper);
@@ -139,35 +169,21 @@ public class NetworkDispatcher implements Dispatcher{
         }while (wrapper!=null);
     }
 
-    public void dispatchInnerMain(final AsyncWrapper wrapper) {
-        HttpLite.runOnMainThread(new Runnable() {
-            @Override
-            public void run() {
-                dispatchInner(wrapper);
-            }
-        });
-    }
-
-    public void onFinishedMain(final AsyncWrapper wrapper) {
-        HttpLite.runOnMainThread(new Runnable() {
-            @Override
-            public void run() {
-                onFinished(wrapper);
-            }
-        });
-    }
-
-    private class AsyncWrapper implements Runnable {
+    private static class AsyncWrapper implements Runnable {
         private Task realTask;
+        private TaskDispatcher dispatcher;
 
-        public AsyncWrapper(Task realTask) {
+        public AsyncWrapper(Task realTask,TaskDispatcher dispatcher) {
             this.realTask = realTask;
+            this.dispatcher = dispatcher;
         }
 
         @Override
         public void run() {
             realTask.executeAsync();
-            onFinishedMain(this);
+            final TaskDispatcher dispatcher = this.dispatcher;
+            if(dispatcher!=null)dispatcher.onFinished(this);
+            this.dispatcher = null;
         }
     }
 }

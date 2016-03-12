@@ -16,10 +16,9 @@ import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
- * alexclin.httplite.urlconnection
+ * URLFormBody
  *
- * @author alexclin
- * @date 16/1/2 20:01
+ * @author alexclin  16/1/2 20:01
  */
 public class URLFormBody implements RequestBody {
     private static final URLMediaType CONTENT_TYPE =

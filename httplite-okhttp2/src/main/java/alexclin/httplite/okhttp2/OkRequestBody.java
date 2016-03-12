@@ -1,26 +1,26 @@
-package alexclin.httplite.okhttp3;
+package alexclin.httplite.okhttp2;
+
+import com.squareup.okhttp.RequestBody;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 import alexclin.httplite.MediaType;
-import okhttp3.RequestBody;
 import okio.BufferedSink;
 import okio.Okio;
 
 /**
- * alexclin.httplite.okhttp
+ * OkRequestBody
  *
- * @author alexclin
- * @date 16/1/1 14:22
+ * @author alexclin 16/1/1 14:22
  */
-public class RequestBodyWrapper implements alexclin.httplite.RequestBody {
+public class OkRequestBody implements alexclin.httplite.RequestBody {
     private RequestBody requestBody;
     private MediaType type;
 
-    public RequestBodyWrapper(RequestBody requestBody) {
+    public OkRequestBody(RequestBody requestBody) {
         this.requestBody = requestBody;
-        this.type = new MediaTypeWrapper(requestBody.contentType());
+        this.type = new OkMediaType(requestBody.contentType());
     }
 
     @Override
@@ -44,13 +44,13 @@ public class RequestBodyWrapper implements alexclin.httplite.RequestBody {
 
     public static RequestBody wrapperLite(final alexclin.httplite.RequestBody requestBody){
         if(requestBody==null) return null;
-        if(requestBody instanceof RequestBodyWrapper){
-            return ((RequestBodyWrapper) requestBody).raw();
+        if(requestBody instanceof OkRequestBody){
+            return ((OkRequestBody) requestBody).raw();
         }else{
             return new RequestBody() {
                 @Override
-                public okhttp3.MediaType contentType() {
-                    return MediaTypeWrapper.wrapperLite(requestBody.contentType());
+                public com.squareup.okhttp.MediaType contentType() {
+                    return OkMediaType.wrapperLite(requestBody.contentType());
                 }
 
                 @Override

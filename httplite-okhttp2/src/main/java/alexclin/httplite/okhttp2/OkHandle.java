@@ -6,17 +6,16 @@ import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 
 /**
- * HandleImpl
+ * OkHandle
  *
- * @author alexclin
- * @date 16/2/17 19:46
+ * @author alexclin 16/2/17 19:46
  */
-public class HandleImpl implements Handle {
+public class OkHandle implements Handle {
     private Call realCall;
     private volatile boolean isCanceled = false;
     private Request request;
 
-    public HandleImpl(final alexclin.httplite.Request request) {
+    public OkHandle(final alexclin.httplite.Request request) {
         this.request = request;
     }
 
