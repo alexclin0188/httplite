@@ -29,7 +29,6 @@ public class HttpLite {
     private HashMap<String,ResponseParser> parserMap;
     private String baseUrl;
     private int maxRetryCount;
-    private boolean useLiteRetry;
     private RequestFilter mRequestFilter;
     private ResponseFilter mResponseFilter;
     private Executor customDownloadExecutor;
@@ -38,14 +37,17 @@ public class HttpLite {
     private Retrofit retrofit;
     private final boolean isRelease;
 
-    HttpLite(LiteClient client, String baseUrl, boolean useLiteRetry, int maxRetryCount,CallFactory factory,boolean release) {
+    HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
+             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor) {
         this.client = client;
         this.parserMap = new HashMap<>();
         this.baseUrl = baseUrl;
-        this.useLiteRetry = useLiteRetry;
         this.maxRetryCount = maxRetryCount;
         this.isRelease = release;
         this.callFactory = factory;
+        this.mRequestFilter = requestFilter;
+        this.mResponseFilter = responseFilter;
+        this.customDownloadExecutor = downloadExecutor;
     }
 
     public HttpLite setBaseUrl(String baseUrl){
@@ -59,10 +61,6 @@ public class HttpLite {
 
     public int getMaxRetryCount() {
         return maxRetryCount;
-    }
-
-    boolean isUseLiteRetry(){
-        return useLiteRetry;
     }
 
     public Request url(String url){
@@ -106,24 +104,6 @@ public class HttpLite {
         }
     }
 
-    public HttpLite addResponseParser(ResponseParser parser){
-        if(null==parser){
-            return this;
-        }
-        String key = parser.getClass().getName();
-        parserMap.put(key,parser);
-        return this;
-    }
-
-    public HttpLite removeResponseParser(Class<? extends ResponseParser> clazz){
-        if(clazz==null){
-            parserMap.clear();
-        }else{
-            parserMap.remove(clazz.getName());
-        }
-        return this;
-    }
-
     Collection<ResponseParser> getParsers(){
         return parserMap.values();
     }
@@ -143,12 +123,12 @@ public class HttpLite {
     }
 
     public RequestBody createRequestBody(final MediaType contentType, final byte[] content){
-        return client.createRequestBody(contentType,content);
+        return client.createRequestBody(contentType, content);
     }
 
     public RequestBody createRequestBody(final MediaType contentType, final byte[] content,
                                   final int offset, final int byteCount){
-        return client.createRequestBody(contentType,content,offset,byteCount);
+        return client.createRequestBody(contentType, content, offset, byteCount);
     }
 
     public RequestBody createRequestBody(final MediaType contentType, final File file){
@@ -160,7 +140,7 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz){
-        return retrofit(clazz,null);
+        return retrofit(clazz, null);
     }
 
     public <T> T retrofit(Class<T> clazz,RequestFilter filter){
@@ -179,20 +159,8 @@ public class HttpLite {
         return mRequestFilter;
     }
 
-    public void setRequestFilter(RequestFilter requestFilter) {
-        this.mRequestFilter = requestFilter;
-    }
-
     ResponseFilter getResponseFilter() {
         return mResponseFilter;
-    }
-
-    public void setResponseFilter(ResponseFilter mResponseFilter) {
-        this.mResponseFilter = mResponseFilter;
-    }
-
-    public void setCustomDownloadExecutor(Executor customDownloadExecutor) {
-        this.customDownloadExecutor = customDownloadExecutor;
     }
 
     Executor getCustomDownloadExecutor() {

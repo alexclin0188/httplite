@@ -122,24 +122,12 @@ HttpLiteBuilder builder = Ok2Lite.create(); //okhttp2作为http实现类库，�
 HttpLiteBuilder builder = Ok3Lite.create(); //okhttp3作为http实现类库，推荐
 //或者
 HttpLiteBuilder builder = URLite.create(); //使用URLConnection实现的http
-//另外提供一个本地mock模拟功能
-HttpLiteBuilder  builder = URLite.mock(new MockHandler() {
-            @Override
-            public <T> void mock(Request request, MockResponse<T> response) throws Exception {
-                //TODO 模拟数据
-                //response.mock(T result,Map<String, List<String>> headers);//模拟解析结果
-                //response.mock(Response response);//模拟原生Response 仅用于Sync执行并返回原生Response的情况
-                //response.mockCancel(); //模拟取消
-                //response.mockProgress(long current,long total); //模拟进度调用
-                //response.mockRetry(long current,long max);  //模拟重试调用
-            }
-        });
 ```
 
 配置并创建HttpLite
 
 ```java
-    httpLite = builder.setConnectTimeout(3, TimeUnit.SECONDS)  //设置连接超时
+  builder  = builder.setConnectTimeout(3, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(3, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(3, TimeUnit.SECONDS)  //设置读超市
                 .setMaxRetryCount(2)  //设置失败重试次数
@@ -153,9 +141,34 @@ HttpLiteBuilder  builder = URLite.mock(new MockHandler() {
                 .baseUrl("http://xxx.xxx.xxx")  //BaseUrl,用于拼接完整的Url
                 .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
                 .setRelease(false)   //设置是否是Release状态，是Release状态会关闭对接口函数定义的检查，提升效率
-                .build();
-    httpLite.addResponseParser(new JacksonParser()); //添加ResponseParser实现结果解析
-    httpLite.setBaseUrl("http://192.168.99.238:10080/");
+                .addResponseParser(new JacksonParser()); //添加ResponseParser实现结果解析
+                .requestFilter(new RequestFilter() {
+                                    @Override
+                                    public void onRequest(HttpLite lite,Request request, Type type) {
+                                        request.header("handle","misc");
+                                    }
+                                })；      //对所有请求进行监听，做某些处理
+  //正常使用状态
+  Httplite httpLite = builder.build();
+  //本地模拟模式
+  httpLite = builder.mock(new MockHandler() {
+              @Override
+              public <T> void mock(Request request, Mock<T> mock) throws Exception {
+                  //TODO 模拟数据
+                  //mock.mock(T result,Map<String, List<String>> headers);//模拟解析结果
+                  //mock.mock(Response response);//模拟原生Response 仅用于Sync执行并返回原生Response的情况
+                  //mock.mockProgress(long current,long total); //模拟进度调用
+                  //mock.mockRetry(long current,long max);  //模拟重试调用
+                  //mock.mockJson(....);
+                  //mock.mock(new File("...."));
+              }
+
+              @Override
+              public boolean needMock(Request request) {
+                  //TODO 判断该请求是否需要Mock
+                  return true;
+              }
+          });
 ```
 
 创建API接口实例

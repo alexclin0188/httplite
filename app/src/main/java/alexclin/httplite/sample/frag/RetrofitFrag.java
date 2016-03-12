@@ -186,14 +186,14 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
                 .baseUrl(baseUrl)
-                .build()
-                .addResponseParser(new JacksonParser());
-        lite.setRequestFilter(new RequestFilter() {
-            @Override
-            public void onRequest(HttpLite lite,Request request, Type type) {
-                request.header("handle","misc");
-            }
-        });
+                .addResponseParser(new JacksonParser())
+                .requestFilter(new RequestFilter() {
+                    @Override
+                    public void onRequest(HttpLite lite,Request request, Type type) {
+                        request.header("handle","misc");
+                    }
+                })
+                .build();
         return lite;
     }
 }

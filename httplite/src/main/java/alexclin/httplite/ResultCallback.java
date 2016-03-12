@@ -111,7 +111,7 @@ public abstract class ResultCallback<T> {
     }
 
     protected final boolean canRetry() {
-        return retryCount > getLite().getMaxRetryCount() && getLite().isUseLiteRetry();
+        return retryCount > getLite().getMaxRetryCount();
     }
 
     protected final HttpLite getLite(){

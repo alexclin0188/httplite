@@ -6,6 +6,8 @@ import java.net.CookiePolicy;
 import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.util.HashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
@@ -14,6 +16,9 @@ import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
 import alexclin.httplite.internal.MockCall;
+import alexclin.httplite.listener.RequestFilter;
+import alexclin.httplite.listener.ResponseFilter;
+import alexclin.httplite.listener.ResponseParser;
 
 /**
  * HttpLiteBuilder
@@ -22,25 +27,29 @@ import alexclin.httplite.internal.MockCall;
  */
 public abstract class HttpLiteBuilder{
     private String baseUrl;
-    private boolean useLiteRetry;
     private boolean isRelase;
+    private RequestFilter mRequestFilter;
+    private ResponseFilter mResponseFilter;
+    private Executor customDownloadExecutor;
 
     private ClientSettings settings = new ClientSettings();
+
+    private HashMap<String,ResponseParser> parserMap;
 
     protected abstract LiteClient initLiteClient();
 
     public final HttpLite build(){
         LiteClient client = initLiteClient();
-        settings.maxRetryCount = useLiteRetry?0:settings.maxRetryCount;
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,new HttpCall.Factory(),isRelase);
+        return new HttpLite(client,baseUrl,settings.maxRetryCount,new HttpCall.Factory(),isRelase,
+                mRequestFilter,mResponseFilter,customDownloadExecutor);
     }
 
     public final HttpLite mock(MockHandler mockHandler){
         LiteClient client = initLiteClient();
-        settings.maxRetryCount = useLiteRetry?0:settings.maxRetryCount;
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,useLiteRetry,settings.maxRetryCount,new MockCall.MockFactory(mockHandler),isRelase);
+        return new HttpLite(client,baseUrl,settings.maxRetryCount,new MockCall.MockFactory(mockHandler),isRelase,
+                mRequestFilter,mResponseFilter,customDownloadExecutor);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -119,11 +128,6 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder useLiteRetry(boolean useLiteRetry){
-        this.useLiteRetry = useLiteRetry;
-        return this;
-    }
-
     public HttpLiteBuilder useCookie(CookieStore cookieStore){
         settings.cookieHandler = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
         return this;
@@ -142,6 +146,26 @@ public abstract class HttpLiteBuilder{
     public HttpLiteBuilder setCache(File dir,long maxCacheSize){
         settings.cacheDir = dir;
         settings.cacheMaxSize = maxCacheSize;
+        return this;
+    }
+
+    public HttpLiteBuilder addResponseParser(ResponseParser parser){
+        if(null==parser){
+            return this;
+        }
+        if(parserMap==null) parserMap = new HashMap<>();
+        String key = parser.getClass().getName();
+        parserMap.put(key,parser);
+        return this;
+    }
+
+    public HttpLiteBuilder requestFilter(RequestFilter requestFilter){
+        this.mRequestFilter = requestFilter;
+        return this;
+    }
+
+    public HttpLiteBuilder responseFilter(ResponseFilter responseFilter){
+        this.mResponseFilter = responseFilter;
         return this;
     }
 }
