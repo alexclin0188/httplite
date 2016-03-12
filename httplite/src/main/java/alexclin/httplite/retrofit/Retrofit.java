@@ -106,19 +106,19 @@ public abstract class Retrofit {
     public abstract HttpLite lite();
 
     public static void registerParamterProcessor(ParameterProcessor processor) {
-        if (processor != null && !ProcessorFactory.paramterProcessorList.contains(processor)) {
-            ProcessorFactory.paramterProcessorList.add(processor);
+        if (processor != null && !ProcessorFactory.parameterProcessorList.contains(processor)) {
+            ProcessorFactory.parameterProcessorList.add(processor);
         }
     }
 
     public static void unregisterParamterProcessor(ParameterProcessor processor) {
         if (processor != null) {
-            ProcessorFactory.paramterProcessorList.remove(processor);
+            ProcessorFactory.parameterProcessorList.remove(processor);
         }
     }
 
     public static void unregisterParamterProcessor(Class<? extends ParameterProcessor> clazz) {
-        Iterator<ParameterProcessor> iterator = ProcessorFactory.paramterProcessorList.iterator();
+        Iterator<ParameterProcessor> iterator = ProcessorFactory.parameterProcessorList.iterator();
         while (iterator.hasNext()){
             ParameterProcessor processor = iterator.next();
             if(processor.getClass()==clazz){

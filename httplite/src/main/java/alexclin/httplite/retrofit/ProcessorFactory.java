@@ -16,6 +16,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
+import alexclin.httplite.annotation.Mark;
 import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Progress;
 import alexclin.httplite.annotation.Retry;
@@ -33,25 +34,26 @@ import alexclin.httplite.util.Util;
 class ProcessorFactory {
 
     static List<MethodProcessor> methodProcessorList = new CopyOnWriteArrayList<>();
-    static List<ParameterProcessor> paramterProcessorList = new CopyOnWriteArrayList<>();
+    static List<ParameterProcessor> parameterProcessorList = new CopyOnWriteArrayList<>();
     static List<AnnotationRule> annotationRuleList = new CopyOnWriteArrayList<>();
     static List<ParamMiscProcessor> paramMiscProcessors = new CopyOnWriteArrayList<>();
 
     static {
         methodProcessorList.add(new HttpMethodProcessor());
+        methodProcessorList.add(new MarkProcessor());
         annotationRuleList.add(new BasicAnnotationRule());
-        paramterProcessorList.add(new ListenerParamProcessor());
-        paramterProcessorList.add(new BasicProcessors.BodyProcessor());
-        paramterProcessorList.add(new BasicProcessors.FormProcessor());
-        paramterProcessorList.add(new BasicProcessors.FormsProcessor());
-        paramterProcessorList.add(new BasicProcessors.HeaderProcessor());
-        paramterProcessorList.add(new BasicProcessors.HeadersProcessor());
-        paramterProcessorList.add(new BasicProcessors.IntoFileProcessor());
-        paramterProcessorList.add(new BasicProcessors.MultipartProcessor());
-        paramterProcessorList.add(new BasicProcessors.ParamProcessor());
-        paramterProcessorList.add(new BasicProcessors.ParamsProcessor());
-        paramterProcessorList.add(new BasicProcessors.PathProcessor());
-        paramterProcessorList.add(new BasicProcessors.PathsProcessor());
+        parameterProcessorList.add(new ListenerParamProcessor());
+        parameterProcessorList.add(new BasicProcessors.BodyProcessor());
+        parameterProcessorList.add(new BasicProcessors.FormProcessor());
+        parameterProcessorList.add(new BasicProcessors.FormsProcessor());
+        parameterProcessorList.add(new BasicProcessors.HeaderProcessor());
+        parameterProcessorList.add(new BasicProcessors.HeadersProcessor());
+        parameterProcessorList.add(new BasicProcessors.IntoFileProcessor());
+        parameterProcessorList.add(new BasicProcessors.MultipartProcessor());
+        parameterProcessorList.add(new BasicProcessors.ParamProcessor());
+        parameterProcessorList.add(new BasicProcessors.ParamsProcessor());
+        parameterProcessorList.add(new BasicProcessors.PathProcessor());
+        parameterProcessorList.add(new BasicProcessors.PathsProcessor());
         paramMiscProcessors.add(new BasicProcessors.JsonFieldProcessor());
     }
 
@@ -69,7 +71,7 @@ class ProcessorFactory {
 
     static AbsParamProcessor paramProcessor(Annotation annotation) {
         if(isSystemAnnotation(annotation)) return null;
-        for (ParameterProcessor processor : paramterProcessorList) {
+        for (ParameterProcessor processor : parameterProcessorList) {
             if (processor.support(annotation)) return processor;
         }
         for(ParamMiscProcessor processor : paramMiscProcessors){
@@ -110,6 +112,19 @@ class ProcessorFactory {
         @Override
         public boolean support(Annotation annotation) {
             return isBasicHttpAnnotation(annotation);
+        }
+    }
+
+    static class MarkProcessor implements MethodProcessor{
+
+        @Override
+        public void process(Annotation annotation, Retrofit retrofit, Request request) {
+            request.mark(((Mark)annotation).value());
+        }
+
+        @Override
+        public boolean support(Annotation annotation) {
+            return annotation instanceof Mark;
         }
     }
 
