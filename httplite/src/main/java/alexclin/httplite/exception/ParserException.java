@@ -1,7 +1,7 @@
 package alexclin.httplite.exception;
 
 /**
- * alexclin.httplite
+ * ParserException
  *
  * @author alexclin 16/1/1 10:15
  */

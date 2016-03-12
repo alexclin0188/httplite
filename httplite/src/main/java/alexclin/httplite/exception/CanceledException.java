@@ -1,7 +1,7 @@
 package alexclin.httplite.exception;
 
 /**
- * alexclin.httplite.exception
+ * CanceledException
  *
  * @author alexclin 16/1/2 18:41
  */

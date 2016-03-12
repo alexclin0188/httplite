@@ -1,7 +1,7 @@
 package alexclin.httplite.exception;
 
 /**
- * alexclin.httplite.exception
+ * DecodeException
  *
  * @author alexclin 16/1/1 18:55
  */

@@ -1,7 +1,7 @@
 package alexclin.httplite.exception;
 
 /**
- * alexclin.httplite.exception
+ * IllegalOperationException
  *
  * @author alexclin 16/1/1 18:02
  */
