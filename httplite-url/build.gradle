@@ -24,8 +24,8 @@ android {
 }
 
 dependencies {
-    //    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':httplite')
+    compile 'alexclin.httplite:httplite:1.0.1'
+//    compile project(':httplite')
 }
 
 def mavenDesc = 'A android http library'
