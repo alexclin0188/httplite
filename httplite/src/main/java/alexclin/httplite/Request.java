@@ -63,6 +63,8 @@ public final class Request {
 
     private DownloadCallback.DownloadParams downloadParams;
 
+    private Object mark;
+
     Request(HttpLite lite,String url) {
         this.lite = lite;
         this.url = url;
@@ -486,6 +488,15 @@ public final class Request {
 
     public boolean canCache(){
         return method==Method.GET && cacheExpiredTime!=NO_CACHE;
+    }
+
+    public Request mark(Object mark){
+        this.mark = mark;
+        return this;
+    }
+
+    public Object getMark(){
+        return mark;
     }
 }
 

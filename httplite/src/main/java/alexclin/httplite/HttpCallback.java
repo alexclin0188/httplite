@@ -84,14 +84,14 @@ class HttpCallback<T> extends ResultCallback<T>{
                 case String:
                     return (T)decodeString(response);
                 case Object:
-                    Collection<ResponseParser> prasers = getLite().getParsers();
-                    if(prasers.isEmpty()){
+                    Collection<ResponseParser> parsers = getLite().getParsers();
+                    if(parsers.isEmpty()){
                         throw new ParserException("No ResponseParser has set in HttpLite, failed with type:"+type);
                     }
                     for(ResponseParser parser: getLite().getParsers()){
                         if(parser.isSupported(type)){
                             try {
-                                return parser.praseResponse(response,type);
+                                return parser.parseResponse(response, type);
                             } catch (Exception e) {
                                 throw new ParserException(e);
                             }

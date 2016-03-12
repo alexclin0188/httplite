@@ -8,8 +8,7 @@ import alexclin.httplite.util.Util;
 /**
  * TestRetrofit
  *
- * @author alexclin
- * @date 16/1/30 19:08
+ * @author alexclin 16/1/30 19:08
  */
 public class TestRetrofit {
     public static void test(HttpLite lite){

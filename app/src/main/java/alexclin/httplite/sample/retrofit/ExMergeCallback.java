@@ -5,8 +5,7 @@ import java.io.File;
 /**
  * ExMergeCallback
  *
- * @author alexclin
- * @date 16/1/31 17:23
+ * @author alexclin 16/1/31 17:23
  */
 public class ExMergeCallback extends MergeCallback<File> {
 

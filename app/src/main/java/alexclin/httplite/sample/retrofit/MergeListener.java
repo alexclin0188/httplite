@@ -9,8 +9,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * MergeListener
  *
- * @author alexclin
- * @date 16/1/30 19:00
+ * @author alexclin 16/1/30 19:00
  */
 public class MergeListener implements ProgressListener,RetryListener,CancelListener {
     @Override

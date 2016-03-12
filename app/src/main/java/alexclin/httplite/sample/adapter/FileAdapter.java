@@ -15,8 +15,7 @@ import alexclin.httplite.sample.R;
 /**
  * FileAdapter
  *
- * @author alexclin
- * @date 16/1/10 12:20
+ * @author alexclin 16/1/10 12:20
  */
 public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileViewHolder> {
 

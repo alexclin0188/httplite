@@ -300,7 +300,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     @Override
     public void resume() {
         reset();
-        call.excuteSelf(this);
+        call.executeSelf(this);
     }
 
     @Override

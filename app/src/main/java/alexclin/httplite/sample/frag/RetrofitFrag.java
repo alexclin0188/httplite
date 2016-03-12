@@ -38,8 +38,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * RetrofitFrag
  *
- * @author alexclin
- * @date 16/1/31 11:32
+ * @author alexclin 16/1/31 11:32
  */
 public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private View view;

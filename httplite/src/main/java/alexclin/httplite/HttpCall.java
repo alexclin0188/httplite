@@ -25,7 +25,7 @@ public class HttpCall implements Call{
             return download((Callback<File>)callback);
         }else{
             ResultCallback rcb = createHttpCalback(callback, type);
-            return excuteSelf(rcb);
+            return executeSelf(rcb);
         }
     }
 
@@ -54,7 +54,7 @@ public class HttpCall implements Call{
     @Override
     public DownloadHandle download(Callback<File> callback) {
         final DownloadCallback rcb = createDownloadCallback(callback);
-        excuteSelf(rcb);
+        executeSelf(rcb);
         return rcb;
     }
 
@@ -94,7 +94,7 @@ public class HttpCall implements Call{
         return response;
     }
 
-    <T> Handle excuteSelf(final ResultCallback<T> callback){
+    <T> Handle executeSelf(final ResultCallback<T> callback){
         HttpLite lite = request.lite;
         boolean isDownload = callback instanceof DownloadCallback;
         final Runnable preWork = isDownload?(DownloadCallback)callback:null;

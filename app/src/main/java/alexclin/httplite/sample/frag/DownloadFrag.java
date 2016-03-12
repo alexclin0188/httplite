@@ -14,8 +14,7 @@ import alexclin.httplite.sample.manager.DownloadManager;
 /**
  * DownloadFrag
  *
- * @author alexclin
- * @date 16/1/10 11:57
+ * @author alexclin 16/1/10 11:57
  */
 public class DownloadFrag extends Fragment{
     private RecyclerView mRecyclerView;

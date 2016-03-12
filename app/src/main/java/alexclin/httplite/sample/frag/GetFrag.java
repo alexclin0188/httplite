@@ -31,8 +31,7 @@ import de.greenrobot.event.EventBus;
 /**
  * GetFrag
  *
- * @author alexclin
- * @date 16/1/10 11:38
+ * @author alexclin 16/1/10 11:38
  */
 public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener,Callback<Result<List<FileInfo>>>,View.OnClickListener{
     private RecyclerView mRecyclerView;

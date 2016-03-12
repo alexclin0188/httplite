@@ -16,8 +16,7 @@ import alexclin.httplite.sample.manager.DownloadTask;
 /**
  * DownloadAdpater
  *
- * @author alexclin
- * @date 16/1/10 16:22
+ * @author alexclin 16/1/10 16:22
  */
 public class DownloadAdpater extends RecyclerView.Adapter<DownloadAdpater.DownloadViewHolder> implements DownloadManager.DownloadListener {
 

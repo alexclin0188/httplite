@@ -13,8 +13,7 @@ import java.util.List;
 /**
  * LeftMenuAdapter
  *
- * @author alexclin
- * @date 16/1/10 11:44
+ * @author alexclin 16/1/10 11:44
  */
 public class LeftMenuAdapter extends RecyclerView.Adapter<LeftMenuAdapter.MenuViewHolder> {
 

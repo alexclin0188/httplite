@@ -7,10 +7,9 @@ import java.lang.reflect.Type;
 import alexclin.httplite.StringParser;
 
 /**
- * alexclin.httplite.sample.json
+ * GsonParser
  *
- * @author alexclin
- * @date 16/1/2 16:46
+ * @author alexclin 16/1/2 16:46
  */
 public class GsonParser extends StringParser {
     private Gson gson;
@@ -20,7 +19,7 @@ public class GsonParser extends StringParser {
     }
 
     @Override
-    public <T> T praseResponse(String content, Type type) throws Exception {
+    public <T> T parseResponse(String content, Type type) throws Exception {
         return gson.fromJson(content,type);
     }
 

@@ -4,10 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * alexclin.httplite.sample.model
+ * ZhihuData
  *
- * @author alexclin
- * @date 16/1/2 16:01
+ * @author alexclin 16/1/2 16:01
  */
 public class ZhihuData {
     public String date;

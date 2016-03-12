@@ -11,5 +11,5 @@ import alexclin.httplite.Response;
  */
 public interface ResponseParser {
     boolean isSupported(Type type);
-    <T> T praseResponse(Response response, Type type) throws Exception;
+    <T> T parseResponse(Response response, Type type) throws Exception;
 }

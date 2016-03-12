@@ -20,8 +20,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * CustomFrag
  *
- * @author alexclin
- * @date 16/1/10 11:37
+ * @author alexclin 16/1/10 11:37
  */
 public class CustomFrag extends Fragment {
 

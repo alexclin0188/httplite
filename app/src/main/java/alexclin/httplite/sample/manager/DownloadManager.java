@@ -12,8 +12,7 @@ import alexclin.httplite.sample.adapter.DownloadAdpater;
 /**
  * DownloadManager
  *
- * @author alexclin
- * @date 16/1/10 15:21
+ * @author alexclin 16/1/10 15:21
  */
 public class DownloadManager {
     private static HashMap<String,DownloadTask> mTaskMap = new HashMap<>();

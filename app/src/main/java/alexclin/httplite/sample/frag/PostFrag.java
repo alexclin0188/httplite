@@ -35,8 +35,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * PostFrag
  *
- * @author alexclin
- * @date 16/1/10 11:38
+ * @author alexclin 16/1/10 11:38
  */
 public class PostFrag extends Fragment implements FileAdapter.OnFileClickListener,View.OnClickListener{
     private RecyclerView mRecyclerView;

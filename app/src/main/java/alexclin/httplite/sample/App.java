@@ -20,8 +20,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * App
  *
- * @author alexclin
- * @date 16/1/10 10:56
+ * @author alexclin 16/1/10 10:56
  */
 public class App extends Application {
     private HttpLite httpLite;

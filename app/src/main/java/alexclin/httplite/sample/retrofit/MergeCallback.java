@@ -13,8 +13,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * MergeCallback
  *
- * @author alexclin
- * @date 16/1/31 15:31
+ * @author alexclin 16/1/31 15:31
  */
 public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListener,CancelListener {
     @Override

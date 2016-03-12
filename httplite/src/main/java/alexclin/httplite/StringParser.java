@@ -12,9 +12,9 @@ import alexclin.httplite.listener.ResponseParser;
 public abstract class StringParser implements ResponseParser{
 
     @Override
-    public final <T> T praseResponse(Response response, Type type) throws Exception{
-        return praseResponse(HttpCallback.decodeResponseToString(response),type);
+    public final <T> T parseResponse(Response response, Type type) throws Exception{
+        return parseResponse(HttpCallback.decodeResponseToString(response), type);
     }
 
-    public abstract <T> T praseResponse(String content, Type type) throws Exception;
+    public abstract <T> T parseResponse(String content, Type type) throws Exception;
 }

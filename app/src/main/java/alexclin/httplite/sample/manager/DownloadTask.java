@@ -16,8 +16,7 @@ import alexclin.httplite.util.LogUtil;
 /**
  * DownloadTask
  *
- * @author alexclin
- * @date 16/1/10 15:48
+ * @author alexclin 16/1/10 15:48
  */
 public class DownloadTask implements Callback<File>,CancelListener,ProgressListener {
     public interface TaskStateListener {
