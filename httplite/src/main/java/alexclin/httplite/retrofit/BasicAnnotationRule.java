@@ -45,7 +45,7 @@ public class BasicAnnotationRule implements AnnotationRule {
             throw Util.methodError(checkMethod,info);
         }
 
-        boolean isFileResturnOrCallback = Util.getTypeParameter(methodParameterTypes[methodParameterTypes.length-1])== File.class;
+        boolean isFileReturnOrCallback = Util.getTypeParameter(methodParameterTypes[methodParameterTypes.length-1])== File.class;
         boolean allowBody = Request.permitsRequestBody(method);
         boolean requireBody = Request.requiresRequestBody(method);
         boolean hasBodyAnnotation = false;
@@ -73,7 +73,7 @@ public class BasicAnnotationRule implements AnnotationRule {
                     }
                     hasMultipartAnnotation = true;
                 } else if (annotation instanceof IntoFile) {
-                    if (!isFileResturnOrCallback)
+                    if (!isFileReturnOrCallback)
                         throw Util.methodError(checkMethod,"Use @InfoFile must with last parameter (Callback<File>) or (Clazz<File> and return file)");
                     hasIntoFile = true;
                 } else if (annotation instanceof JsonField){
@@ -98,7 +98,7 @@ public class BasicAnnotationRule implements AnnotationRule {
             }
         }
 
-        if(isFileResturnOrCallback&&!hasIntoFile){
+        if(isFileReturnOrCallback&&!hasIntoFile){
             throw Util.methodError(checkMethod,"Use last parameter (Callback<File>) or (Clazz<File> and return file), method must has @IntoFile paramter");
         }
 

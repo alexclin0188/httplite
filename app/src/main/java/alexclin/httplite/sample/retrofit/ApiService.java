@@ -37,9 +37,9 @@ import alexclin.httplite.sample.model.ZhihuData;
 public interface ApiService {
     @POST("/login")
     void login(
-            @Param("username") String userName,
-            @Param("password")String password,
-            @Param("token") String token,
+            @JsonField("username") String userName,
+            @JsonField("password")String password,
+            @JsonField("token") String token,
             Callback<Result<UserInfo>> callback
     );
 

@@ -151,24 +151,24 @@ HttpLiteBuilder builder = URLite.create(); //使用URLConnection实现的http
   //正常使用状态
   Httplite httpLite = builder.build();
   //本地模拟模式
-  httpLite = builder.mock(new MockHandler() {
-              @Override
-              public <T> void mock(Request request, Mock<T> mock) throws Exception {
-                  //TODO 模拟数据
-                  //mock.mock(T result,Map<String, List<String>> headers);//模拟解析结果
-                  //mock.mock(Response response);//模拟原生Response 仅用于Sync执行并返回原生Response的情况
-                  //mock.mockProgress(long current,long total); //模拟进度调用
-                  //mock.mockRetry(long current,long max);  //模拟重试调用
-                  //mock.mockJson(....);
-                  //mock.mock(new File("...."));
-              }
+        httpLite = builder.mock(new MockHandler() {
+            @Override
+            public <T> void mock(Request request, Mock<T> mock) throws Exception {
+//                mock.mockProgress(long current,long total); //模拟进度调用
+//                mock.mockRetry(long current,long max);  //模拟重试调用
+                  //TODO 模拟网络数据
+//                mock.mock(Response response);//模拟原生Response
+//                mock.mockJson(....);
+//                mock.mock(new File("...."))；
+//                mock.mock(T result,Map<String, List<String>> headers);//直接模拟解析结果
+            }
 
-              @Override
-              public boolean needMock(Request request) {
-                  //TODO 判断该请求是否需要Mock
-                  return true;
-              }
-          });
+            @Override
+            public boolean needMock(Request request) {
+                //TODO 判断该请求是否需要Mock
+                return true;
+            }
+        });
 ```
 
 创建API接口实例

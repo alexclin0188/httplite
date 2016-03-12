@@ -87,7 +87,7 @@ class ProcessorFactory {
         if (annotation instanceof GET) {
             return alexclin.httplite.Method.GET;
         } else if (annotation instanceof POST) {
-            return alexclin.httplite.Method.GET;
+            return alexclin.httplite.Method.POST;
         } else if (annotation instanceof HTTP) {
             return ((HTTP) annotation).method();
         }

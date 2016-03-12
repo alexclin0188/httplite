@@ -38,9 +38,9 @@ public class HttpLite {
     private final boolean isRelease;
 
     HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
-             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor) {
+             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap) {
         this.client = client;
-        this.parserMap = new HashMap<>();
+        this.parserMap = parserMap;
         this.baseUrl = baseUrl;
         this.maxRetryCount = maxRetryCount;
         this.isRelease = release;

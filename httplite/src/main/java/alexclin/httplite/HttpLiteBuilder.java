@@ -42,14 +42,14 @@ public abstract class HttpLiteBuilder{
         LiteClient client = initLiteClient();
         client.setConfig(settings);
         return new HttpLite(client,baseUrl,settings.maxRetryCount,new HttpCall.Factory(),isRelase,
-                mRequestFilter,mResponseFilter,customDownloadExecutor);
+                mRequestFilter,mResponseFilter,customDownloadExecutor,parserMap);
     }
 
     public final HttpLite mock(MockHandler mockHandler){
         LiteClient client = initLiteClient();
         client.setConfig(settings);
         return new HttpLite(client,baseUrl,settings.maxRetryCount,new MockCall.MockFactory(mockHandler),isRelase,
-                mRequestFilter,mResponseFilter,customDownloadExecutor);
+                mRequestFilter,mResponseFilter,customDownloadExecutor,parserMap);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
