@@ -20,8 +20,8 @@ import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.LogUtil;
+import alexclin.httplite.util.Util;
 
 /**
  * DownloadCallback
@@ -87,7 +87,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
             return oldTargetFile.renameTo(newFile) ? newFile : oldTargetFile;
         }else{
             if(newFile.exists()){
-                IOUtil.deleteFileOrDir(newFile);
+                Util.deleteFileOrDir(newFile);
             }
             return newFile;
         }
@@ -114,7 +114,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
         long range;
         long fileLen = params.targetFile.length();
         if (fileLen <= CHECK_SIZE) {
-            IOUtil.deleteFileOrDir(params.targetFile);
+            Util.deleteFileOrDir(params.targetFile);
             range = 0;
         } else {
             range = fileLen - CHECK_SIZE;
@@ -129,7 +129,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
         try {
             if (params.targetFile.isDirectory()) {
                 // 防止文件正在写入时, 父文件夹被删除, 继续写入时造成偶现文件节点异常问题.
-                IOUtil.deleteFileOrDir(params.targetFile);
+                Util.deleteFileOrDir(params.targetFile);
             }
             if (!params.targetFile.exists()) {
                 params.targetFile.createNewFile();
@@ -143,21 +143,21 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
                     long filePos = targetFileLen - CHECK_SIZE;
                     if (filePos > 0) {
                         fis = new FileInputStream(params.targetFile);
-                        byte[] fileCheckBuffer = IOUtil.readBytes(fis, filePos, CHECK_SIZE);
-                        byte[] checkBuffer = IOUtil.readBytes(response.body().stream(), 0, CHECK_SIZE);
+                        byte[] fileCheckBuffer = Util.readBytes(fis, filePos, CHECK_SIZE);
+                        byte[] checkBuffer = Util.readBytes(response.body().stream(), 0, CHECK_SIZE);
                         if (!Arrays.equals(checkBuffer, fileCheckBuffer)) {
-                            IOUtil.closeQuietly(fis); // 先关闭文件流, 否则文件删除会失败.
-                            IOUtil.deleteFileOrDir(params.targetFile);
+                            Util.closeQuietly(fis); // 先关闭文件流, 否则文件删除会失败.
+                            Util.deleteFileOrDir(params.targetFile);
                             retryDownload(new RuntimeException("autoResume but file is changed"));
                             return;
                         }
                     } else {
-                        IOUtil.deleteFileOrDir(params.targetFile);
+                        Util.deleteFileOrDir(params.targetFile);
                         retryDownload(new RuntimeException("autoResume but local file large then server file length"));
                         return;
                     }
                 } finally {
-                    IOUtil.closeQuietly(fis);
+                    Util.closeQuietly(fis);
                 }
             }
             checkCanceled();
@@ -191,8 +191,8 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
             bos.flush();
             onProgress(current,total);
         } finally {
-            IOUtil.closeQuietly(bis);
-            IOUtil.closeQuietly(bos);
+            Util.closeQuietly(bis);
+            Util.closeQuietly(bos);
         }
     }
 

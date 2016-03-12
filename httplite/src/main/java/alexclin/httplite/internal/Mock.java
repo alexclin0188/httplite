@@ -82,6 +82,7 @@ public class Mock<T> {
         });
     }
 
+    @SuppressWarnings("unchecked")
     void processMock() throws Exception{
         if(task.clazz()==null||result!=null) return;
         if(response==null) throw new TimeoutException("No response by mock");

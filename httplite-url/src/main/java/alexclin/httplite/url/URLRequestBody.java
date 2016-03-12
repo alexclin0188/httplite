@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -74,9 +73,9 @@ public abstract class URLRequestBody implements RequestBody{
                 InputStream source = null;
                 try {
                     source = new FileInputStream(file);
-                    IOUtil.copy(source,sink);
+                    Util.copy(source,sink);
                 } finally {
-                    IOUtil.closeQuietly(source);
+                    Util.closeQuietly(source);
                 }
             }
         };

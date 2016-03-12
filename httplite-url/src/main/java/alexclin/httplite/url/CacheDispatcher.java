@@ -21,14 +21,13 @@ import alexclin.httplite.util.Util;
 /**
  * CacheDispatcher
  *
- * @author alexclin
- * @date 16/2/18 19:42
+ * @author alexclin 16/2/18 19:42
  */
 public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
-    private final PriorityBlockingQueue<Task> mCacheQueue = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<Task<Response>> mCacheQueue = new PriorityBlockingQueue<>();
 
-    private final Map<String, Queue<Pair<Task,Boolean>>> mWaitingRequests = new HashMap<>();
+    private final Map<String, Queue<Pair<Task<Response>,Boolean>>> mWaitingRequests = new HashMap<>();
 
     private TaskDispatcher<Response> networkDispatcher;
 
@@ -37,12 +36,12 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     /** Used for telling us to die. */
     private volatile boolean mQuit = false;
 
-    public CacheDispatcher(TaskDispatcher networkDispatcher,URLCache cache) {
+    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,URLCache cache) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
     }
 
-    public void dispatch(Task task) {
+    public void dispatch(Task<Response> task) {
         if(!isSameKeyTaskRunning(task,false)){
             mCacheQueue.add(task);
         }
@@ -70,8 +69,8 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         for(Task task:mCacheQueue){
             if(Util.equal(tag,task.tag())) task.cancel();
         }
-        for(Queue<Pair<Task,Boolean>> queue:mWaitingRequests.values()){
-            for(Pair<Task,Boolean> pair:queue){
+        for(Queue<Pair<Task<Response>,Boolean>> queue:mWaitingRequests.values()){
+            for(Pair<Task<Response>,Boolean> pair:queue){
                 Task task = pair.first;
                 if(Util.equal(tag,task.tag())) task.cancel();
             }
@@ -83,8 +82,8 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         for(Task task:mCacheQueue){
             task.cancel();
         }
-        for(Queue<Pair<Task,Boolean>> queue:mWaitingRequests.values()){
-            for(Pair<Task,Boolean> pair:queue){
+        for(Queue<Pair<Task<Response>,Boolean>> queue:mWaitingRequests.values()){
+            for(Pair<Task<Response>,Boolean> pair:queue){
                 Task task = pair.first;
                 task.cancel();
             }
@@ -121,13 +120,13 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
     private void notifyTaskFinish(String cacheKey) {
         synchronized (mWaitingRequests) {
-            Queue<Pair<Task,Boolean>> waitingRequests = mWaitingRequests.remove(cacheKey);
+            Queue<Pair<Task<Response>,Boolean>> waitingRequests = mWaitingRequests.remove(cacheKey);
             if (waitingRequests != null) {
                 LogUtil.i(String.format("Releasing %d waiting requests for cacheKey=%s.",
                         waitingRequests.size(), cacheKey));
                 // Process all queued up requests. They won't be considered as in flight, but
                 // that's not a problem as the cache has been primed by 'request'.
-                for(Pair<Task,Boolean> pair:waitingRequests) {
+                for(Pair<Task<Response>,Boolean> pair:waitingRequests) {
                     if(pair.second){
                         pair.first.notify();
                     }else{
@@ -142,16 +141,16 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         return Util.md5Hex(request.getUrl());
     }
 
-    private boolean isSameKeyTaskRunning(Task task,boolean sync){
+    private boolean isSameKeyTaskRunning(Task<Response> task,boolean sync){
         synchronized (mWaitingRequests) {
             String cacheKey = getCacheKey(task.request());
             if (mWaitingRequests.containsKey(cacheKey)) {
                 // There is already a request in flight. Queue up.
-                Queue<Pair<Task,Boolean>> stagedRequests = mWaitingRequests.get(cacheKey);
+                Queue<Pair<Task<Response>,Boolean>> stagedRequests = mWaitingRequests.get(cacheKey);
                 if (stagedRequests == null) {
-                    stagedRequests = new LinkedList<Pair<Task,Boolean>>();
+                    stagedRequests = new LinkedList<>();
                 }
-                stagedRequests.add(new Pair<Task, Boolean>(task,sync));
+                stagedRequests.add(new Pair<>(task,sync));
                 mWaitingRequests.put(cacheKey, stagedRequests);
                 LogUtil.i(String.format("Request for cacheKey=%s is in flight, putting on hold.", cacheKey));
                 return true;
@@ -168,7 +167,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     public void run() {
         android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
         while (true){
-            final Task task;
+            final Task<Response> task;
             try {
                 // Take a request from the queue.
                 task = mCacheQueue.take();
@@ -196,7 +195,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         cache.addCacheHeaders(request);
     }
 
-    static class CacheTask implements Task{
+    static class CacheTask implements Task<Response>{
         private Task task;
         private Response response;
 

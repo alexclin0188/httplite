@@ -9,9 +9,12 @@ import alexclin.httplite.Request;
 import alexclin.httplite.annotation.Body;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.Forms;
+import alexclin.httplite.annotation.GET;
+import alexclin.httplite.annotation.HTTP;
 import alexclin.httplite.annotation.IntoFile;
 import alexclin.httplite.annotation.JsonField;
 import alexclin.httplite.annotation.Multipart;
+import alexclin.httplite.annotation.POST;
 import alexclin.httplite.util.Util;
 
 /**
@@ -23,26 +26,25 @@ import alexclin.httplite.util.Util;
 public class BasicAnnotationRule implements AnnotationRule {
 
     @Override
-    public void checkMethod(Method checkMethod) throws RuntimeException {
-        Type[] methodParameterTypes = checkMethod.getGenericParameterTypes();
-        Annotation[][] methodParameterAnnotationArrays = checkMethod.getParameterAnnotations();
-        Annotation[] methodAnnotations = checkMethod.getAnnotations();
-        boolean hasHttpAnnotation = false;
+    public void checkMethod(Method interfaceMethod) throws RuntimeException {
+        Type[] methodParameterTypes = interfaceMethod.getGenericParameterTypes();
+        Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
         alexclin.httplite.Method method = null;
-        for (Annotation annotation : methodAnnotations) {
-            boolean isBasicHttp = ProcessorFactory.isBasicHttpAnnoation(annotation);
-            method = ProcessorFactory.getHttpAnnoationMethod(annotation);
-            if (!isBasicHttp) continue;
-            if (hasHttpAnnotation) {
-                String info = Util.printArray("You can use only one http annotation on each method but threre is:%s", methodAnnotations);
-                throw Util.methodError(checkMethod,info);
-            } else {
-                hasHttpAnnotation = true;
-            }
+        GET get = interfaceMethod.getAnnotation(GET.class);
+        if(get!=null){
+            method = alexclin.httplite.Method.GET;
         }
-        if (!hasHttpAnnotation) {
-            String info = Util.printArray("You must set one http annotation on each method but threre is:%s", methodAnnotations);
-            throw Util.methodError(checkMethod,info);
+        if(method==null){
+            POST post = interfaceMethod.getAnnotation(POST.class);
+            if(post!=null) method = alexclin.httplite.Method.POST;
+        }
+        if(method==null){
+            HTTP http = interfaceMethod.getAnnotation(HTTP.class);
+            if(http!=null) method = http.method();
+        }
+        if (method==null) {
+            String info = Util.printArray("You must set one http annotation on each method but there is:%s", interfaceMethod.getAnnotations());
+            throw Util.methodError(interfaceMethod,info);
         }
 
         boolean isFileReturnOrCallback = Util.getTypeParameter(methodParameterTypes[methodParameterTypes.length-1])== File.class;
@@ -57,53 +59,53 @@ public class BasicAnnotationRule implements AnnotationRule {
             for (Annotation annotation : annotations) {
                 if (annotation instanceof Body) {
                     if (hasBodyAnnotation) {
-                        throw Util.methodError(checkMethod, "You can use @Body annoation on method not more than once");
+                        throw Util.methodError(interfaceMethod, "You can use @Body annotation on method not more than once");
                     }else if (!allowBody) {
-                        throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
+                        throw Util.methodError(interfaceMethod,String.format("HttpMethod:%s don't allow body param", method));
                     }
                     hasBodyAnnotation = true;
                 } else if ((annotation instanceof Form) || (annotation instanceof Forms)) {
                     if (!allowBody) {
-                        throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
+                        throw Util.methodError(interfaceMethod,String.format("HttpMethod:%s don't allow body param", method));
                     }
                     hasFormAnnotation = true;
                 } else if ((annotation instanceof Multipart)) {
                     if (!allowBody) {
-                        throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
+                        throw Util.methodError(interfaceMethod,String.format("HttpMethod:%s don't allow body param", method));
                     }
                     hasMultipartAnnotation = true;
                 } else if (annotation instanceof IntoFile) {
                     if (!isFileReturnOrCallback)
-                        throw Util.methodError(checkMethod,"Use @InfoFile must with last parameter (Callback<File>) or (Clazz<File> and return file)");
+                        throw Util.methodError(interfaceMethod,"Use @InfoFile must with last parameter (Callback<File>) or (Clazz<File> and return file)");
                     hasIntoFile = true;
                 } else if (annotation instanceof JsonField){
                     if (!allowBody) {
-                        throw Util.methodError(checkMethod,String.format("HttpMethod:%s don't allow body param", method));
+                        throw Util.methodError(interfaceMethod,String.format("HttpMethod:%s don't allow body param", method));
                     }
                     hasJsonField = true;
                 }
                 if (hasFormAnnotation&&hasBodyAnnotation) {
-                    throw Util.methodError(checkMethod,"You can not use @Body and @Form/Forms on on the same one method");
+                    throw Util.methodError(interfaceMethod,"You can not use @Body and @Form/Forms on on the same one method");
                 } else if (hasMultipartAnnotation&&hasBodyAnnotation) {
-                    throw Util.methodError(checkMethod,"You can not use @Body and @Multipart on on the same one method");
+                    throw Util.methodError(interfaceMethod,"You can not use @Body and @Multipart on on the same one method");
                 } else if(hasJsonField&&hasBodyAnnotation){
-                    throw Util.methodError(checkMethod,"You can not use @Body and @JsonField on on the same one method");
+                    throw Util.methodError(interfaceMethod,"You can not use @Body and @JsonField on on the same one method");
                 } else if(hasFormAnnotation&&hasMultipartAnnotation){
-                    throw Util.methodError(checkMethod,"You can not use @Form/Forms and @Multipart on on the same one method");
+                    throw Util.methodError(interfaceMethod,"You can not use @Form/Forms and @Multipart on on the same one method");
                 } else if(hasFormAnnotation&&hasJsonField){
-                    throw Util.methodError(checkMethod,"You can not use @JsonFile and @Multipart on on the same one method");
+                    throw Util.methodError(interfaceMethod,"You can not use @JsonFile and @Multipart on on the same one method");
                 } else if(hasMultipartAnnotation&&hasJsonField){
-                    throw Util.methodError(checkMethod,"You can not use @Form/Forms and @JsonField on on the same one method");
+                    throw Util.methodError(interfaceMethod,"You can not use @Form/Forms and @JsonField on on the same one method");
                 }
             }
         }
 
         if(isFileReturnOrCallback&&!hasIntoFile){
-            throw Util.methodError(checkMethod,"Use last parameter (Callback<File>) or (Clazz<File> and return file), method must has @IntoFile paramter");
+            throw Util.methodError(interfaceMethod,"Use last parameter (Callback<File>) or (Clazz<File> and return file), method must has @IntoFile parameter");
         }
 
         if(requireBody && !(hasBodyAnnotation||hasFormAnnotation||hasMultipartAnnotation||hasJsonField)){
-            throw Util.methodError(checkMethod,"Http method:%s must has body parameter such as:@Form/Forms @Multipart @Body @JsonField",method);
+            throw Util.methodError(interfaceMethod,"Http method:%s must has body parameter such as:@Form/Forms @Multipart @Body @JsonField",method);
         }
     }
 }

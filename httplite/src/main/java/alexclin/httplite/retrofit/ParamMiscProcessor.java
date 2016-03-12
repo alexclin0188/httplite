@@ -10,8 +10,7 @@ import alexclin.httplite.Request;
 /**
  * ParamMiscProcessor
  *
- * @author alexclin
- * @date 16/1/31 13:38
+ * @author alexclin 16/1/31 13:38
  */
 public interface ParamMiscProcessor extends AbsParamProcessor{
     void process(Request request,Annotation[][] annotations,List<Pair<Integer,Integer>> list,Object... args);

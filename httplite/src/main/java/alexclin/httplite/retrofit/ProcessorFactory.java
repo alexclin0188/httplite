@@ -28,8 +28,7 @@ import alexclin.httplite.util.Util;
 /**
  * ProcessorFactory
  *
- * @author alexclin
- * @date 16/1/28 19:20
+ * @author alexclin 16/1/28 19:20
  */
 class ProcessorFactory {
 
@@ -79,20 +78,10 @@ class ProcessorFactory {
         throw new RuntimeException("unkown paramter annotation:" + annotation + ", to use custom annotaion, please set custom ParameterProcessor/ParamMiscProcessor in Retrofit");
     }
 
-    public static boolean isBasicHttpAnnoation(Annotation annotation) {
+    public static boolean isBasicHttpAnnotation(Annotation annotation) {
         return (annotation instanceof GET) || (annotation instanceof POST) || (annotation instanceof HTTP);
     }
 
-    public static alexclin.httplite.Method getHttpAnnoationMethod(Annotation annotation) {
-        if (annotation instanceof GET) {
-            return alexclin.httplite.Method.GET;
-        } else if (annotation instanceof POST) {
-            return alexclin.httplite.Method.POST;
-        } else if (annotation instanceof HTTP) {
-            return ((HTTP) annotation).method();
-        }
-        return null;
-    }
 
     public static boolean isSystemAnnotation(Annotation annotation){
         String packageName = annotation.getClass().getName();
@@ -120,7 +109,7 @@ class ProcessorFactory {
 
         @Override
         public boolean support(Annotation annotation) {
-            return isBasicHttpAnnoation(annotation);
+            return isBasicHttpAnnotation(annotation);
         }
     }
 

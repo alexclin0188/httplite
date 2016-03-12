@@ -25,7 +25,7 @@ public class LogUtil {
 
     private static boolean isDebug = false;
 
-    public static String customTagPrefix = "httplie_log";
+    public static String customTagPrefix = "httplite_log";
 
     private LogUtil() {
     }

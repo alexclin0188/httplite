@@ -13,8 +13,7 @@ import alexclin.httplite.RequestBody;
 /**
  * MultiPart
  *
- * @author alexclin
- * @date 16/1/20 20:59
+ * @author alexclin 16/1/20 20:59
  */
 public class MultiPart {
     private RequestBody requestBody;
@@ -22,7 +21,6 @@ public class MultiPart {
     private Pair<Pair<String,String>,RequestBody> nameFileBody;
     private Pair<Pair<String,String>,File> nameFile;
     private Pair<Pair<String,String>,Pair<File,String>> nameFileType;
-
 
     public MultiPart(RequestBody body){
         this.requestBody = body;

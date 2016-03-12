@@ -48,7 +48,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     public URLite() {
-        mNetDispatcher = new TaskDispatcher<Response>();
+        mNetDispatcher = new TaskDispatcher<>();
     }
 
     @Override

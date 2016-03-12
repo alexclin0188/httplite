@@ -7,8 +7,7 @@ import java.lang.reflect.Type;
 /**
  * AbsParamProcessor
  *
- * @author alexclin
- * @date 16/1/31 13:45
+ * @author alexclin 16/1/31 13:45
  */
 interface AbsParamProcessor {
     boolean support(Annotation annotation);

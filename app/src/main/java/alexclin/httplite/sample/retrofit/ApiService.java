@@ -33,7 +33,7 @@ import alexclin.httplite.sample.model.ZhihuData;
  *
  * @author alexclin 16/1/30 18:59
  */
-@BaseURL("")
+@BaseURL("http://192.168.99.238:10080/")
 public interface ApiService {
     @POST("/login")
     void login(

@@ -31,6 +31,7 @@ import java.util.TimeZone;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.url.URLite;
+import alexclin.httplite.util.Util;
 
 /**
  * Utility methods for parsing HTTP headers.
@@ -211,7 +212,7 @@ public class CacheEntryParser {
         IOUtil.writeHeaders(dataOut, response.headers());
         IOUtil.writeString(dataOut, response.body().contentType().toString());
         IOUtil.writeLong(dataOut, response.body().contentLength());
-        alexclin.httplite.util.IOUtil.copy(response.body().stream(), dataOut);
+        Util.copy(response.body().stream(), dataOut);
         dataOut.flush();
         dataOut.close();
     }

@@ -34,8 +34,7 @@ import alexclin.httplite.util.Util;
 /**
  * BasicProcessors
  *
- * @author alexclin
- * @date 16/1/30 10:06
+ * @author alexclin 16/1/30 10:06
  */
 class BasicProcessors {
 

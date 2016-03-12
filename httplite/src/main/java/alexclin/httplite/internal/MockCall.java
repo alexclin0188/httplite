@@ -59,7 +59,7 @@ public class MockCall extends HttpCall{
 
     @SuppressWarnings("unchecked")
     private  <T> MockTask<T> mock(final Callback<T> callback) {
-        MockTask<T> mockTask = new MockTask<T>(this,callback);
+        MockTask<T> mockTask = new MockTask<>(this,callback);
         factory.dispatcher().dispatch(mockTask);
         return mockTask;
     }

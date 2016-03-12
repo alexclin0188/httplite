@@ -24,8 +24,7 @@ import alexclin.httplite.util.Util;
 /**
  * MethodHandler
  *
- * @author alexclin
- * @date 16/1/28 19:20
+ * @author alexclin 16/1/28 19:20
  */
 public class MethodHandler {
     private MethodProcessor[] methodProcessors;

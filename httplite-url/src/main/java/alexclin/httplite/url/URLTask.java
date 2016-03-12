@@ -19,7 +19,7 @@ import alexclin.httplite.internal.Dispatcher;
  *
  * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Dispatcher.Task,Handle{
+public class URLTask implements Dispatcher.Task<Response>,Handle{
 
     private URLite lite;
     private Request request;
@@ -78,7 +78,7 @@ public class URLTask implements Dispatcher.Task,Handle{
         } else {
             connection = (HttpURLConnection) url.openConnection();
         }
-        assertCenceled();
+        assertCanceled();
         connection.setReadTimeout(lite.settings.getReadTimeout());
         connection.setConnectTimeout(lite.settings.getConnectTimeout());
         connection.setInstanceFollowRedirects(lite.settings.isFollowRedirects());
@@ -131,7 +131,7 @@ public class URLTask implements Dispatcher.Task,Handle{
         return response;
     }
 
-    private void assertCenceled() throws Exception{
+    private void assertCanceled() throws Exception{
         if(isCanceled()){
             throw new CanceledException("URLTask has been canceled");
         }

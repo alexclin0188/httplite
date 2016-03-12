@@ -12,7 +12,6 @@ import java.util.List;
 
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -88,7 +87,7 @@ public class URLFormBody implements RequestBody {
 
             if (countBytes) {
                 byteCount = bos.size();
-                IOUtil.closeQuietly(buffer);
+                Util.closeQuietly(buffer);
             }
         } catch (IOException e) {
             e.printStackTrace();

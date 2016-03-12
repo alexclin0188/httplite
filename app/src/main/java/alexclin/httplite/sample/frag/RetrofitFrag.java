@@ -177,7 +177,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 
     private HttpLite initHttpLite(){
         if(this.httpLite!=null) return this.httpLite;
-        String baseUrl = "http://192.168.99.238:10080/";
+//        String baseUrl = "http://192.168.99.238:10080/";
         HttpLiteBuilder builder = Ok2Lite.create();
         HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
@@ -185,7 +185,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .setMaxRetryCount(2)  //设置失败重试次数
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
-                .baseUrl(baseUrl)
+//                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
                 .requestFilter(new RequestFilter() {
                     @Override

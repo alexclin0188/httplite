@@ -16,7 +16,6 @@ import java.util.UUID;
 
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -98,14 +97,14 @@ public class URLMultipartBody implements RequestBody {
 
         try {
             BufferedWriter byteCountBuffer = null;
-            BufferedWriter isWritter = null;
+            BufferedWriter writer;
             ByteArrayOutputStream bos = null;
             if (countBytes) {
                 bos = new ByteArrayOutputStream();
-                isWritter = byteCountBuffer = new BufferedWriter(new OutputStreamWriter(bos,Util.UTF_8));
+                writer = byteCountBuffer = new BufferedWriter(new OutputStreamWriter(bos,Util.UTF_8));
                 sink = bos;
             }else{
-                isWritter = new BufferedWriter(new OutputStreamWriter(sink,Util.UTF_8));
+                writer = new BufferedWriter(new OutputStreamWriter(sink,Util.UTF_8));
             }
 
             for (int p = 0, partCount = parts.size(); p < partCount; p++) {
@@ -120,15 +119,15 @@ public class URLMultipartBody implements RequestBody {
                 if (headers != null) {
                     for (String key:headers.keySet()) {
                         for (String value:headers.get(key)){
-                            isWritter.write(key);
-                            isWritter.flush();
+                            writer.write(key);
+                            writer.flush();
                             if(countBytes){
                                 bos.write(COLONSPACE);
                             }else{
                                 sink.write(COLONSPACE);
                             }
-                            isWritter.write(value);
-                            isWritter.flush();
+                            writer.write(value);
+                            writer.flush();
                             if(countBytes){
                                 bos.write(CRLF);
                             }else{
@@ -140,9 +139,9 @@ public class URLMultipartBody implements RequestBody {
 
                 MediaType contentType = body.contentType();
                 if (contentType != null) {
-                    isWritter.write("Content-Type: ");
-                    isWritter.write(contentType.toString());
-                    isWritter.flush();
+                    writer.write("Content-Type: ");
+                    writer.write(contentType.toString());
+                    writer.flush();
                     if(countBytes){
                         bos.write(CRLF);
                     }else{
@@ -152,8 +151,8 @@ public class URLMultipartBody implements RequestBody {
 
                 long contentLength = body.contentLength();
                 if (contentLength != -1) {
-                    isWritter.write("Content-Length: ");
-                    isWritter.flush();
+                    writer.write("Content-Length: ");
+                    writer.flush();
                     if(countBytes){
                         bos.write(getBytes(contentLength));
                         bos.write(CRLF);
@@ -163,7 +162,7 @@ public class URLMultipartBody implements RequestBody {
                     }
                 } else if (countBytes) {
                     // We can't measure the body's size without the sizes of its components.
-                    IOUtil.closeQuietly(isWritter);
+                    Util.closeQuietly(writer);
                     return -1L;
                 }
 
@@ -185,7 +184,7 @@ public class URLMultipartBody implements RequestBody {
 
             if (countBytes) {
                 byteCount += bos.size();
-                IOUtil.closeQuietly(byteCountBuffer);
+                Util.closeQuietly(byteCountBuffer);
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -17,6 +17,10 @@ package alexclin.httplite.util;
 
 import android.text.TextUtils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,21 +34,14 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.net.FileNameMap;
-import java.net.IDN;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
 import java.util.concurrent.ThreadFactory;
-import java.util.regex.Pattern;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.MediaType;
@@ -53,22 +50,11 @@ import alexclin.httplite.MediaType;
  * Junk drawer of utility methods.
  */
 public final class Util {
-    public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     /**
      * A cheap and type-safe constant for the UTF-8 Charset.
      */
     public static final Charset UTF_8 = Charset.forName("UTF-8");
-
-    /**
-     * GMT and UTC are equivalent for our purposes.
-     */
-    public static final TimeZone UTC = TimeZone.getTimeZone("GMT");
-
-
-    private static final Pattern VERIFY_AS_IP_ADDRESS = Pattern.compile(
-            "([0-9a-fA-F]*:[0-9a-fA-F:.]*)|([\\d.]+)");
 
     private Util() {
     }
@@ -87,14 +73,6 @@ public final class Util {
         return Collections.unmodifiableList(new ArrayList<>(list));
     }
 
-    public static <T> List<T> immutableList(T... elements) {
-        return Collections.unmodifiableList(Arrays.asList(elements.clone()));
-    }
-
-    public static <K, V> Map<K, V> immutableMap(Map<K, V> map) {
-        return Collections.unmodifiableMap(new LinkedHashMap<>(map));
-    }
-
     public static ThreadFactory threadFactory(final String name, final boolean daemon) {
         return new ThreadFactory() {
             @Override
@@ -106,181 +84,8 @@ public final class Util {
         };
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> T[] intersect(Class<T> arrayType, T[] first, T[] second) {
-        List<T> result = intersect(first, second);
-        return result.toArray((T[]) Array.newInstance(arrayType, result.size()));
-    }
-
-    /**
-     * Returns a list containing containing only elements found in {@code first}  and also in {@code
-     * second}. The returned elements are in the same order as in {@code first}.
-     */
-    private static <T> List<T> intersect(T[] first, T[] second) {
-        List<T> result = new ArrayList<>();
-        for (T a : first) {
-            for (T b : second) {
-                if (a.equals(b)) {
-                    result.add(b);
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Returns true if {@code e} is due to a firmware bug fixed after Android 4.2.2.
-     * https://code.google.com/p/android/issues/detail?id=54072
-     */
-    public static boolean isAndroidGetsocknameError(AssertionError e) {
-        return e.getCause() != null && e.getMessage() != null
-                && e.getMessage().contains("getsockname failed");
-    }
-
-    public static boolean contains(String[] array, String value) {
-        return Arrays.asList(array).contains(value);
-    }
-
-    public static String[] concat(String[] array, String value) {
-        String[] result = new String[array.length + 1];
-        System.arraycopy(array, 0, result, 0, array.length);
-        result[result.length - 1] = value;
-        return result;
-    }
-
-    /**
-     * Increments {@code pos} until {@code input[pos]} is not ASCII whitespace. Stops at {@code
-     * limit}.
-     */
-    public static int skipLeadingAsciiWhitespace(String input, int pos, int limit) {
-        for (int i = pos; i < limit; i++) {
-            switch (input.charAt(i)) {
-                case '\t':
-                case '\n':
-                case '\f':
-                case '\r':
-                case ' ':
-                    continue;
-                default:
-                    return i;
-            }
-        }
-        return limit;
-    }
-
-    /**
-     * Decrements {@code limit} until {@code input[limit - 1]} is not ASCII whitespace. Stops at
-     * {@code pos}.
-     */
-    public static int skipTrailingAsciiWhitespace(String input, int pos, int limit) {
-        for (int i = limit - 1; i >= pos; i--) {
-            switch (input.charAt(i)) {
-                case '\t':
-                case '\n':
-                case '\f':
-                case '\r':
-                case ' ':
-                    continue;
-                default:
-                    return i + 1;
-            }
-        }
-        return pos;
-    }
-
-    /**
-     * Equivalent to {@code string.substring(pos, limit).trim()}.
-     */
-    public static String trimSubstring(String string, int pos, int limit) {
-        int start = skipLeadingAsciiWhitespace(string, pos, limit);
-        int end = skipTrailingAsciiWhitespace(string, start, limit);
-        return string.substring(start, end);
-    }
-
-    /**
-     * Returns the index of the first character in {@code input} that contains a character in {@code
-     * delimiters}. Returns limit if there is no such character.
-     */
-    public static int delimiterOffset(String input, int pos, int limit, String delimiters) {
-        for (int i = pos; i < limit; i++) {
-            if (delimiters.indexOf(input.charAt(i)) != -1) return i;
-        }
-        return limit;
-    }
-
-    /**
-     * Returns the index of the first character in {@code input} that is {@code delimiter}. Returns
-     * limit if there is no such character.
-     */
-    public static int delimiterOffset(String input, int pos, int limit, char delimiter) {
-        for (int i = pos; i < limit; i++) {
-            if (input.charAt(i) == delimiter) return i;
-        }
-        return limit;
-    }
-
-    /**
-     * Performs IDN ToASCII encoding and canonicalize the result to lowercase. e.g. This converts
-     * {@code ☃.net} to {@code xn--n3h.net}, and {@code WwW.GoOgLe.cOm} to {@code www.google.com}.
-     * {@code null} will be returned if the input cannot be ToASCII encoded or if the result
-     * contains unsupported ASCII characters.
-     */
-    public static String domainToAscii(String input) {
-        try {
-            String result = IDN.toASCII(input).toLowerCase(Locale.US);
-            if (result.isEmpty()) return null;
-
-            // Confirm that the IDN ToASCII result doesn't contain any illegal characters.
-            if (containsInvalidHostnameAsciiCodes(result)) {
-                return null;
-            }
-            // TODO: implement all label limits.
-            return result;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    private static boolean containsInvalidHostnameAsciiCodes(String hostnameAscii) {
-        for (int i = 0; i < hostnameAscii.length(); i++) {
-            char c = hostnameAscii.charAt(i);
-            // The WHATWG Host parsing rules accepts some character codes which are invalid by
-            // definition for OkHttp's host header checks (and the WHATWG Host syntax definition). Here
-            // we rule out characters that would cause problems in host headers.
-            if (c <= '\u001f' || c >= '\u007f') {
-                return true;
-            }
-            // Check for the characters mentioned in the WHATWG Host parsing spec:
-            // U+0000, U+0009, U+000A, U+000D, U+0020, "#", "%", "/", ":", "?", "@", "[", "\", and "]"
-            // (excluding the characters covered above).
-            if (" #%/:?@[\\]".indexOf(c) != -1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns true if {@code host} is not a host name and might be an IP address.
-     */
-    public static boolean verifyAsIpAddress(String host) {
-        return VERIFY_AS_IP_ADDRESS.matcher(host).matches();
-    }
-
-    public static void copyStream(InputStream is, OutputStream os) throws IOException {
-        byte[] buffer = new byte[1024];
-        int read;
-        while ((read = is.read(buffer)) != -1) {
-            os.write(buffer, 0, read);
-        }
-    }
-
     public static boolean isHttpPrefix(String url){
-        if(TextUtils.isEmpty(url)){
-            return false;
-        }
-        return url.startsWith("http://")||url.startsWith("https://");
+        return !TextUtils.isEmpty(url)&&(url.startsWith("http://")||url.startsWith("https://"));
     }
 
     public static MediaType guessMediaType(HttpLite lite,File file){
@@ -383,7 +188,7 @@ public final class Util {
                 sb.append(object.toString()).append(",");
             }
         }
-        return String.format(foramt,sb.toString());
+        return String.format(foramt, sb.toString());
     }
 
     public static boolean hasUnresolvableType(Type type) {
@@ -487,13 +292,12 @@ public final class Util {
     }
 
     /**
-     * 方式三
+     * 字节数组转HEX字符
      *
-     * @param bytes
-     * @return
+     * @param bytes 字节数组
+     * @return HEX字符串
      */
-    public static String bytes2hex(byte[] bytes)
-    {
+    public static String bytes2hex(byte[] bytes){
         final String HEX = "0123456789abcdef";
         StringBuilder sb = new StringBuilder(bytes.length * 2);
         for (byte b : bytes){
@@ -503,5 +307,64 @@ public final class Util {
             sb.append(HEX.charAt(b & 0x0f));
         }
         return sb.toString();
+    }
+
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    public static byte[] readBytes(InputStream in, long skip, long size) throws IOException {
+        ByteArrayOutputStream out = null;
+        try {
+            if (skip > 0) {
+                long skipSize;
+                while (skip > 0 && (skipSize = in.skip(skip)) > 0) {
+                    skip -= skipSize;
+                }
+            }
+            out = new ByteArrayOutputStream();
+            for (int i = 0; i < size; i++) {
+                out.write(in.read());
+            }
+        } finally {
+            closeQuietly(out);
+        }
+        return out.toByteArray();
+    }
+
+    public static void copy(InputStream in, OutputStream out) throws IOException {
+        if (!(in instanceof BufferedInputStream)) {
+            in = new BufferedInputStream(in);
+        }
+        if (!(out instanceof BufferedOutputStream)) {
+            out = new BufferedOutputStream(out);
+        }
+        int len;
+        byte[] buffer = new byte[1024];
+        while ((len = in.read(buffer)) != -1) {
+            out.write(buffer, 0, len);
+        }
+        out.flush();
+    }
+
+    public static boolean deleteFileOrDir(File path) {
+        if (path == null || !path.exists()) {
+            return true;
+        }
+        if (path.isFile()) {
+            return path.delete();
+        }
+        File[] files = path.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                deleteFileOrDir(file);
+            }
+        }
+        return path.delete();
     }
 }

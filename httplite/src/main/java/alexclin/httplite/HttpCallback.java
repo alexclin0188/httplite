@@ -16,7 +16,6 @@ import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.exception.ParserException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.util.IOUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -141,7 +140,7 @@ class HttpCallback<T> extends ResultCallback<T>{
             while ((s=reader.readLine())!=null){
                 stringBuilder.append(s);
             }
-            IOUtil.closeQuietly(reader);
+            Util.closeQuietly(reader);
             return stringBuilder.toString();
         }
         throw new RuntimeException("Not text response body,no Content-Type in response");

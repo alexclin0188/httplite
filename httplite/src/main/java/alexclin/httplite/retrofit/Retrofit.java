@@ -1,5 +1,7 @@
 package alexclin.httplite.retrofit;
 
+import android.os.Build;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -16,8 +18,7 @@ import alexclin.httplite.util.Util;
 /**
  * Retrofit
  *
- * @author alexclin
- * @date 16/1/5 23:06
+ * @author alexclin 16/1/5 23:06
  */
 public abstract class Retrofit {
 
@@ -67,12 +68,16 @@ public abstract class Retrofit {
     }
 
     private static boolean isDefaultMethod(Method method){
-        //TODO
+        if(Build.VERSION.SDK_INT>23){
+            //TODO java8
+        }
         return false;
     }
 
     public static <T> Object invokeDefaultMethod(Method method,Class<T> service,Object proxy,Object... args){
-        //TODO
+        if(Build.VERSION.SDK_INT>23){
+            //TODO java8
+        }
         return null;
     }
 
