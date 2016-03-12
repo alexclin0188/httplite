@@ -14,4 +14,7 @@ public interface Call {
     Response executeSync() throws Exception;
     <T> T executeSync(Clazz<T> clazz) throws Exception;
     DownloadHandle download(Callback<File> callback);
+    interface CallFactory {
+        Call newCall(Request request);
+    }
 }

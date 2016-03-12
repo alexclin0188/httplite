@@ -299,7 +299,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
     @Override
     public void resume() {
-        reset();
+        isCanceled = false;
         call.executeSelf(this);
     }
 
@@ -334,10 +334,6 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
             this.targetFile = targetFile;
             this.autoResume = autoResume;
             this.autoRename = autoRename;
-        }
-
-        public String getPath() {
-            return parentDir.getAbsolutePath();
         }
     }
 }

@@ -16,6 +16,7 @@ import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.internal.MockCall;
 import alexclin.httplite.retrofit.Retrofit;
+import alexclin.httplite.Call.CallFactory;
 
 /**
  * HttpLite

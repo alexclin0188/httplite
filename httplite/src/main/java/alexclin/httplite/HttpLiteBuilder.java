@@ -8,6 +8,7 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
@@ -27,10 +28,10 @@ import alexclin.httplite.listener.ResponseParser;
  */
 public abstract class HttpLiteBuilder{
     private String baseUrl;
-    private boolean isRelase;
+    private boolean isRelease;
     private RequestFilter mRequestFilter;
     private ResponseFilter mResponseFilter;
-    private Executor customDownloadExecutor;
+    private Executor downloadExecutor;
 
     private ClientSettings settings = new ClientSettings();
 
@@ -41,15 +42,15 @@ public abstract class HttpLiteBuilder{
     public final HttpLite build(){
         LiteClient client = initLiteClient();
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.maxRetryCount,new HttpCall.Factory(),isRelase,
-                mRequestFilter,mResponseFilter,customDownloadExecutor,parserMap);
+        return new HttpLite(client,baseUrl,settings.maxRetryCount,new HttpCall.Factory(), isRelease,
+                mRequestFilter,mResponseFilter, downloadExecutor,parserMap);
     }
 
     public final HttpLite mock(MockHandler mockHandler){
         LiteClient client = initLiteClient();
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.maxRetryCount,new MockCall.MockFactory(mockHandler),isRelase,
-                mRequestFilter,mResponseFilter,customDownloadExecutor,parserMap);
+        return new HttpLite(client,baseUrl,settings.maxRetryCount,new MockCall.MockFactory(mockHandler), isRelease,
+                mRequestFilter,mResponseFilter, downloadExecutor,parserMap);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -139,7 +140,7 @@ public abstract class HttpLiteBuilder{
     }
 
     public HttpLiteBuilder setRelease(boolean isRelase){
-        this.isRelase = isRelase;
+        this.isRelease = isRelase;
         return this;
     }
 
@@ -166,6 +167,11 @@ public abstract class HttpLiteBuilder{
 
     public HttpLiteBuilder responseFilter(ResponseFilter responseFilter){
         this.mResponseFilter = responseFilter;
+        return this;
+    }
+
+    public HttpLiteBuilder customDownloadExecutor(ExecutorService executor){
+        this.downloadExecutor = executor;
         return this;
     }
 }

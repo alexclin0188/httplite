@@ -46,7 +46,7 @@ class HttpCallback<T> extends ResultCallback<T>{
                 String message = response.message();
                 if(TextUtils.isEmpty(message)){
                     try {
-                        message = decodeResponseToString(response);
+                        message = decodeToString(response);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -116,7 +116,7 @@ class HttpCallback<T> extends ResultCallback<T>{
 
     private String decodeString(Response response) throws Exception{
         try {
-            return decodeResponseToString(response);
+            return decodeToString(response);
         } catch (Exception e) {
             throw new DecodeException("Decode String error",e);
         }
@@ -130,7 +130,7 @@ class HttpCallback<T> extends ResultCallback<T>{
         }
     }
 
-    static String decodeResponseToString(Response response) throws IOException{
+    static String decodeToString(Response response) throws IOException{
         MediaType mt = response.body().contentType();
         if(mt!=null){
             Charset cs = mt.charset(Util.UTF_8);

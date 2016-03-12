@@ -2,6 +2,7 @@ package alexclin.httplite;
 
 import java.io.File;
 import java.lang.reflect.Type;
+import java.util.concurrent.Executor;
 
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.Util;
@@ -24,7 +25,7 @@ public class HttpCall implements Call{
         if(type==File.class){
             return download((Callback<File>)callback);
         }else{
-            ResultCallback rcb = createHttpCalback(callback, type);
+            ResultCallback rcb = createHttpCallback(callback, type);
             return executeSelf(rcb);
         }
     }
@@ -46,7 +47,7 @@ public class HttpCall implements Call{
         if(type==File.class) {
             callback = (ResultCallback<T>)(this.<File>createDownloadCallback(null));
         }else{
-            callback = this.<T>createHttpCalback(null, type);
+            callback = this.<T>createHttpCallback(null, type);
         }
         return callback;
     }
@@ -58,7 +59,7 @@ public class HttpCall implements Call{
         return rcb;
     }
 
-    protected  <T> ResultCallback createHttpCalback(Callback<T> callback,Type type) {
+    protected  <T> ResultCallback createHttpCallback(Callback<T> callback, Type type) {
         HttpLite lite = request.lite;
         ResultCallback<T> rcb = new HttpCallback<>(callback,this,type);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
@@ -98,8 +99,9 @@ public class HttpCall implements Call{
         HttpLite lite = request.lite;
         boolean isDownload = callback instanceof DownloadCallback;
         final Runnable preWork = isDownload?(DownloadCallback)callback:null;
-        if(isDownload&&lite.getCustomDownloadExecutor()!=null){
-            lite.getCustomDownloadExecutor().execute(new Runnable() {
+        final Executor executor = lite.getCustomDownloadExecutor();
+        if(isDownload&&executor!=null){
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {

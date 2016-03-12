@@ -19,7 +19,6 @@ import alexclin.httplite.listener.RetryListener;
  */
 public abstract class ResultCallback<T> {
     protected volatile boolean isCanceled;
-    private int retryCount;
     protected Callback<T> callback;
     protected HttpCall call;
 
@@ -94,11 +93,6 @@ public abstract class ResultCallback<T> {
                 callback.onSuccess(result, headers);
             }
         });
-    }
-
-    final void reset(){
-        retryCount = 0;
-        isCanceled = false;
     }
 
     protected final HttpLite getLite(){
