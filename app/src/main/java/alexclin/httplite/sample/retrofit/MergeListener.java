@@ -1,7 +1,5 @@
 package alexclin.httplite.sample.retrofit;
 
-import alexclin.httplite.Request;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.LogUtil;
@@ -11,11 +9,7 @@ import alexclin.httplite.util.LogUtil;
  *
  * @author alexclin 16/1/30 19:00
  */
-public class MergeListener implements ProgressListener,RetryListener,CancelListener {
-    @Override
-    public void onCancel(Request request) {
-        LogUtil.e("Request:"+request);
-    }
+public class MergeListener implements ProgressListener,RetryListener {
 
     @Override
     public void onProgressUpdate(long current, long total) {

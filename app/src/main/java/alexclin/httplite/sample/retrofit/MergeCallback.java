@@ -5,7 +5,6 @@ import java.util.Map;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.LogUtil;
@@ -15,7 +14,7 @@ import alexclin.httplite.util.LogUtil;
  *
  * @author alexclin 16/1/31 15:31
  */
-public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListener,CancelListener {
+public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListener {
     @Override
     public void onSuccess(T result, Map<String, List<String>> headers) {
         LogUtil.e("Result:"+result);
@@ -24,11 +23,6 @@ public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListe
     @Override
     public void onFailed(Request req, Exception e) {
         LogUtil.e("onFailed:",e);
-    }
-
-    @Override
-    public void onCancel(Request request) {
-        LogUtil.e("onCancel:");
     }
 
     @Override

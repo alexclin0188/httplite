@@ -4,6 +4,7 @@ import com.squareup.okhttp.Call;
 
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
+import alexclin.httplite.ResultCallback;
 
 /**
  * OkHandle
@@ -14,9 +15,11 @@ public class OkHandle implements Handle {
     private Call realCall;
     private volatile boolean isCanceled = false;
     private Request request;
+    private ResultCallback callback;
 
-    public OkHandle(final alexclin.httplite.Request request) {
+    public OkHandle(final alexclin.httplite.Request request,ResultCallback callback) {
         this.request = request;
+        this.callback = callback;
     }
 
     @Override
@@ -31,14 +34,12 @@ public class OkHandle implements Handle {
         } else {
             realCall.cancel();
         }
+        callback.onCancel();
     }
 
     @Override
     public boolean isExecuted() {
-        if (realCall == null)
-            return false;
-        else
-            return realCall.isExecuted();
+        return  realCall != null && realCall.isExecuted();
     }
 
     @Override

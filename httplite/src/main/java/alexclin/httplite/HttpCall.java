@@ -113,7 +113,8 @@ public class HttpCall implements Call{
             });
             return (DownloadCallback)callback;
         }else{
-            return lite.getClient().execute(request,callback,preWork);
+            Handle handle = lite.getClient().execute(request,callback,preWork);
+            return isDownload?((DownloadCallback)callback).wrap(handle):handle;
         }
     }
 

@@ -26,6 +26,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.okhttp2.Ok2Lite;
+import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.json.JacksonParser;
 import alexclin.httplite.sample.model.ZhihuData;
@@ -33,6 +34,7 @@ import alexclin.httplite.sample.retrofit.ApiService;
 import alexclin.httplite.sample.retrofit.ExMergeCallback;
 import alexclin.httplite.sample.retrofit.ExRequestInfo;
 import alexclin.httplite.sample.retrofit.MergeListener;
+import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -68,7 +70,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btn_retrofit1:
-                apiService.login("user_alexclin", "12345678", "sdfdsfdsfdsfsdf", new Callback<Result<UserInfo>>() {
+                apiService.login("user_alexclin", "12345678", "sdfdsfdsfdsfsdf", this,new Callback<Result<UserInfo>>() {
                     @Override
                     public void onSuccess(Result<UserInfo> result, Map<String, List<String>> headers) {
                         LogUtil.e("Result:"+result);
@@ -79,6 +81,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                         LogUtil.e("Onfailed",e);
                     }
                 });
+                httpLite.cancel(this);
                 break;
             case R.id.btn_retrofit2:
                 apiService.testBaidu(new Callback<String>() {
@@ -136,7 +139,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit6:
                 String saveDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
                 MergeListener mergeListener = new MergeListener();
-                DownloadHandle handle = apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,mergeListener,new Callback<File>(){
+                DownloadHandle handle = apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
 
                     @Override
                     public void onSuccess(File result, Map<String, List<String>> headers) {
@@ -169,7 +172,15 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 break;
             case R.id.btn_retrofit8:
                 String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-                DownloadHandle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,new ExMergeCallback());
+                ExMergeCallback callback = new ExMergeCallback();
+                final DownloadHandle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
+//                callback.setHandle(handle1);
+                view.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handle1.cancel();
+                    }
+                },2);
                 break;
         }
     }
@@ -177,13 +188,14 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private HttpLite initHttpLite(){
         if(this.httpLite!=null) return this.httpLite;
 //        String baseUrl = "http://192.168.99.238:10080/";
-        HttpLiteBuilder builder = Ok2Lite.create();
+        HttpLiteBuilder builder = URLite.create();
         HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
                 .setMaxRetryCount(2)  //设置失败重试次数
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
+                .setCache(getActivity().getCacheDir(),10*1024*1024)
 //                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
                 .requestFilter(new RequestFilter() {

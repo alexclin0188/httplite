@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.SocketFactory;
+
 import alexclin.httplite.ClientSettings;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
@@ -15,6 +17,7 @@ import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.ResultCallback;
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.util.Util;
 import okhttp3.Cache;
 import okhttp3.CacheControl;
@@ -56,7 +59,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
 
     @Override
     public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
-        final OkHandle handle = new OkHandle(request);
+        final OkHandle handle = new OkHandle(request,callback);
         if(preWork!=null){
             mClient.dispatcher().executorService().execute(new Runnable() {
                 @Override
@@ -78,11 +81,15 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
 
     private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
         okhttp3.Request.Builder rb = createRequestBuilder(request);
-        Call call = new OkCall(mClient,rb.build(),callback);
+        Call call = mClient.newCall(rb.build());
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                callback.onFailed(e);
+                if("Canceled".equals(e.getMessage())){
+                    callback.onFailed(new CanceledException(e));
+                }else{
+                    callback.onFailed(e);
+                }
             }
 
             @Override
@@ -210,10 +217,13 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
     @Override
     public void setConfig(ClientSettings settings) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.proxy(settings.getProxy()).proxySelector(settings.getProxySelector()).socketFactory(settings.getSocketFactory())
-                .sslSocketFactory(settings.getSslSocketFactory())
-                .hostnameVerifier(settings.getHostnameVerifier()).followSslRedirects(settings.isFollowSslRedirects())
+        builder.followSslRedirects(settings.isFollowSslRedirects())
                 .followRedirects(settings.isFollowRedirects());
+        if(settings.getSocketFactory()!=null) builder.socketFactory(settings.getSocketFactory());
+        if(settings.getSslSocketFactory()!=null) builder.sslSocketFactory(settings.getSslSocketFactory());
+        if(settings.getHostnameVerifier()!=null) builder.hostnameVerifier(settings.getHostnameVerifier());
+        if(settings.getProxySelector()!=null) builder.proxySelector(settings.getProxySelector());
+        if(settings.getProxy()!=null) builder.proxy(settings.getProxy());
         builder.retryOnConnectionFailure(settings.getMaxRetryCount() > 0);
         builder.connectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
         builder.readTimeout(settings.getReadTimeout(), TimeUnit.MILLISECONDS);

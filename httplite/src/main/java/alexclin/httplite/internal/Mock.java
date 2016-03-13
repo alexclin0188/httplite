@@ -14,6 +14,7 @@ import alexclin.httplite.HttpLite;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseBody;
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
@@ -86,6 +87,7 @@ public class Mock<T> {
     void processMock() throws Exception{
         if(task.clazz()==null||result!=null) return;
         if(response==null) throw new TimeoutException("No response by mock");
+        if(isCanceled()) throw new CanceledException("Mock Canceled");
         if(resultType()==Response.class){
             result = (T) response;
             headers = response.headers();

@@ -39,6 +39,8 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
     private volatile boolean isExecuted = false;
 
+    private Handle httpHandle;
+
     public DownloadCallback(Callback<File> mCallback,HttpCall call,DownloadParams params) {
         super(mCallback,call);
         this.params = params;
@@ -47,12 +49,18 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     @Override
     protected void handleResponse(Response response) {
         try {
+            checkCanceled();
             File file = parseResponse(response);
             postSuccess(file,response.headers());
-        } catch (Exception e) {
+        }catch (Exception e){
             postFailed(e);
+            if(e instanceof CanceledException){
+                if(params!=null)
+                    Util.deleteFileOrDir(params.targetFile);
+            }else{
+                isExecuted = true;
+            }
         }
-        isExecuted = true;
     }
 
     @Override
@@ -131,10 +139,11 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
                 // 防止文件正在写入时, 父文件夹被删除, 继续写入时造成偶现文件节点异常问题.
                 Util.deleteFileOrDir(params.targetFile);
             }
+            checkCanceled();
             if (!params.targetFile.exists()) {
                 params.targetFile.createNewFile();
             }
-
+            checkCanceled();
             // 处理[断点逻辑2](见文件头doc)
             long targetFileLen = params.targetFile.length();
             if (params.autoResume && targetFileLen > 0) {
@@ -170,11 +179,11 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
             } else {
                 fileOutputStream = new FileOutputStream(params.targetFile);
             }
-
+            checkCanceled();
             long total = response.body().contentLength() + current;
             bis = new BufferedInputStream(response.body().stream());
             bos = new BufferedOutputStream(fileOutputStream);
-
+            checkCanceled();
             byte[] tmp = new byte[4096];
             int len;
             while ((len = bis.read(tmp)) != -1) {
@@ -208,7 +217,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     }
 
     private void checkCanceled() throws CanceledException {
-        if(isCanceled || isThreadCanceled()){
+        if(isCanceled() || isThreadCanceled()){
             setThreadCanceled(true);
             throw new CanceledException("Download is canceled");
         }
@@ -280,6 +289,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     }
 
     private void retryDownload(Throwable throwable) throws Exception{
+        checkCanceled();
         downloadRetryCount++;
         if(downloadRetryCount>MAX_DOWNLOAD_RETRY){
             postFailed(new RuntimeException(String.format("Download retry over limit count:%d",downloadRetryCount),throwable));
@@ -320,7 +330,12 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
     @Override
     public boolean isCanceled() {
-        return isCanceled;
+        return isCanceled||(httpHandle!=null&&httpHandle.isCanceled());
+    }
+
+    public Handle wrap(Handle handle) {
+        this.httpHandle = handle;
+        return this;
     }
 
     public static class DownloadParams{

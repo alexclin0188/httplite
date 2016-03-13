@@ -7,7 +7,6 @@ import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.RetryListener;
@@ -28,6 +27,10 @@ public abstract class ResultCallback<T> {
     }
 
     public final void onResponse(Response response){
+        if(isCanceled){
+            callCancelAndFailed();
+            return;
+        }
         ResponseFilter filter = getLite().getResponseFilter();
         if(filter!=null) filter.onResponse(getLite(),call.request,response);
         handleResponse(response);
@@ -67,14 +70,6 @@ public abstract class ResultCallback<T> {
 
     public final void onCancel() {
         isCanceled = true;
-        HttpLite.runOnMainThread(new Runnable() {
-            @Override
-            public void run() {
-                CancelListener listener = call.request.cancelListener;
-                if (listener != null)
-                    listener.onCancel(call.request);
-            }
-        });
     }
 
     protected final void postFailed(final Exception e) {
@@ -101,8 +96,14 @@ public abstract class ResultCallback<T> {
 
     abstract T parseResponse(Response response) throws Exception;
 
-    public void callCancelAndFailed(){
+    public void callCancelAndFailed(CanceledException e){
         onCancel();
-        postFailed(new CanceledException("Request is canceled"));
+        if(e==null)
+            e = new CanceledException("Request is canceled");
+        postFailed(e);
+    }
+
+    public void callCancelAndFailed(){
+        callCancelAndFailed(null);
     }
 }

@@ -11,6 +11,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.exception.DecodeException;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.exception.ParserException;
@@ -53,7 +54,7 @@ class HttpCallback<T> extends ResultCallback<T>{
                 }
                 throw new HttpException(response.code(),message);
             }
-        } catch (Exception e) {
+        }catch (Exception e) {
             postFailed(e);
         }
     }
@@ -89,6 +90,8 @@ class HttpCallback<T> extends ResultCallback<T>{
                         throw new ParserException("No ResponseParser has set in HttpLite, failed with type:"+type);
                     }
                     for(ResponseParser parser: getLite().getParsers()){
+                        if(isCanceled)
+                            throw new CanceledException("Canceled during parse");
                         if(parser.isSupported(type)){
                             try {
                                 return parser.parseResponse(response, type);

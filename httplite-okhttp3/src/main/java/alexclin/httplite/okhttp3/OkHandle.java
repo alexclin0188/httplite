@@ -2,6 +2,7 @@ package alexclin.httplite.okhttp3;
 
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
+import alexclin.httplite.ResultCallback;
 import okhttp3.Call;
 
 /**
@@ -13,9 +14,11 @@ public class OkHandle implements Handle {
     private Call realCall;
     private volatile boolean isCanceled = false;
     private Request request;
+    private ResultCallback callback;
 
-    public OkHandle(final Request request) {
+    public OkHandle(final Request request,ResultCallback callback) {
         this.request = request;
+        this.callback = callback;
     }
 
     @Override
@@ -30,6 +33,7 @@ public class OkHandle implements Handle {
         } else {
             realCall.cancel();
         }
+        callback.onCancel();
     }
 
     @Override

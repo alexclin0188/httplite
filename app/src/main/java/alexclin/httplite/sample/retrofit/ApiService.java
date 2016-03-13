@@ -10,7 +10,6 @@ import alexclin.httplite.Clazz;
 import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.Method;
 import alexclin.httplite.annotation.BaseURL;
-import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
@@ -23,7 +22,6 @@ import alexclin.httplite.annotation.Progress;
 import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.sample.model.ZhihuData;
@@ -40,6 +38,7 @@ public interface ApiService {
             @JsonField("username") String userName,
             @JsonField("password")String password,
             @JsonField("token") String token,
+            @Tag Object tag,
             Callback<Result<UserInfo>> callback
     );
 
@@ -56,7 +55,6 @@ public interface ApiService {
             @Param("param2") String param2,
             @IntoFile String path,
             @Progress ProgressListener progressListener,
-            @Cancel CancelListener cancelListener,
             @Retry RetryListener retryListener,
             Callback<File> callback
     );
@@ -100,7 +98,7 @@ public interface ApiService {
             @Param("param1") String param1,
             @Param("param2") String param2,
             @IntoFile String path,
-            @Progress @Cancel @Retry MergeCallback<File> callback
+            @Progress @Retry MergeCallback<File> callback
     );
 
 //    @HTTP(path = "test2",method = Method.POST)

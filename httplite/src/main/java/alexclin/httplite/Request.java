@@ -14,7 +14,6 @@ import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.Util;
@@ -49,7 +48,6 @@ public final class Request {
     private Object tag;
 
     ProgressListener progressListener;
-    CancelListener cancelListener;
     RetryListener retryListener;
 
     HttpLite lite;
@@ -302,11 +300,6 @@ public final class Request {
         return this;
     }
 
-    public Request onCancel(CancelListener listener){
-        this.cancelListener = listener;
-        return this;
-    }
-
     public static boolean permitsRequestBody(Method method) {
         return requiresRequestBody(method)
                 || method.name().equals("OPTIONS")
@@ -440,10 +433,6 @@ public final class Request {
 
     public ProgressListener getProgressListener() {
         return progressListener;
-    }
-
-    public CancelListener getCancelListener() {
-        return cancelListener;
     }
 
     public RetryListener getRetryListener() {

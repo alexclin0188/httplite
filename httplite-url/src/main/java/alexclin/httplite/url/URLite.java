@@ -55,13 +55,13 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     public void setConfig(ClientSettings settings) {
         this.settings = settings;
         mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
-        if(settings.getCacheDir()!=null){
+        if (settings.getCacheDir() != null) {
             try {
-                mCache = new CacheImpl(settings.getCacheDir(),settings.getCacheMaxSize());
+                mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(mCache!=null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher,mCache);
+            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache);
         }
     }
 
@@ -87,13 +87,15 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
 
     @Override
     public void cancel(Object tag) {
-        mCacheDispatcher.cancel(tag);
+        if (mCacheDispatcher != null)
+            mCacheDispatcher.cancel(tag);
         mNetDispatcher.cancel(tag);
     }
 
     @Override
     public void cancelAll() {
-        mCacheDispatcher.cancelAll();
+        if (mCacheDispatcher != null)
+            mCacheDispatcher.cancelAll();
         mNetDispatcher.cancelAll();
     }
 
@@ -214,7 +216,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     private void dispatchTask(Dispatcher.Task task) {
-        if (task.request().canCache()) {
+        if (task.request().canCache()&&mCacheDispatcher!=null) {
             mCacheDispatcher.dispatch(task);
         } else {
             mNetDispatcher.dispatch(task);
@@ -232,32 +234,32 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return task.request().canCache() && mCacheDispatcher != null;
     }
 
-    public Response createCacheResponse(Response response) throws IOException{
+    public Response createCacheResponse(Response response) throws IOException {
         if (mCacheDispatcher != null)
             return mCacheDispatcher.cacheResponse(response);
         else
             return response;
     }
 
-    public void addCacheHeaders(Request request){
-        if(mCacheDispatcher!=null) mCacheDispatcher.addCacheHeaders(request);
+    public void addCacheHeaders(Request request) {
+        if (mCacheDispatcher != null) mCacheDispatcher.addCacheHeaders(request);
     }
 
     public TaskDispatcher getNetDispatcher() {
         return mNetDispatcher;
     }
 
-    public static Response createResponse(HttpURLConnection urlConnection, Request request) throws IOException{
+    public static Response createResponse(HttpURLConnection urlConnection, Request request) throws IOException {
         ResponseBody body = createResponseBody(urlConnection);
-        return  new ResponseImpl(request,urlConnection.getResponseCode(),urlConnection.getResponseMessage(),
-                urlConnection.getHeaderFields(),body);
+        return new ResponseImpl(request, urlConnection.getResponseCode(), urlConnection.getResponseMessage(),
+                urlConnection.getHeaderFields(), body);
     }
 
-    public static Response createResponse(int code,String message,Map<String,List<String>> headers,String mediaType,long length,InputStream inputStream,Request request){
-        return new ResponseImpl(request,code,message,headers,new ResponseBodyImpl(inputStream,URLMediaType.parse(mediaType),length));
+    public static Response createResponse(int code, String message, Map<String, List<String>> headers, String mediaType, long length, InputStream inputStream, Request request) {
+        return new ResponseImpl(request, code, message, headers, new ResponseBodyImpl(inputStream, URLMediaType.parse(mediaType), length));
     }
 
-    private static ResponseBody createResponseBody(HttpURLConnection urlConnection) throws IOException{
+    private static ResponseBody createResponseBody(HttpURLConnection urlConnection) throws IOException {
         long contentLength = urlConnection.getContentLength();
         MediaType type = URLMediaType.parse(urlConnection.getContentType());
         InputStream stream;
@@ -266,6 +268,6 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         } catch (IOException ioe) {
             stream = urlConnection.getErrorStream();
         }
-        return new ResponseBodyImpl(stream,type,contentLength);
+        return new ResponseBodyImpl(stream, type, contentLength);
     }
 }

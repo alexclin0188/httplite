@@ -9,7 +9,6 @@ import java.util.Map;
 import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.util.LogUtil;
 
@@ -18,7 +17,7 @@ import alexclin.httplite.util.LogUtil;
  *
  * @author alexclin 16/1/10 15:48
  */
-public class DownloadTask implements Callback<File>,CancelListener,ProgressListener {
+public class DownloadTask implements Callback<File>,ProgressListener {
     public interface TaskStateListener {
         void onProgressUpdate(long current,long total);
         void onStateChanged(DownloadTask task);
@@ -70,15 +69,6 @@ public class DownloadTask implements Callback<File>,CancelListener,ProgressListe
         }
         LogUtil.e("onFailed:"+e);
         e.printStackTrace();
-    }
-
-    @Override
-    public void onCancel(Request request) {
-        isCanceled = true;
-        if(stateListener!=null){
-            stateListener.onStateChanged(this);
-        }
-        LogUtil.e("onCancel:");
     }
 
     @Override

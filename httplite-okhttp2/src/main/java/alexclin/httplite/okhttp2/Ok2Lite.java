@@ -26,6 +26,8 @@ import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.ResultCallback;
+import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.util.LogUtil;
 
 /**
  * Ok2Lite
@@ -65,7 +67,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
 
     @Override
     public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
-        final OkHandle handle = new OkHandle(request);
+        final OkHandle handle = new OkHandle(request,callback);
         if(preWork!=null){
             mClient.getDispatcher().getExecutorService().execute(new Runnable() {
                 @Override
@@ -87,11 +89,15 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
 
     private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
         com.squareup.okhttp.Request.Builder rb = Ok2Lite.createRequestBuilder(request);
-        Call realCall = new OkCall(mClient,rb.build(),callback);
+        Call realCall = mClient.newCall(rb.build());
         realCall.enqueue(new Callback() {
             @Override
             public void onFailure(com.squareup.okhttp.Request request, IOException e) {
-                callback.onFailed(e);
+                if("Canceled".equals(e.getMessage())){
+                    callback.onFailed(new CanceledException(e));
+                }else{
+                    callback.onFailed(e);
+                }
             }
 
             @Override

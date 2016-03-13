@@ -19,7 +19,7 @@ import alexclin.httplite.internal.Dispatcher;
  *
  * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Dispatcher.Task<Response>,Handle{
+public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Dispatcher.Task<Response>>{
 
     private URLite lite;
     private Request request;
@@ -148,8 +148,8 @@ public class URLTask implements Dispatcher.Task<Response>,Handle{
 
     public void cancel(){
         isCanceled = true;
+        callback.onCancel();
     }
-
 
     public boolean isCanceled() {
         return isCanceled;
@@ -162,5 +162,10 @@ public class URLTask implements Dispatcher.Task<Response>,Handle{
 
     public void onResponse(Response response){
         callback.onResponse(response);
+    }
+
+    @Override
+    public int compareTo(Dispatcher.Task<Response> another) {
+        return hashCode()-another.hashCode();
     }
 }

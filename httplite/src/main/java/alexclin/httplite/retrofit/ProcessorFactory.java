@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.annotation.Cancel;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
 import alexclin.httplite.annotation.Mark;
@@ -21,7 +20,6 @@ import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Progress;
 import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;
-import alexclin.httplite.listener.CancelListener;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.Util;
@@ -139,8 +137,6 @@ class ProcessorFactory {
                 request.onProgress((ProgressListener) value);
             } else if (annotation instanceof Retry) {
                 request.onRetry((RetryListener) value);
-            } else if (annotation instanceof Cancel) {
-                request.onCancel((CancelListener) value);
             } else if (annotation instanceof Tag) {
                 request.tag(value);
             }
@@ -148,18 +144,15 @@ class ProcessorFactory {
 
         @Override
         public boolean support(Annotation annotation) {
-            return (annotation instanceof Progress) || (annotation instanceof Retry) ||
-                    (annotation instanceof Cancel) || (annotation instanceof Tag);
+            return (annotation instanceof Progress) || (annotation instanceof Retry) || (annotation instanceof Tag);
         }
 
         @Override
         public void checkParameters(Method method,Annotation annotation, Type parameterType) throws RuntimeException {
             if ((annotation instanceof Progress) && !(Util.isSubType(parameterType, ProgressListener.class))) {
-                throw Util.methodError(method, "The parameter with annotaion @Progress must implements ProgressListener");
+                throw Util.methodError(method, "The parameter with annotation @Progress must implements ProgressListener");
             } else if ((annotation instanceof Retry) && !(Util.isSubType(parameterType, RetryListener.class))) {
-                throw Util.methodError(method,"The parameter with annotaion @Retry must implements RetryListener");
-            } else if ((annotation instanceof Cancel) && !(Util.isSubType(parameterType, CancelListener.class))) {
-                throw Util.methodError(method,"The parameter with annotaion @Cancel must implements CancelListener");
+                throw Util.methodError(method,"The parameter with annotation @Retry must implements RetryListener");
             }
         }
     }
