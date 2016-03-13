@@ -175,12 +175,12 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 ExMergeCallback callback = new ExMergeCallback();
                 final DownloadHandle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
 //                callback.setHandle(handle1);
-                view.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        handle1.cancel();
-                    }
-                },2);
+//                view.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        handle1.cancel();
+//                    }
+//                },2);
                 break;
         }
     }

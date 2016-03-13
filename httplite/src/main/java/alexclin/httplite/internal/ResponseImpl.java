@@ -1,6 +1,8 @@
 package alexclin.httplite.internal;
 
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +28,14 @@ public class ResponseImpl implements Response {
         this.code = code;
         this.msg = msg;
         this.body = body;
+    }
+
+    public ResponseImpl(Response response,InputStream inputStream,long length){
+        this.request = response.request();
+        this.headers = response.headers();
+        this.code = response.code();
+        this.msg = response.message();
+        this.body = new ResponseBodyImpl(inputStream,response.body().contentType(),length);
     }
 
     @Override

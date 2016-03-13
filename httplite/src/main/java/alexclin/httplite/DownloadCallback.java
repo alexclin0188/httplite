@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
@@ -49,6 +50,9 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
     @Override
     protected void handleResponse(Response response) {
         try {
+            if(!isSuccess(response)){
+                handleFailedCode(response);
+            }
             checkCanceled();
             File file = parseResponse(response);
             postSuccess(file,response.headers());

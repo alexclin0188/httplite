@@ -51,14 +51,15 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
                 }
                 retryCount++;
                 response = execute();
+                if(response!=null){
+                    break;
+                }
             }catch (Exception e) {
+                e.printStackTrace();
                 if(retryCount>maxRetry || e instanceof CanceledException){
                     callback.onFailed(e);
                     return;
                 }
-            }
-            if(response!=null){
-                break;
             }
         }
         if(!isCanceled()){
@@ -125,10 +126,11 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         Response response = URLite.createResponse(connection, request);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
-        if(lite.isCacheAble(this)){
-            response = lite.createCacheResponse(response);
+        if(!lite.isCacheAble(this)){
+            return response;
+        }else{
+            return lite.createCacheResponse(response);
         }
-        return response;
     }
 
     private void assertCanceled() throws Exception{

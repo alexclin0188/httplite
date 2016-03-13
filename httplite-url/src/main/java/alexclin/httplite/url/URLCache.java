@@ -11,8 +11,8 @@ import alexclin.httplite.Response;
  * @author alexclin 16/2/17 20:41
  */
 public interface URLCache {
-    Response get(Request request) throws IOException;
-    void remove(Request request) throws IOException;
-    void put(Response response) throws IOException;
+    Response get(Request request,boolean force) throws IOException;
+    boolean remove(Request request) throws IOException;
+    Response put(Response response) throws IOException;
     void addCacheHeaders(Request request);
 }

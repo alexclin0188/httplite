@@ -36,6 +36,7 @@ public class URLMediaType implements alexclin.httplite.MediaType {
      * type.
      */
     public static URLMediaType parse(String string) {
+        if(string==null) return null;
         Matcher typeSubtype = TYPE_SUBTYPE.matcher(string);
         if (!typeSubtype.lookingAt()) return null;
         String type = typeSubtype.group(1).toLowerCase(Locale.US);

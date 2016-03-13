@@ -44,15 +44,7 @@ class HttpCallback<T> extends ResultCallback<T>{
             if (isIgnoreStatus(type) || isSuccess(response)) {
                 postSuccess(parseResponse(response), response.headers());
             } else {
-                String message = response.message();
-                if(TextUtils.isEmpty(message)){
-                    try {
-                        message = decodeToString(response);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                throw new HttpException(response.code(),message);
+                handleFailedCode(response);
             }
         }catch (Exception e) {
             postFailed(e);
@@ -62,11 +54,6 @@ class HttpCallback<T> extends ResultCallback<T>{
     @Override
     protected Type resultType() {
         return type;
-    }
-
-    private boolean isSuccess(Response response) {
-        int code = response.code();
-        return code >= 200 && code < 300;
     }
 
     @Override @SuppressWarnings("unchecked")
@@ -131,22 +118,6 @@ class HttpCallback<T> extends ResultCallback<T>{
         } catch (IOException e) {
             throw new DecodeException("Decode Bitmap error",e);
         }
-    }
-
-    static String decodeToString(Response response) throws IOException{
-        MediaType mt = response.body().contentType();
-        if(mt!=null){
-            Charset cs = mt.charset(Util.UTF_8);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().stream(),cs==null? Util.UTF_8:cs));
-            StringBuilder stringBuilder = new StringBuilder();
-            String s;
-            while ((s=reader.readLine())!=null){
-                stringBuilder.append(s);
-            }
-            Util.closeQuietly(reader);
-            return stringBuilder.toString();
-        }
-        throw new RuntimeException("Not text response body,no Content-Type in response");
     }
 
     static boolean isIgnoreStatus(Type type){

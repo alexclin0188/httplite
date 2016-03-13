@@ -68,5 +68,15 @@ public class CacheEntry {
         return this.softTtl < System.currentTimeMillis();
     }
 
-
+    @Override
+    public String toString() {
+        return "CacheEntry{" +
+                "response=" + response +
+                ", etag='" + etag + '\'' +
+                ", softTtl=" + softTtl +
+                ", ttl=" + ttl +
+                ", serverDate=" + serverDate +
+                ", lastModified=" + lastModified +
+                '}';
+    }
 }

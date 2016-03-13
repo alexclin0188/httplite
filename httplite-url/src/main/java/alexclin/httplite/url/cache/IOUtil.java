@@ -15,6 +15,7 @@
  */
 package alexclin.httplite.url.cache;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.File;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+
+import alexclin.httplite.util.Util;
 
 /** Junk drawer of utility methods. */
 final class IOUtil {
@@ -130,14 +133,14 @@ final class IOUtil {
 	}
 
 	public static void writeString(OutputStream os, String s) throws IOException {
-		byte[] b = s.getBytes("UTF-8");
+		byte[] b = s!=null?s.getBytes("UTF-8"):new byte[0];
 		writeLong(os, b.length);
 		os.write(b, 0, b.length);
 	}
 
 	public static String readString(InputStream is) throws IOException {
 		int n = (int) readLong(is);
-		byte[] b = streamToBytes(is, n,null);
+		byte[] b = n!=0?streamToBytes(is, n,null):new byte[0];
 		return new String(b, "UTF-8");
 	}
 
@@ -162,7 +165,7 @@ final class IOUtil {
 	}
 
 	public static void writeHeaders(OutputStream out,Map<String,List<String>> headers)throws IOException{
-		writeInt(out,headers.size());
+		writeInt(out, headers.size());
 		for(String key:headers.keySet()){
 			List<String> list = headers.get(key);
 			writeString(out, key);
@@ -187,5 +190,11 @@ final class IOUtil {
 			hashMap.put(key,list);
 		}
 		return hashMap;
+	}
+
+	public static byte[] readAllBytes(InputStream dataIn) throws IOException{
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		Util.copy(dataIn,bos);
+		return bos.toByteArray();
 	}
 }

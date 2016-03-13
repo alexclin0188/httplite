@@ -30,7 +30,9 @@ import java.util.TimeZone;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
+import alexclin.httplite.internal.ResponseImpl;
 import alexclin.httplite.url.URLite;
+import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -45,7 +47,7 @@ public class CacheEntryParser {
      */
     private static final int CACHE_MAGIC = 0x20160221;
 
-    public static CacheEntry parseCacheEntry(Response response) {
+    public static CacheEntry parseCacheEntry(Response response,PoolingStream poolingStream,long length) {
         long now = System.currentTimeMillis();
 
         Map<String, List<String>> headers = response.headers();
@@ -64,10 +66,12 @@ public class CacheEntryParser {
         String headerValue;
 
         List<String> headerValues = headers.get("Date");
-        for (String value : headerValues) {
-            headerValue = value;
-            serverDate = parseDateAsEpoch(headerValue);
-            if (serverDate != 0) break;
+        if (headerValues != null && !headerValues.isEmpty()) {
+            for (String value : headerValues) {
+                headerValue = value;
+                serverDate = parseDateAsEpoch(headerValue);
+                if (serverDate != 0) break;
+            }
         }
 
         headerValues = headers.get("Cache-Control");
@@ -95,17 +99,21 @@ public class CacheEntryParser {
         }
 
         headerValues = headers.get("Expires");
-        for (String value : headerValues) {
-            headerValue = value;
-            serverExpires = parseDateAsEpoch(headerValue);
-            if (serverExpires != 0) break;
+        if (headerValues != null && !headerValues.isEmpty()) {
+            for (String value : headerValues) {
+                headerValue = value;
+                serverExpires = parseDateAsEpoch(headerValue);
+                if (serverExpires != 0) break;
+            }
         }
 
         headerValues = headers.get("Last-Modified");
-        for (String value : headerValues) {
-            headerValue = value;
-            lastModified = parseDateAsEpoch(headerValue);
-            if (lastModified != 0) break;
+        if (headerValues != null && !headerValues.isEmpty()) {
+            for (String value : headerValues) {
+                headerValue = value;
+                lastModified = parseDateAsEpoch(headerValue);
+                if (lastModified != 0) break;
+            }
         }
 
         headerValues = headers.get("ETag");
@@ -124,9 +132,12 @@ public class CacheEntryParser {
             // Default semantic for Expire header in HTTP specification is softExpire.
             softExpire = now + (serverExpires - serverDate);
             finalExpire = softExpire;
+        }else{
+            return null;
         }
 
         CacheEntry entry = new CacheEntry();
+        response = new ResponseImpl(response,poolingStream,length);
         entry.setResponse(response);
         entry.setEtag(serverEtag);
         entry.setSoftTtl(softExpire);
@@ -148,18 +159,19 @@ public class CacheEntryParser {
     public static long parseDateAsEpoch(String dateStr) {
         for (String pattern : DEFAULT_PATTERNS) {
             try {
-                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
+                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern,Locale.getDefault());
                 return dateFormat.parse(dateStr).getTime();
             } catch (ParseException e) {
-                e.printStackTrace();
+
             }
         }
+        LogUtil.e("ParseFailed with:"+dateStr);
         return 0;
     }
 
-    public static String foramtDateAsEpoch(long time) {
+    public static String formatDateAsEpoch(long time) {
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(PATTERN_RFC1123, Locale.ENGLISH);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(PATTERN_RFC1123,Locale.getDefault());
             return dateFormat.format(new Date(time));
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,7 +199,13 @@ public class CacheEntryParser {
         Map<String, List<String>> headers = IOUtil.readHeaders(dataIn);
         String mediaType = IOUtil.readString(dataIn);
         long contentLength = IOUtil.readLong(dataIn);
-        byte[] bytes = IOUtil.streamToBytes(dataIn, (int) contentLength, pool);
+        byte[] bytes;
+        if(contentLength>0){
+            bytes = IOUtil.streamToBytes(dataIn, (int) contentLength, pool);
+        }else{
+            bytes = IOUtil.readAllBytes(dataIn);
+            contentLength = bytes.length;
+        }
         entry.setResponse(URLite.createResponse(code, message, headers, mediaType, contentLength,
                 new PoolingStream(bytes, pool), request));
         return entry;
@@ -219,6 +237,7 @@ public class CacheEntryParser {
 
     public static class PoolingStream extends ByteArrayInputStream {
         private ByteArrayPool pool;
+
         public PoolingStream(byte[] buf, ByteArrayPool pool) {
             super(buf);
             this.pool = pool;

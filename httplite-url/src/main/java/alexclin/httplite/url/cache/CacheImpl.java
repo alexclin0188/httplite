@@ -5,8 +5,10 @@ import java.io.IOException;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
+import alexclin.httplite.internal.ResponseImpl;
 import alexclin.httplite.url.CacheDispatcher;
 import alexclin.httplite.url.URLCache;
+import alexclin.httplite.util.LogUtil;
 
 /**
  * URLCacheImpl
@@ -30,48 +32,74 @@ public class CacheImpl implements URLCache{
     }
 
     @Override
-    public Response get(Request request) throws IOException {
+    public Response get(Request request,boolean force) throws IOException {
         String key = CacheDispatcher.getCacheKey(request);
         DiskLruCache.Snapshot snapshot = cache.get(key);
+        if(snapshot==null){
+            return null;
+        }
         CacheEntry entry = CacheEntryParser.newEntry(snapshot, pool, request);
-        if (request.getCacheExpiredTime() == Request.FORCE_CACHE) {
+        if (force||request.getCacheExpiredTime() == Request.FORCE_CACHE) {
             return entry.getResponse();
         }
-        if ((request.getCacheExpiredTime() > 0 && entry.getLastModified() + request.getCacheExpiredTime() * 1000 > System.currentTimeMillis())
-                || entry.isExpired())
+        boolean isEntryExpired = entry.isExpired();
+        boolean isRequestExpired = (request.getCacheExpiredTime() > 0 && entry.getLastModified() + request.getCacheExpiredTime() * 1000 > System.currentTimeMillis());
+        if (isEntryExpired||isRequestExpired) {
+            LogUtil.i(String.format("Expired %b-%b, remove old:%s",isEntryExpired,isRequestExpired,entry));
+            cache.remove(key);
             return null;
+        }
         return entry.getResponse();
     }
 
     @Override
-    public void remove(Request request) throws IOException {
+    public boolean remove(Request request) throws IOException {
         String key = CacheDispatcher.getCacheKey(request);
         cache.remove(key);
+        return true;
     }
 
     @Override
-    public void put(Response response) throws IOException {
+    public Response put(Response response) throws IOException {
         if(response.body().contentLength()>MAX_CONTENT_LENGTH||response.body().contentLength()>cache.getMaxSize()/3){
-            return;
+            return response;
+        }
+        byte[] data = IOUtil.readAllBytes(response.body().stream());
+        Response returnResponse = new ResponseImpl(response,new CacheEntryParser.PoolingStream(data,pool),data.length);
+
+        CacheEntry entry = CacheEntryParser.parseCacheEntry(response,new CacheEntryParser.PoolingStream(data,pool),data.length);
+        if(entry==null){
+            return returnResponse;
         }
         String cacheKey = CacheDispatcher.getCacheKey(response.request());
         DiskLruCache.Snapshot snapshot = cache.get(cacheKey);
-        if (snapshot == null) return;
-        DiskLruCache.Editor editor = null;
-        try {
+        DiskLruCache.Editor editor;
+        if (snapshot == null){
+            editor = cache.edit(cacheKey);
+        }else{
             editor = snapshot.edit();
-            CacheEntry entry = CacheEntryParser.parseCacheEntry(response);
+        }
+        if(editor==null){
+            LogUtil.e("edit failed");
+            return returnResponse;
+        }
+        try {
             CacheEntryParser.writeEntryTo(entry, editor);
             editor.commit();
-        } catch (IOException e) {
+        } catch (Exception e){
             abortQuietly(editor);
+            throw e;
         }
+        return returnResponse;
     }
 
     public void addCacheHeaders(Request request){
         CacheEntry entry = null;
         try {
             DiskLruCache.Snapshot snapshot = cache.get(CacheDispatcher.getCacheKey(request));
+            if(snapshot==null){
+                return;
+            }
             entry = CacheEntryParser.newEntry(snapshot);
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,7 +114,7 @@ public class CacheImpl implements URLCache{
         }
 
         if (entry.getLastModified() > 0) {
-            String lastModified = CacheEntryParser.foramtDateAsEpoch(entry.getLastModified());
+            String lastModified = CacheEntryParser.formatDateAsEpoch(entry.getLastModified());
             if(lastModified!=null)
                 request.header("If-Modified-Since", lastModified);
         }

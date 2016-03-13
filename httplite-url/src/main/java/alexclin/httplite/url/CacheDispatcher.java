@@ -1,6 +1,7 @@
 package alexclin.httplite.url;
 
 import android.os.Process;
+import android.util.Log;
 import android.util.Pair;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,URLCache cache) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
+        start();
     }
 
     public void dispatch(Task<Response> task) {
@@ -57,7 +59,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }else{
             task.wait();
         }
-        Response response = cache.get(task.request());
+        Response response = cache.get(task.request(),false);
         if(response==null){
             response = networkDispatcher.execute(task);
         }
@@ -100,15 +102,13 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         if (cacheKey != null) {
             try {
                 if (response.code() < 300) {
-                    try {
-                        cache.put(response);
-                        response = cache.get(response.request());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    LogUtil.i("success response, put cache");
+                    response = cache.put(response);
                 } else if (response.code() == HttpException.SC_NOT_MODIFIED) {
-                    return cache.get(response.request());
+                    LogUtil.i("NOT_MODIFIED, use old cache");
+                    return cache.get(response.request(),true);
                 } else {
+                    LogUtil.i("error response, clear cache");
                     cache.remove(response.request());
                 }
             } finally {
@@ -155,8 +155,6 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
                 LogUtil.i(String.format("Request for cacheKey=%s is in flight, putting on hold.", cacheKey));
                 return true;
             } else {
-                // Insert 'null' queue for this cacheKey, indicating there is now a request in
-                // flight.
                 mWaitingRequests.put(cacheKey, null);
                 return false;
             }
@@ -179,11 +177,13 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
                 continue;
             }
             try {
-                final Response response = cache.get(task.request());
+                final Response response = cache.get(task.request(),false);
                 if(response==null){
+                    LogUtil.i("No cache, use net");
                     networkDispatcher.dispatch(task);
                     continue;
                 }
+                LogUtil.i("cache hit, dispatch to parse result");
                 networkDispatcher.dispatch(new CacheTask(task,response));
             } catch (IOException e) {
                 e.printStackTrace();

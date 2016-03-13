@@ -235,10 +235,11 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     public Response createCacheResponse(Response response) throws IOException {
-        if (mCacheDispatcher != null)
+        if (mCacheDispatcher != null) {
             return mCacheDispatcher.cacheResponse(response);
-        else
+        }else {
             return response;
+        }
     }
 
     public void addCacheHeaders(Request request) {

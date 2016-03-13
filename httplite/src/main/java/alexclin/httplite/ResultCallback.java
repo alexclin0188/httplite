@@ -1,15 +1,23 @@
 package alexclin.httplite;
 
 
+import android.text.TextUtils;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.RetryListener;
+import alexclin.httplite.util.Util;
 
 /**
  * ResultCallback
@@ -39,6 +47,11 @@ public abstract class ResultCallback<T> {
     protected abstract void handleResponse(Response response);
 
     protected abstract Type resultType();
+
+    protected boolean isSuccess(Response response) {
+        int code = response.code();
+        return code >= 200 && code < 300;
+    }
 
     public final void onFailed(Exception e) {
         postFailed(e);
@@ -105,5 +118,33 @@ public abstract class ResultCallback<T> {
 
     public void callCancelAndFailed(){
         callCancelAndFailed(null);
+    }
+
+    protected void handleFailedCode(Response response) throws HttpException {
+        String message = response.message();
+        if(TextUtils.isEmpty(message)){
+            try {
+                message = decodeToString(response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        throw new HttpException(response.code(),message);
+    }
+
+    static String decodeToString(Response response) throws IOException {
+        MediaType mt = response.body().contentType();
+        if(mt!=null){
+            Charset cs = mt.charset(Util.UTF_8);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().stream(),cs==null? Util.UTF_8:cs));
+            StringBuilder stringBuilder = new StringBuilder();
+            String s;
+            while ((s=reader.readLine())!=null){
+                stringBuilder.append(s);
+            }
+            Util.closeQuietly(reader);
+            return stringBuilder.toString();
+        }
+        throw new RuntimeException("Not text response body,no Content-Type in response");
     }
 }
