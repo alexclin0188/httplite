@@ -16,24 +16,24 @@ A android http library
 使用okhttp 2.7.5作为http实现
 
 ```
-    compile 'alexclin.httplite:httplite-okhttp2:1.0.1'
+    compile 'alexclin.httplite:httplite-okhttp2:1.0.2'
 ```
 
 使用okhttp 3.2.0作为http实现
 ```
-    compile 'alexclin.httplite:httplite-okhttp3:1.0.1'
+    compile 'alexclin.httplite:httplite-okhttp3:1.0.2'
 ```
 
 使用系统URLConnection作为http实现
 ```
-    compile 'alexclin.httplite:httplite-url:1.0.1'
+    compile 'alexclin.httplite:httplite-url:1.0.2'
 ```
 
 或者直接使用releaselib中的jar包
 
-* 1 okhttp2: httplite1.0.1.jar+httplite-ok2lite1.0.1.jar+okhttp 2.x.x版本jar包
-* 2 okhttp3: httplite1.0.1.jar+httplite-ok3lite1.0.1.jar+okhttp 3.x.x版本jar包
-* 3 url: httplite1.0.1.jar+httplite-urlite1.0.1.jar
+* 1 okhttp2: httplite1.0.2.jar+httplite-ok2lite1.0.2.jar+okhttp 2.x.x版本jar包
+* 2 okhttp3: httplite1.0.2.jar+httplite-ok3lite1.0.2.jar+okhttp 3.x.x版本jar包
+* 3 url: httplite1.0.2.jar+httplite-urlite1.0.2.jar
 
 ### 使用接口定义API接口
 
