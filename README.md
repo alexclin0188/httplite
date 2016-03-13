@@ -42,12 +42,14 @@ A android http library
 Demo中的API接口定义
 
 ```
+@BaseURL("http://192.168.99.238:10080/")
 public interface ApiService {
     @POST("/login")
     void login(
-            @Param("username") String userName,
-            @Param("password")String password,
-            @Param("token") String token,
+            @JsonField("username") String userName,
+            @JsonField("password")String password,
+            @JsonField("token") String token,
+            @Tag Object tag,
             Callback<Result<UserInfo>> callback
     );
 
@@ -64,7 +66,6 @@ public interface ApiService {
             @Param("param2") String param2,
             @IntoFile String path,
             @Progress ProgressListener progressListener,
-            @Cancel CancelListener cancelListener,
             @Retry RetryListener retryListener,
             Callback<File> callback
     );
@@ -107,7 +108,7 @@ public interface ApiService {
             @Param("param1") String param1,
             @Param("param2") String param2,
             @IntoFile String path,
-            @Progress @Cancel @Retry MergeCallback<File> callback
+            @Progress @Retry MergeCallback<File> callback
     );
 }
 ```
