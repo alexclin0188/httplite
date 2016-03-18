@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
@@ -25,7 +25,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
 
     private TaskStateListener stateListener;
 
-    private DownloadHandle handle;
+    private Handle handle;
 
     private long total;
     private long current;
@@ -118,7 +118,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         return headers;
     }
 
-    public void setHandle(DownloadHandle handle) {
+    public void setHandle(Handle handle) {
         this.handle = handle;
     }
 

@@ -32,8 +32,8 @@ class HttpCallback<T> extends ResultCallback<T>{
     private ParseType parseType;
 
     @SuppressWarnings("unchecked")
-    HttpCallback(Callback<T> callback, HttpCall call,Type type) {
-        super(callback,call);
+    HttpCallback(Callback<T> callback, HttpCall call,Type type,boolean callOnMain) {
+        super(callback,call,callOnMain);
         this.type = type;
         this.parseType = handleType(type);
     }

@@ -7,7 +7,8 @@ import com.example.UserInfo;
 import java.io.File;
 
 import alexclin.httplite.Clazz;
-import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Method;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;
@@ -49,7 +50,7 @@ public interface ApiService {
     void testZhihu(Callback<ZhihuData> callback);
 
     @GET("/download/{test_holder}")
-    DownloadHandle downdloadFile(
+    Handle downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
@@ -93,7 +94,7 @@ public interface ApiService {
     );
 
     @GET("/download/{test_holder}")
-    DownloadHandle downdloadFile(
+    Handle downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,

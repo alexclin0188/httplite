@@ -97,7 +97,7 @@ public class HttpLite {
         }
     }
 
-    public static void runOnMainThread(Runnable runnable){
+    public static void postOnMain(Runnable runnable){
         if(Thread.currentThread()==Looper.getMainLooper().getThread()){
             runnable.run();
         }else{

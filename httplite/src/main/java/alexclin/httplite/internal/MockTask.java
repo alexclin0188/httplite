@@ -1,7 +1,7 @@
 package alexclin.httplite.internal;
 
 import alexclin.httplite.Clazz;
-import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
@@ -13,22 +13,24 @@ import alexclin.httplite.listener.Callback;
  *
  * @author alexclin  16/3/12 13:15
  */
-public class MockTask<T> implements Dispatcher.Task<T>,DownloadHandle {
+public class MockTask<T> implements Dispatcher.Task<T>,Handle {
     private MockCall call;
     private boolean isCanceled;
     private volatile boolean isExecuted;
     private Clazz<T> clazz;
     private Callback<T> callback;
     private Mock<T> mock;
+    private boolean callOnMain;
 
-    public MockTask(MockCall call, Clazz<T> clazz) {
+    public MockTask(MockCall call, Clazz<T> clazz,boolean callOnMain) {
         this.call = call;
         this.clazz = clazz;
         this.mock = new Mock<>(this);
+        this.callOnMain = callOnMain;
     }
 
-    public MockTask(MockCall call, Callback<T> callback) {
-        this(call, Clazz.of(callback));
+    public MockTask(MockCall call, Callback<T> callback,boolean callOnMain) {
+        this(call, Clazz.of(callback),callOnMain);
         this.callback = callback;
     }
 
@@ -54,19 +56,26 @@ public class MockTask<T> implements Dispatcher.Task<T>,DownloadHandle {
         try {
             call.factory.callMock(request(), mock);
             mock.processMock();
-            HttpLite.runOnMainThread(new Runnable() {
+            if(callOnMain)
+            HttpLite.postOnMain(new Runnable() {
                 @Override
                 public void run() {
                     mock.performCallback(callback);
                 }
             });
+            else
+                mock.performCallback(callback);
         } catch (final Exception e) {
-            HttpLite.runOnMainThread(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onFailed(request(), e);
-                }
-            });
+            if(callOnMain){
+                HttpLite.postOnMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.onFailed(request(), e);
+                    }
+                });
+            }else{
+                callback.onFailed(request(), e);
+            }
         }
         isExecuted = true;
     }
@@ -99,15 +108,12 @@ public class MockTask<T> implements Dispatcher.Task<T>,DownloadHandle {
     }
 
     @Override
-    public void pause() {
-        cancel();
-    }
-
-    @Override
-    public void resume() {
+    public boolean resume() {
         if(isExecuted){
             isCanceled = false;
             executeAsync();
+            return true;
         }
+        return false;
     }
 }

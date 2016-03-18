@@ -157,6 +157,11 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         return isCanceled;
     }
 
+    @Override
+    public boolean resume() {
+        return false;
+    }
+
 
     public boolean isExecuted() {
         return isExecuted;

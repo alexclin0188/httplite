@@ -29,7 +29,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin at 16/1/1 19:12
  */
-class DownloadCallback extends ResultCallback<File> implements Runnable,DownloadHandle{
+class DownloadCallback extends ResultCallback<File> implements Runnable,Handle{
     private static final int CHECK_SIZE = 512;
     private static final int MAX_DOWNLOAD_RETRY = 2;
     private int downloadRetryCount;
@@ -42,8 +42,8 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
 
     private Handle httpHandle;
 
-    public DownloadCallback(Callback<File> mCallback,HttpCall call,DownloadParams params) {
-        super(mCallback,call);
+    public DownloadCallback(Callback<File> mCallback,HttpCall call,DownloadParams params,boolean callOnMain) {
+        super(mCallback,call,callOnMain);
         this.params = params;
     }
 
@@ -300,21 +300,17 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Download
             return;
         }
         try {
-            handleResponse(call.executeSync());
+            handleResponse(call.sync());
         } catch (Exception e) {
             retryDownload(throwable);
         }
     }
 
     @Override
-    public void pause() {
-        onCancel();
-    }
-
-    @Override
-    public void resume() {
+    public boolean resume() {
         isCanceled = false;
         call.executeSelf(this);
+        return true;
     }
 
     @Override

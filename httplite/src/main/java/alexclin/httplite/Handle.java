@@ -10,4 +10,5 @@ public interface Handle {
     void cancel();
     boolean isExecuted();
     boolean isCanceled();
+    boolean resume();
 }

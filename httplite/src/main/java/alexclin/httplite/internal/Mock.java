@@ -62,7 +62,7 @@ public class Mock<T> {
     }
 
     public final void mockRetry(final int tryCount, final int maxCount) {
-        HttpLite.runOnMainThread(new Runnable() {
+        HttpLite.postOnMain(new Runnable() {
             @Override
             public void run() {
                 if (mRetryListener != null) {
@@ -73,7 +73,7 @@ public class Mock<T> {
     }
 
     public final void mockProgress(final long current, final long total) {
-        HttpLite.runOnMainThread(new Runnable() {
+        HttpLite.postOnMain(new Runnable() {
             @Override
             public void run() {
                 if (mProgressListener != null) {

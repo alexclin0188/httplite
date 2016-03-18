@@ -12,56 +12,50 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin at 16/1/26 22:12
  */
-public class HttpCall implements Call{
+public class HttpCall extends Call{
     protected Request request;
 
     protected HttpCall(Request request) {
         this.request = request;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> Handle execute(Callback<T> callback){
+    @Override @SuppressWarnings("unchecked")
+    public <T> Handle async(boolean callOnMain, Callback<T> callback) {
         Type type = Util.type(Callback.class, callback);
         if(type==File.class){
-            return download((Callback<File>)callback);
+            final DownloadCallback rcb = createDownloadCallback((Callback<File>) callback,callOnMain);
+            executeSelf(rcb);
+            return rcb;
         }else{
-            ResultCallback rcb = createHttpCallback(callback, type);
+            ResultCallback rcb = createHttpCallback(callback, type,callOnMain);
             return executeSelf(rcb);
         }
     }
 
-    public Response executeSync() throws Exception{
-        return executeSyncInner(null);
-    }
-
-    public <T> T executeSync(Clazz<T> clazz) throws Exception{
-        ResultCallback<T> callback = createResultCallback(clazz);
+    @Override
+    public <T> T sync(Clazz<T> clazz) throws Exception{
+        ResultCallback<T> callback = createResultCallback(clazz,true);
         Response response = executeSyncInner(callback);
         return parseResult(response, callback);
     }
 
+    /***************************************/
+
     @SuppressWarnings("unchecked")
-    protected  <T> ResultCallback<T> createResultCallback(Clazz<T> clazz) {
+    protected  <T> ResultCallback<T> createResultCallback(Clazz<T> clazz,boolean callOnMain) {
         Type type = clazz.type();
         ResultCallback<T> callback;
         if(type==File.class) {
-            callback = (ResultCallback<T>)(this.<File>createDownloadCallback(null));
+            callback = (ResultCallback<T>)(this.<File>createDownloadCallback(null,callOnMain));
         }else{
-            callback = this.<T>createHttpCallback(null, type);
+            callback = this.<T>createHttpCallback(null, type,callOnMain);
         }
         return callback;
     }
 
-    @Override
-    public DownloadHandle download(Callback<File> callback) {
-        final DownloadCallback rcb = createDownloadCallback(callback);
-        executeSelf(rcb);
-        return rcb;
-    }
-
-    protected  <T> ResultCallback createHttpCallback(Callback<T> callback, Type type) {
+    protected  <T> ResultCallback createHttpCallback(Callback<T> callback, Type type,boolean callOnMain) {
         HttpLite lite = request.lite;
-        ResultCallback<T> rcb = new HttpCallback<>(callback,this,type);
+        ResultCallback<T> rcb = new HttpCallback<>(callback,this,type,callOnMain);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
         return rcb;
     }
@@ -74,12 +68,12 @@ public class HttpCall implements Call{
         return request.lite.parse(mediaType);
     }
 
-    protected DownloadCallback createDownloadCallback(Callback<File> callback) {
+    protected DownloadCallback createDownloadCallback(Callback<File> callback,boolean callOnMain) {
         DownloadCallback.DownloadParams params = request.getDownloadParams();
         if(params==null){
             throw new IllegalArgumentException("to execute Callback<File>, you must call intoFile() on Request before execute");
         }
-        return new DownloadCallback(callback,this,params);
+        return new DownloadCallback(callback,this,params,callOnMain);
     }
 
     private Response executeSyncInner(ResultCallback callback) throws Exception{

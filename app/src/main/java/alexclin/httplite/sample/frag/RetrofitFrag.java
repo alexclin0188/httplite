@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.Clazz;
-import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
@@ -139,7 +139,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit6:
                 String saveDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
                 MergeListener mergeListener = new MergeListener();
-                DownloadHandle handle = apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
+                Handle handle = apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
 
                     @Override
                     public void onSuccess(File result, Map<String, List<String>> headers) {
@@ -173,7 +173,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit8:
                 String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
                 ExMergeCallback callback = new ExMergeCallback();
-                final DownloadHandle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
+                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
 //                callback.setHandle(handle1);
 //                view.postDelayed(new Runnable() {
 //                    @Override

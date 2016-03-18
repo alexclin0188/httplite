@@ -458,8 +458,8 @@ public final class Request {
         return this;
     }
 
-    public DownloadHandle download(Callback<File> callback){
-        return get().download(callback);
+    public Handle download(Callback<File> callback){
+        return get().async(callback);
     }
 
     private DownloadCallback.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){

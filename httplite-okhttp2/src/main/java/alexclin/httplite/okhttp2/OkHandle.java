@@ -50,6 +50,11 @@ public class OkHandle implements Handle {
             return realCall.isCanceled();
     }
 
+    @Override
+    public boolean resume() {
+        return false;
+    }
+
     void setRealCall(Call realCall) {
         this.realCall = realCall;
     }

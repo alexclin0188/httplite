@@ -1,10 +1,7 @@
 package alexclin.httplite.internal;
 
-import java.io.File;
-
 import alexclin.httplite.Call;
 import alexclin.httplite.Clazz;
-import alexclin.httplite.DownloadHandle;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpCall;
 import alexclin.httplite.MediaType;
@@ -27,24 +24,13 @@ public class MockCall extends HttpCall{
     }
 
     @Override
-    public <T> Handle execute(Callback<T> callback) {
-        return mock(callback);
+    public <T> Handle async(boolean callOnMain,Callback<T> callback) {
+        return mock(callback,callOnMain);
     }
 
     @Override
-    public Response executeSync() throws Exception {
-        return mockSync(new Clazz<Response>() {
-        });
-    }
-
-    @Override
-    public <T> T executeSync(Clazz<T> clazz) throws Exception {
+    public <T> T sync(Clazz<T> clazz) throws Exception {
         return mockSync(clazz);
-    }
-
-    @Override
-    public DownloadHandle download(Callback<File> callback) {
-        return mock(callback);
     }
 
     Request request(){
@@ -53,13 +39,13 @@ public class MockCall extends HttpCall{
 
     @SuppressWarnings("unchecked")
     private  <T> T mockSync(Clazz<T> clazz) throws Exception {
-        MockTask<T> task = new MockTask<>(this,clazz);
+        MockTask<T> task = new MockTask<>(this,clazz,true);
         return (T)factory.dispatcher().execute(task);
     }
 
     @SuppressWarnings("unchecked")
-    private  <T> MockTask<T> mock(final Callback<T> callback) {
-        MockTask<T> mockTask = new MockTask<>(this,callback);
+    private  <T> MockTask<T> mock(final Callback<T> callback,boolean callOnMain) {
+        MockTask<T> mockTask = new MockTask<>(this,callback,callOnMain);
         factory.dispatcher().dispatch(mockTask);
         return mockTask;
     }
@@ -69,7 +55,7 @@ public class MockCall extends HttpCall{
     }
 
     <T> T parseResultFrom(Response response,Clazz<T> clazz) throws Exception{
-        return parseResult(response, createResultCallback(clazz));
+        return parseResult(response, createResultCallback(clazz,true));
     }
 
     public static class MockFactory extends HttpCall.Factory {

@@ -105,7 +105,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                             }
                             list.add(fileInfo);
                         }
-                    HttpLite.runOnMainThread(new Runnable() {
+                    HttpLite.postOnMain(new Runnable() {
                         @Override
                         public void run() {
                             PostFrag.this.currentPath = currentPath;
@@ -125,7 +125,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             loadFiles(info.filePath);
         }else{
             File file = new File(basePath+info.filePath);
-            mHttpLite.url(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).execute(new Callback<Result<String>>() {
+            mHttpLite.url(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).async(new Callback<Result<String>>() {
                 @Override
                 public void onSuccess(Result<String> result, Map<String, List<String>> headers) {
                     LogUtil.e("Result:"+result);
@@ -139,7 +139,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             });
             MediaType type = mHttpLite.parse(MediaType.MULTIPART_FORM+";charset=utf-8");
             RequestBody body = mHttpLite.createRequestBody(mHttpLite.parse(MediaType.APPLICATION_STREAM),file);
-            mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body).post().execute(new Callback<Result<String>>() {
+            mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body).post().async(new Callback<Result<String>>() {
                 @Override
                 public void onSuccess(Result<String> result, Map<String, List<String>> headers) {
                     LogUtil.e("Result:"+result);
@@ -151,7 +151,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                     e.printStackTrace();
                 }
             });
-            mHttpLite.url("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).execute(new Callback<String>() {
+            mHttpLite.url("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).async(new Callback<String>() {
                 @Override
                 public void onSuccess(String result, Map<String, List<String>> headers) {
                     LogUtil.e("Result:" + result);
@@ -163,7 +163,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                     e.printStackTrace();
                 }
             });
-            mHttpLite.url("/").form("&test1","name&1").form("干撒呢","二逼").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().execute(new Callback<String>() {
+            mHttpLite.url("/").form("&test1","name&1").form("干撒呢","二逼").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().async(new Callback<String>() {
                 @Override
                 public void onSuccess(String result, Map<String, List<String>> headers) {
                     LogUtil.e("Result:" + result);

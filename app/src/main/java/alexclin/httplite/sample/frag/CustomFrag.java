@@ -31,7 +31,7 @@ public class CustomFrag extends Fragment {
             case R.id.btn_test:
                 App.httpLite(getActivity()).url("http://192.168.99.238:10080/").header("header","not chinese").header("test_header","2016-01-06")
                         .header("double_header","header1").addHeader("double_header","head2")
-                        .param("param1","I'm god").param("param2","You dog").param("param3","中文").get().execute(new Callback<String>() {
+                        .param("param1","I'm god").param("param2","You dog").param("param3","中文").get().async(new Callback<String>() {
                     @Override
                     public void onSuccess(String result,Map<String,List<String>> headers) {
                         mInfoTv.setText(result);
@@ -44,7 +44,7 @@ public class CustomFrag extends Fragment {
                 });
                 break;
             case R.id.btn_test2:
-                App.httpLite(getActivity()).url("http://news-at.zhihu.com/api/4/news/latest").get().execute(new Callback<ZhihuData>() {
+                App.httpLite(getActivity()).url("http://news-at.zhihu.com/api/4/news/latest").get().async(new Callback<ZhihuData>() {
                     @Override
                     public void onSuccess(ZhihuData result,Map<String,List<String>> headers) {
                         LogUtil.e("Result:" + result);
@@ -61,7 +61,7 @@ public class CustomFrag extends Fragment {
             case R.id.btn_test3:
                 App.httpLite(getActivity()).url("http://192.168.99.238:10080/").header("header","not chinese").header("test_header","2016-01-06")
                         .header("double_header","header1").addHeader("double_header","head2")
-                        .param("type","json").param("param2","You dog").param("param3", "中文").get().execute(new Callback<Result<List<FileInfo>>>() {
+                        .param("type","json").param("param2","You dog").param("param3", "中文").get().async(new Callback<Result<List<FileInfo>>>() {
                     @Override
                     public void onSuccess(Result<List<FileInfo>> result,Map<String,List<String>> headers) {
                         mInfoTv.setText("Result:"+result);
