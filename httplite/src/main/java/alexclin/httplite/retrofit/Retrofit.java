@@ -18,6 +18,7 @@ import alexclin.httplite.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.Result;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
@@ -223,12 +224,17 @@ public abstract class Retrofit {
     private class SyncInvoker implements Invoker {
         @Override
         public Object invoke(Call call,final Type returnType, Object... args) throws Exception{
-            return call.sync(new Clazz() {
+            Clazz clazz = new Clazz() {
                 @Override
                 public Type type() {
                     return returnType;
                 }
-            });
+            };
+            if(Util.isSubType(returnType, Result.class)){
+                return call.syncResult(clazz);
+            }else{
+                return call.sync(clazz);
+            }
         }
 
         @Override
@@ -238,7 +244,12 @@ public abstract class Retrofit {
 
         @Override
         public void checkMethod(Method method) throws RuntimeException {
-            //TODO 检查方法定义
+            if(method.getReturnType()!=Result.class){
+                Class[] exceptionClasses = method.getExceptionTypes();
+                if(exceptionClasses.length!=1|| exceptionClasses[0]!=Exception.class){
+                    throw Util.methodError(method,"Sync method must declare throws Exception");
+                }
+            }
         }
     }
 
@@ -260,7 +271,21 @@ public abstract class Retrofit {
 
         @Override
         public void checkMethod(Method method) throws RuntimeException {
-            //TODO 检查方法定义
+            Type returnType = method.getGenericReturnType();
+            Type[] methodParameterTypes  = method.getGenericParameterTypes();
+            if(methodParameterTypes.length==0){
+                throw new IllegalArgumentException("the method define in the interface must have at least one parameter as Callback<T> or Clazz<T>");
+            }
+            Type lastParamType = methodParameterTypes[methodParameterTypes.length-1];
+            if(Util.hasUnresolvableType(lastParamType)){
+                throw Util.methodError(method,
+                        "Method lastParamType must not include a type variable or wildcard: %s", lastParamType);
+            }
+            if(Util.isSubType(lastParamType, Callback.class)){
+                if(returnType != void.class && returnType != Handle.class){
+                    throw Util.methodError(method, "the method define in the interface must return void or Handle");
+                }
+            }
         }
     }
 }

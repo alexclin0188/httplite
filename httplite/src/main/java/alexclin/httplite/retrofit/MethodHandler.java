@@ -54,6 +54,11 @@ public class MethodHandler<T> {
         methodAnnotations = method.getAnnotations();
         paramMiscProcessors = new HashMap<>();
 
+        if(Util.hasUnresolvableType(returnType)){
+            throw Util.methodError(method,
+                    "Method return type must not include a type variable or wildcard: %s", returnType);
+        }
+
         int count = methodParameterTypes.length;
         parameterProcessors = new ParameterProcessor[count][];
         int annotationCount;
