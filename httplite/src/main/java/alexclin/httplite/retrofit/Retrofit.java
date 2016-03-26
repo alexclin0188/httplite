@@ -5,13 +5,20 @@ import android.os.Build;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Call;
+import alexclin.httplite.Clazz;
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
 
@@ -25,6 +32,16 @@ public abstract class Retrofit {
     private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();  //TODO LinkedHashMap合不合适？
 
     private MethodListener methodListener;
+    private List<Invoker> mInvokers;
+
+    public Retrofit(List<Invoker> invokers) {
+        mInvokers = new ArrayList<>();
+        if(invokers!=null){
+            mInvokers.addAll(invokers);
+        }
+        mInvokers.add(new AsyncInvoker());
+        mInvokers.add(new SyncInvoker());
+    }
 
     @SuppressWarnings("unchecked")
     public final <T> T create(final Class<T> service,final RequestFilter filter){
@@ -86,7 +103,7 @@ public abstract class Retrofit {
         synchronized (methodHandlerCache) {
             handler = methodHandlerCache.get(method);
             if (handler == null) {
-                handler = new MethodHandler(method,!isReleaseMode());
+                handler = new MethodHandler(method,!isReleaseMode(),searchInvoker(method));
                 methodHandlerCache.put(method, handler);
             }
         }
@@ -190,6 +207,60 @@ public abstract class Retrofit {
             if(processor.getClass()==clazz){
                 iterator.remove();
             }
+        }
+    }
+
+    private Invoker searchInvoker(Method method) throws RuntimeException{
+        for(Invoker invoker:mInvokers){
+            if(invoker.support(method)){
+                if(!isReleaseMode()) invoker.checkMethod(method);
+                return invoker;
+            }
+        }
+        return null;
+    }
+
+    private class SyncInvoker implements Invoker {
+        @Override
+        public Object invoke(Call call,final Type returnType, Object... args) throws Exception{
+            return call.sync(new Clazz() {
+                @Override
+                public Type type() {
+                    return returnType;
+                }
+            });
+        }
+
+        @Override
+        public boolean support(Method method) {
+            return true;
+        }
+
+        @Override
+        public void checkMethod(Method method) throws RuntimeException {
+            //TODO 检查方法定义
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private class AsyncInvoker implements Invoker {
+        @Override
+        public Object invoke(Call call, Type returnType, Object... args) throws Exception{
+            Handle obj = call.async(true,(Callback)args[args.length-1]);
+            return returnType==void.class?null:obj;
+        }
+
+        @Override
+        public boolean support(Method method) {
+            Class[] paramTyps = method.getParameterTypes();
+            boolean isSupport = (paramTyps[paramTyps.length-1]==Callback.class)&&
+                    (method.getReturnType() == Callback.class);
+            return isSupport;
+        }
+
+        @Override
+        public void checkMethod(Method method) throws RuntimeException {
+            //TODO 检查方法定义
         }
     }
 }

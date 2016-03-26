@@ -25,9 +25,8 @@ import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.ResultCallback;
+import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.util.LogUtil;
 
 /**
  * Ok2Lite
@@ -66,7 +65,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
+    public Handle execute(final alexclin.httplite.Request request, final ResponseHandler callback, final Runnable preWork) {
         final OkHandle handle = new OkHandle(request,callback);
         if(preWork!=null){
             mClient.getDispatcher().getExecutorService().execute(new Runnable() {
@@ -87,22 +86,22 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         return handle;
     }
 
-    private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
+    private Call executeInternal(final alexclin.httplite.Request request, final ResponseHandler handler){
         com.squareup.okhttp.Request.Builder rb = Ok2Lite.createRequestBuilder(request);
         Call realCall = mClient.newCall(rb.build());
         realCall.enqueue(new Callback() {
             @Override
             public void onFailure(com.squareup.okhttp.Request request, IOException e) {
                 if("Canceled".equals(e.getMessage())){
-                    callback.onFailed(new CanceledException(e));
+                    handler.onFailed(new CanceledException(e));
                 }else{
-                    callback.onFailed(e);
+                    handler.onFailed(e);
                 }
             }
 
             @Override
             public void onResponse(Response response) throws IOException {
-                callback.onResponse(new OkResponse(response, request));
+                handler.onResponse(new OkResponse(response, request));
             }
         });
         return realCall;

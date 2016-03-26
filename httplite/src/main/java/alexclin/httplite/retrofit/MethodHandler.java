@@ -2,7 +2,6 @@ package alexclin.httplite.retrofit;
 
 import android.util.Pair;
 
-import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -25,24 +24,24 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/28 19:20
  */
-public class MethodHandler {
+public class MethodHandler<T> {
     private MethodProcessor[] methodProcessors;
     private ParameterProcessor[][] parameterProcessors;
     private Type returnType;
     private Annotation[][] methodParameterAnnotationArrays;
     private Annotation[] methodAnnotations;
     private Map<ParamMiscProcessor,List<Pair<Integer,Integer>>> paramMiscProcessors;
-    private boolean isSyncMethod;
     private String baseUrl;
+    private Invoker invoker;
 
-    public MethodHandler(Method method,boolean check) {
+    public MethodHandler(Method method,boolean check,Invoker invoker) {
         if(check){
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
             for(AnnotationRule rule:annotationRules){
                 rule.checkMethod(method);
             }
         }
-
+        this.invoker = invoker;
         Class<?> dc = method.getDeclaringClass();
         BaseURL baseURL = dc.getAnnotation(BaseURL.class);
         if(baseURL!=null){
@@ -51,7 +50,6 @@ public class MethodHandler {
 
         returnType = method.getGenericReturnType();
         Type[] methodParameterTypes = method.getGenericParameterTypes();
-        isSyncMethod = checkReturnAndLastParameter(method, returnType, methodParameterTypes, check);
         methodParameterAnnotationArrays = method.getParameterAnnotations();
         methodAnnotations = method.getAnnotations();
         paramMiscProcessors = new HashMap<>();
@@ -114,23 +112,15 @@ public class MethodHandler {
         }
 
         Type lastParamTypeRaw = Util.getRawType(lastParamType);
-        boolean isSync = lastParamTypeRaw==Clazz.class;
+        boolean isSync = lastParamTypeRaw==Callback.class;
 
         if(check){
-            Type typeParam = Util.getTypeParameter(lastParamType);
-            if(lastParamTypeRaw==Clazz.class){
-                if(!returnType.equals(typeParam)){
-                    throw Util.methodError(method, "the return type must be same as the type T in Clazz<T> when you use Clazz<T> as last param type");
-                }
-            }else if(Util.isSubType(lastParamType,Callback.class)){
+            if(Util.isSubType(lastParamType,Callback.class)){
                 if(returnType != void.class && returnType != Handle.class){
                     throw Util.methodError(method, "the method define in the interface must return void or Handle/DownloadHandle");
                 }
-            }else {
-                throw Util.methodError(method,
-                        "Method lastParamType must be Callback<T> or Clazz<T> but is: %s", lastParamType);
             }
-            if(isSync){
+            if(!isSync){
                 Class[] exceptionClazzs = method.getExceptionTypes();
                 if(exceptionClazzs.length!=1|| exceptionClazzs[0]!=Exception.class){
                     throw Util.methodError(method,"Sync method must declare throws Exception");
@@ -162,19 +152,23 @@ public class MethodHandler {
                 processor.process(request,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
             }
         }
-        return performReturn(retrofit,filter,request,returnType,args[args.length-1]);
+        Call call = retrofit.makeCall(request);
+        call = new CallWrapper(call,filter,retrofit);
+        return invoker.invoke(call,returnType,args);
     }
 
-    @SuppressWarnings("unchecked")
-    private Object performReturn(Retrofit retrofit,RequestFilter filter,Request request, Type returnType,Object lastParam) throws Exception{
-        Call call = retrofit.makeCall(request);
-        if(isSyncMethod){
-            if(filter!=null) filter.onRequest(retrofit.lite(),request,((Clazz)lastParam).type());
-            return call.sync((Clazz) lastParam);
-        }else{
-            if(filter!=null) filter.onRequest(retrofit.lite(),request,Util.type(Callback.class,lastParam));
-            Object result = call.async((Callback) lastParam);
-            return (returnType == Handle.class) ? result : null;
-        }
-    }
+//    @SuppressWarnings("unchecked")
+//    private Object performReturn(Retrofit retrofit,RequestFilter filter,Request request, Type returnType,Object lastParam) throws Exception{
+//
+//        if(isCallbackMethod){
+//            if(filter!=null) filter.onRequest(retrofit.lite(),request,Util.type(Callback.class, lastParam));
+//            Object result = call.async((Callback) lastParam);
+//            return (returnType == void.class) ? null:result;
+//        }else{
+//            if(filter!=null) filter.onRequest(retrofit.lite(),request,((Clazz)lastParam).type());
+//            return call.sync((Clazz) lastParam);
+//        }
+//    }
+
+
 }

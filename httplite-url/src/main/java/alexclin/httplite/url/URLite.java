@@ -23,7 +23,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseBody;
-import alexclin.httplite.ResultCallback;
+import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.internal.Dispatcher;
 import alexclin.httplite.internal.ResponseBodyImpl;
 import alexclin.httplite.internal.ResponseImpl;
@@ -73,7 +73,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public Handle execute(Request request, ResultCallback callback, Runnable preWork) {
+    public Handle execute(Request request, ResponseHandler callback, Runnable preWork) {
         URLTask task = new URLTask(this, request, callback, preWork);
         dispatchTask(task);
         return task;

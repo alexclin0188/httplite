@@ -4,7 +4,7 @@ import com.squareup.okhttp.Call;
 
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
-import alexclin.httplite.ResultCallback;
+import alexclin.httplite.ResponseHandler;
 
 /**
  * OkHandle
@@ -15,9 +15,9 @@ public class OkHandle implements Handle {
     private Call realCall;
     private volatile boolean isCanceled = false;
     private Request request;
-    private ResultCallback callback;
+    private ResponseHandler callback;
 
-    public OkHandle(final alexclin.httplite.Request request,ResultCallback callback) {
+    public OkHandle(final alexclin.httplite.Request request,ResponseHandler callback) {
         this.request = request;
         this.callback = callback;
     }

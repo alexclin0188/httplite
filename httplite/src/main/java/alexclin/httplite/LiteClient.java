@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public interface LiteClient {
 
-    Handle execute(Request request, ResultCallback callback,Runnable preWork);
+    Handle execute(Request request, ResponseHandler callback,Runnable preWork);
 
     Response executeSync(Request request) throws Exception;
 

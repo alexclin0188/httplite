@@ -22,7 +22,11 @@ public abstract class Call {
 
     public abstract <T> T sync(Clazz<T> clazz) throws Exception;
 
+    public abstract <T> Result<T> syncResult(Clazz<T> clazz);
+
     interface CallFactory {
         Call newCall(Request request);
     }
+
+    public abstract Request request();
 }

@@ -10,7 +10,7 @@ import javax.net.ssl.HttpsURLConnection;
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.ResultCallback;
+import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.internal.Dispatcher;
 
@@ -25,13 +25,13 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
     private Request request;
     private int retryCount;
 
-    private ResultCallback callback;
+    private ResponseHandler callback;
     private Runnable preWork;
 
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLite lite,Request request,ResultCallback callback,Runnable runnable) {
+    public URLTask(URLite lite,Request request,ResponseHandler callback,Runnable runnable) {
         this.request = request;
         this.lite = lite;
         this.callback = callback;

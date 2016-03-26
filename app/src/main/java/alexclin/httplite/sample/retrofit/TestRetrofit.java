@@ -1,5 +1,8 @@
 package alexclin.httplite.sample.retrofit;
 
+import com.example.FileInfo;
+import com.example.Result;
+
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.LogUtil;

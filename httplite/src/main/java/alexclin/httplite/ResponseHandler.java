@@ -20,17 +20,17 @@ import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.Util;
 
 /**
- * ResultCallback
+ * ResponseHandler
  *
  * @author alexclin  16/1/1 19:05
  */
-public abstract class ResultCallback<T> {
+public abstract class ResponseHandler<T> {
     protected volatile boolean isCanceled;
     protected Callback<T> callback;
     protected HttpCall call;
     private boolean callOnMain;
 
-    protected ResultCallback(Callback<T> callback, HttpCall call, boolean callOnMain) {
+    protected ResponseHandler(Callback<T> callback, HttpCall call, boolean callOnMain) {
         this.callback = callback;
         this.call = call;
         this.callOnMain = callOnMain;

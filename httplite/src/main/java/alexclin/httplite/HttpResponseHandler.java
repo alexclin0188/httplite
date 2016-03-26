@@ -2,29 +2,23 @@ package alexclin.httplite;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.text.TextUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.util.Collection;
 
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.exception.DecodeException;
-import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.exception.ParserException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.util.Util;
 
 /**
- * HttpCallback
+ * HttpResponseHandler
  *
  * @author alexclin at 15/12/31 21:27
  */
-class HttpCallback<T> extends ResultCallback<T>{
+class HttpResponseHandler<T> extends ResponseHandler<T> {
     enum ParseType{
         RAW,Bitmap,String,Object
     }
@@ -32,7 +26,7 @@ class HttpCallback<T> extends ResultCallback<T>{
     private ParseType parseType;
 
     @SuppressWarnings("unchecked")
-    HttpCallback(Callback<T> callback, HttpCall call,Type type,boolean callOnMain) {
+    HttpResponseHandler(Callback<T> callback, HttpCall call, Type type, boolean callOnMain) {
         super(callback,call,callOnMain);
         this.type = type;
         this.parseType = handleType(type);

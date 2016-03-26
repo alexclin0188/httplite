@@ -33,10 +33,6 @@ public class MockCall extends HttpCall{
         return mockSync(clazz);
     }
 
-    Request request(){
-        return request;
-    }
-
     @SuppressWarnings("unchecked")
     private  <T> T mockSync(Clazz<T> clazz) throws Exception {
         MockTask<T> task = new MockTask<>(this,clazz,true);

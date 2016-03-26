@@ -13,7 +13,7 @@ public abstract class StringParser implements ResponseParser{
 
     @Override
     public final <T> T parseResponse(Response response, Type type) throws Exception{
-        return parseResponse(HttpCallback.decodeToString(response), type);
+        return parseResponse(HttpResponseHandler.decodeToString(response), type);
     }
 
     public abstract <T> T parseResponse(String content, Type type) throws Exception;

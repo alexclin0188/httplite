@@ -19,17 +19,16 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
 /**
- * DownloadCallback
+ * DownloadHandler
  *
  * @author alexclin at 16/1/1 19:12
  */
-class DownloadCallback extends ResultCallback<File> implements Runnable,Handle{
+class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
     private static final int CHECK_SIZE = 512;
     private static final int MAX_DOWNLOAD_RETRY = 2;
     private int downloadRetryCount;
@@ -42,7 +41,7 @@ class DownloadCallback extends ResultCallback<File> implements Runnable,Handle{
 
     private Handle httpHandle;
 
-    public DownloadCallback(Callback<File> mCallback,HttpCall call,DownloadParams params,boolean callOnMain) {
+    public DownloadHandler(Callback<File> mCallback, HttpCall call, DownloadParams params, boolean callOnMain) {
         super(mCallback,call,callOnMain);
         this.params = params;
     }

@@ -59,7 +59,7 @@ public final class Request {
 
     private HashMap<String,Pair<String,Boolean>> pathHolders;
 
-    private DownloadCallback.DownloadParams downloadParams;
+    private DownloadHandler.DownloadParams downloadParams;
 
     private Object mark;
 
@@ -462,8 +462,8 @@ public final class Request {
         return get().async(callback);
     }
 
-    private DownloadCallback.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
-        DownloadCallback.DownloadParams params = DownloadCallback.createParams(path,fileName,autoResume,autoRename);
+    private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
+        DownloadHandler.DownloadParams params = DownloadHandler.createParams(path, fileName, autoResume, autoRename);
         if(params==null){
             String info = String.format("call intoFile() with wrong params->path:%s,fileName:%s,resume:%b,rename:%b",path,fileName,autoResume,autoRename);
             throw new IllegalArgumentException(info);
@@ -471,7 +471,7 @@ public final class Request {
         return params;
     }
 
-    public DownloadCallback.DownloadParams getDownloadParams() {
+    public DownloadHandler.DownloadParams getDownloadParams() {
         return downloadParams;
     }
 

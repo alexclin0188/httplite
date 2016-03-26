@@ -8,15 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.SocketFactory;
-
 import alexclin.httplite.ClientSettings;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.ResultCallback;
+import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.util.Util;
 import okhttp3.Cache;
@@ -58,7 +56,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    public Handle execute(final alexclin.httplite.Request request, final ResultCallback callback, final Runnable preWork) {
+    public Handle execute(final alexclin.httplite.Request request, final ResponseHandler callback, final Runnable preWork) {
         final OkHandle handle = new OkHandle(request,callback);
         if(preWork!=null){
             mClient.dispatcher().executorService().execute(new Runnable() {
@@ -79,7 +77,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
         return handle;
     }
 
-    private Call executeInternal(final alexclin.httplite.Request request, final ResultCallback callback){
+    private Call executeInternal(final alexclin.httplite.Request request, final ResponseHandler callback){
         okhttp3.Request.Builder rb = createRequestBuilder(request);
         Call call = mClient.newCall(rb.build());
         call.enqueue(new Callback() {
