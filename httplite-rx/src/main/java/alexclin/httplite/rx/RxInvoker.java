@@ -1,5 +1,6 @@
 package alexclin.httplite.rx;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
@@ -69,8 +70,13 @@ public class RxInvoker implements Invoker {
     }
 
     @Override
-    public void checkMethod(Method method) throws RuntimeException {
-        //TODO 检查method定义
+    public boolean checkMethod(Method method) throws RuntimeException {
+        Type type = Util.getTypeParameter(method.getGenericReturnType());
+        if(Util.isSubType(type,Result.class)){
+            return Util.getTypeParameter(type)==File.class;
+        }else{
+            return type== File.class;
+        }
     }
 
     private static class CallOnSubscribe<R> implements Observable.OnSubscribe<R>{

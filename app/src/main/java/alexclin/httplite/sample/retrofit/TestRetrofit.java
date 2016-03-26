@@ -72,6 +72,6 @@ public class TestRetrofit {
 //        Object[] testObj = arrray;
 //        ApiService service = lite.retrofit(ApiService.class);
 
-        LogUtil.e("IsSub:"+Util.isSubType(ExMergeCallback.class, Callback.class));
+//        LogUtil.e("IsSub:"+Util.isSubType(ExMergeCallback.class, Callback.class));
     }
 }

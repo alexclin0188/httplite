@@ -2,6 +2,7 @@ package alexclin.httplite.retrofit;
 
 import android.os.Build;
 
+import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -214,7 +215,6 @@ public abstract class Retrofit {
     private Invoker searchInvoker(Method method) throws RuntimeException{
         for(Invoker invoker:mInvokers){
             if(invoker.support(method)){
-                if(!isReleaseMode()) invoker.checkMethod(method);
                 return invoker;
             }
         }
@@ -243,12 +243,15 @@ public abstract class Retrofit {
         }
 
         @Override
-        public void checkMethod(Method method) throws RuntimeException {
+        public boolean checkMethod(Method method) throws RuntimeException {
             if(method.getReturnType()!=Result.class){
                 Class[] exceptionClasses = method.getExceptionTypes();
                 if(exceptionClasses.length!=1|| exceptionClasses[0]!=Exception.class){
                     throw Util.methodError(method,"Sync method must declare throws Exception");
                 }
+                return Util.getTypeParameter(method.getGenericReturnType())==File.class;
+            }else{
+                return method.getReturnType().equals(File.class);
             }
         }
     }
@@ -263,14 +266,12 @@ public abstract class Retrofit {
 
         @Override
         public boolean support(Method method) {
-            Class[] paramTyps = method.getParameterTypes();
-            boolean isSupport = (paramTyps[paramTyps.length-1]==Callback.class)&&
-                    (method.getReturnType() == Callback.class);
-            return isSupport;
+            Class[] paramTypes = method.getParameterTypes();
+            return Util.isSubType(paramTypes[paramTypes.length-1],Callback.class);
         }
 
         @Override
-        public void checkMethod(Method method) throws RuntimeException {
+        public boolean checkMethod(Method method) throws RuntimeException {
             Type returnType = method.getGenericReturnType();
             Type[] methodParameterTypes  = method.getGenericParameterTypes();
             if(methodParameterTypes.length==0){
@@ -286,6 +287,7 @@ public abstract class Retrofit {
                     throw Util.methodError(method, "the method define in the interface must return void or Handle");
                 }
             }
+            return Util.getTypeParameter(lastParamType)==File.class;
         }
     }
 }

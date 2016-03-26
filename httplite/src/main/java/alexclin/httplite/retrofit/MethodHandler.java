@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.BaseURL;
@@ -36,9 +35,10 @@ public class MethodHandler<T> {
 
     public MethodHandler(Method method,boolean check,Invoker invoker) {
         if(check){
+            boolean isFileResult = invoker.checkMethod(method);
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
             for(AnnotationRule rule:annotationRules){
-                rule.checkMethod(method);
+                rule.checkMethod(method,isFileResult);
             }
         }
         this.invoker = invoker;
@@ -158,7 +158,7 @@ public class MethodHandler<T> {
             }
         }
         Call call = retrofit.makeCall(request);
-        call = new CallWrapper(call,filter,retrofit);
+        call = new RetrofitCall(call,filter,retrofit);
         return invoker.invoke(call,returnType,args);
     }
 

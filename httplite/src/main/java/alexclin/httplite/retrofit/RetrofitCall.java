@@ -5,21 +5,22 @@ import alexclin.httplite.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.Result;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
 
 /**
- * CallWrapper
+ * RetrofitCall
  *
  * @author alexclin  16/3/24 22:49
  */
-public class CallWrapper extends Call {
+public class RetrofitCall extends Call {
     private Call realCall;
     private RequestFilter filter;
     private Retrofit retrofit;
 
-    public CallWrapper(Call realCall, RequestFilter filter, Retrofit retrofit) {
+    public RetrofitCall(Call realCall, RequestFilter filter, Retrofit retrofit) {
         this.realCall = realCall;
         this.filter = filter;
         this.retrofit = retrofit;
@@ -40,6 +41,11 @@ public class CallWrapper extends Call {
             }
         });
         return realCall.sync(clazz);
+    }
+
+    @Override
+    public <T> Result<T> syncResult(Clazz<T> clazz) {
+        return realCall.syncResult(clazz);
     }
 
     @Override

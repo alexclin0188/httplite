@@ -27,6 +27,7 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.okhttp3.Ok3Lite;
+import alexclin.httplite.rx.RxInvoker;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.json.JacksonParser;
 import alexclin.httplite.sample.model.ZhihuData;
@@ -36,6 +37,10 @@ import alexclin.httplite.sample.retrofit.ExRequestInfo;
 import alexclin.httplite.sample.retrofit.MergeListener;
 import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;
+import rx.Observable;
+import rx.Scheduler;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 /**
  * RetrofitFrag
@@ -171,9 +176,9 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_retrofit8:
-                String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-                ExMergeCallback callback = new ExMergeCallback();
-                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
+//                String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+//                ExMergeCallback callback = new ExMergeCallback();
+//                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
 //                callback.setHandle(handle1);
 //                view.postDelayed(new Runnable() {
 //                    @Override
@@ -181,6 +186,23 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 //                        handle1.cancel();
 //                    }
 //                },2);
+                Observable<ZhihuData> observable = apiService.testZhihu();
+                observable.subscribeOn(Schedulers.io()).subscribe(new Subscriber<ZhihuData>() {
+                    @Override
+                    public void onCompleted() {
+                        LogUtil.e("onCompleted");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        LogUtil.e("Onfailed", e);
+                    }
+
+                    @Override
+                    public void onNext(ZhihuData zhihuData) {
+                        LogUtil.e("Result:" + zhihuData);
+                    }
+                });
                 break;
         }
     }
@@ -195,15 +217,16 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .setMaxRetryCount(2)  //设置失败重试次数
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
-                .setCache(getActivity().getCacheDir(),10*1024*1024)
+                .setCache(getActivity().getCacheDir(), 10 * 1024 * 1024)
 //                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
                 .requestFilter(new RequestFilter() {
                     @Override
-                    public void onRequest(HttpLite lite,Request request, Type type) {
-                        request.header("handle","misc");
+                    public void onRequest(HttpLite lite, Request request, Type type) {
+                        request.header("handle", "misc");
                     }
                 })
+                .addRetrofitInvoker(new RxInvoker())
                 .build();
         return lite;
     }

@@ -10,5 +10,5 @@ import java.lang.reflect.Method;
  * @author alexclin 16/1/30 09:54
  */
 public interface AnnotationRule {
-    void checkMethod(Method method) throws RuntimeException;
+    void checkMethod(Method method,boolean isFileResult) throws RuntimeException;
 }

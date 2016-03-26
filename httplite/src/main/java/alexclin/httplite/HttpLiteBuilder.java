@@ -6,7 +6,9 @@ import java.net.CookiePolicy;
 import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +22,7 @@ import alexclin.httplite.internal.MockCall;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
+import alexclin.httplite.retrofit.Invoker;
 
 /**
  * HttpLiteBuilder
@@ -32,6 +35,7 @@ public abstract class HttpLiteBuilder{
     private RequestFilter mRequestFilter;
     private ResponseFilter mResponseFilter;
     private Executor downloadExecutor;
+    private List<Invoker> invokers;
 
     private ClientSettings settings = new ClientSettings();
 
@@ -43,14 +47,14 @@ public abstract class HttpLiteBuilder{
         LiteClient client = initLiteClient();
         client.setConfig(settings);
         return new HttpLite(client,baseUrl,settings.maxRetryCount,new HttpCall.Factory(), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap);
+                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
     }
 
     public final HttpLite mock(MockHandler mockHandler){
         LiteClient client = initLiteClient();
         client.setConfig(settings);
         return new HttpLite(client,baseUrl,settings.maxRetryCount,new MockCall.MockFactory(mockHandler), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap);
+                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -172,6 +176,14 @@ public abstract class HttpLiteBuilder{
 
     public HttpLiteBuilder customDownloadExecutor(ExecutorService executor){
         this.downloadExecutor = executor;
+        return this;
+    }
+
+    public HttpLiteBuilder addRetrofitInvoker(Invoker invoker){
+        if(invokers==null) invokers = new ArrayList<>();
+        if(invoker!=null&&!invokers.contains(invoker)){
+            this.invokers.add(invoker);
+        }
         return this;
     }
 }

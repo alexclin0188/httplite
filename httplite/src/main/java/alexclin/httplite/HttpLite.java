@@ -15,6 +15,7 @@ import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.internal.MockCall;
+import alexclin.httplite.retrofit.Invoker;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
 
@@ -39,7 +40,7 @@ public class HttpLite {
     private final boolean isRelease;
 
     HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
-             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap) {
+             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap,List<Invoker> invokers) {
         this.client = client;
         this.parserMap = parserMap;
         this.baseUrl = baseUrl;
@@ -49,6 +50,7 @@ public class HttpLite {
         this.mRequestFilter = requestFilter;
         this.mResponseFilter = responseFilter;
         this.customDownloadExecutor = downloadExecutor;
+        this.retrofit = new RetrofitImpl(invokers);
     }
 
     public HttpLite setBaseUrl(String baseUrl){
@@ -145,10 +147,6 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz,RequestFilter filter){
-        if(retrofit==null)
-            synchronized (this){
-                if(retrofit==null) retrofit = new RetrofitImpl();
-            }
         return retrofit.create(clazz,filter);
     }
 
@@ -173,6 +171,10 @@ public class HttpLite {
     }
 
     class RetrofitImpl extends Retrofit{
+
+        public RetrofitImpl(List<Invoker> invokers) {
+            super(invokers);
+        }
 
         @Override
         public Request makeRequest(String baseUrl) {

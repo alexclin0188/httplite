@@ -13,5 +13,12 @@ import alexclin.httplite.Call;
 public interface Invoker {
     Object invoke(Call call,Type returnType,Object... args) throws Exception;
     boolean support(Method method);
-    void checkMethod(Method method) throws RuntimeException;
+
+    /**
+     * check method defined in interface and return whether the result want to parse is File
+     * @param method method
+     * @return whether the result want to parse is File
+     * @throws RuntimeException
+     */
+    boolean checkMethod(Method method) throws RuntimeException;
 }

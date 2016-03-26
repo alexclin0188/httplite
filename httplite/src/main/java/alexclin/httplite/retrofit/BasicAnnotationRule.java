@@ -15,6 +15,7 @@ import alexclin.httplite.annotation.IntoFile;
 import alexclin.httplite.annotation.JsonField;
 import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
+import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.Util;
 
 /**
@@ -26,7 +27,7 @@ import alexclin.httplite.util.Util;
 public class BasicAnnotationRule implements AnnotationRule {
 
     @Override
-    public void checkMethod(Method interfaceMethod) throws RuntimeException {
+    public void checkMethod(Method interfaceMethod,boolean isFileResult) throws RuntimeException {
         Type[] methodParameterTypes = interfaceMethod.getGenericParameterTypes();
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
         alexclin.httplite.Method method = null;
@@ -47,7 +48,6 @@ public class BasicAnnotationRule implements AnnotationRule {
             throw Util.methodError(interfaceMethod,info);
         }
 
-        boolean isFileReturnOrCallback = Util.getTypeParameter(methodParameterTypes[methodParameterTypes.length-1])== File.class;
         boolean allowBody = Request.permitsRequestBody(method);
         boolean requireBody = Request.requiresRequestBody(method);
         boolean hasBodyAnnotation = false;
@@ -75,7 +75,7 @@ public class BasicAnnotationRule implements AnnotationRule {
                     }
                     hasMultipartAnnotation = true;
                 } else if (annotation instanceof IntoFile) {
-                    if (!isFileReturnOrCallback)
+                    if (!isFileResult)
                         throw Util.methodError(interfaceMethod,"Use @InfoFile must with last parameter (Callback<File>) or (Clazz<File> and return file)");
                     hasIntoFile = true;
                 } else if (annotation instanceof JsonField){
@@ -100,7 +100,7 @@ public class BasicAnnotationRule implements AnnotationRule {
             }
         }
 
-        if(isFileReturnOrCallback&&!hasIntoFile){
+        if(isFileResult&&!hasIntoFile){
             throw Util.methodError(interfaceMethod,"Use last parameter (Callback<File>) or (Clazz<File> and return file), method must has @IntoFile parameter");
         }
 

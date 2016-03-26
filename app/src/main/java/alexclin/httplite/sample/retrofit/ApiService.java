@@ -8,7 +8,6 @@ import java.io.File;
 
 import alexclin.httplite.Clazz;
 import alexclin.httplite.Handle;
-import alexclin.httplite.Handle;
 import alexclin.httplite.Method;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;
@@ -26,6 +25,7 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.sample.model.ZhihuData;
+import rx.Observable;
 
 /**
  * ApiService
@@ -112,4 +112,10 @@ public interface ApiService {
 //            @Multipart MultiPart multiPart,
 //            Clazz<TestModel> clazz
 //    );
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<ZhihuData> testZhihu();
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }
