@@ -107,6 +107,10 @@ public class HttpLite {
         }
     }
 
+    public static Handler mainHandler(){
+        return sHandler;
+    }
+
     Collection<ResponseParser> getParsers(){
         return parserMap.values();
     }
