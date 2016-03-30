@@ -3,6 +3,7 @@ package alexclin.httplite.sample.frag;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.okhttp3.Ok3Lite;
+import alexclin.httplite.rx.AndroidSchedulers;
 import alexclin.httplite.rx.RxInvoker;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.json.JacksonParser;
@@ -187,7 +189,9 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 //                    }
 //                },2);
                 Observable<ZhihuData> observable = apiService.testZhihu();
-                observable.subscribeOn(Schedulers.io()).subscribe(new Subscriber<ZhihuData>() {
+                observable.subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Subscriber<ZhihuData>() {
                     @Override
                     public void onCompleted() {
                         LogUtil.e("onCompleted");
@@ -201,6 +205,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                     @Override
                     public void onNext(ZhihuData zhihuData) {
                         LogUtil.e("Result:" + zhihuData);
+                        LogUtil.e("Result:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
                     }
                 });
                 break;
