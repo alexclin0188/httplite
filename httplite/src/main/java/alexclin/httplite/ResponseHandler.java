@@ -43,6 +43,7 @@ public abstract class ResponseHandler<T> {
         }
         ResponseFilter filter = getLite().getResponseFilter();
         if (filter != null) filter.onResponse(getLite(), call.request, response);
+        response = call.request.handleResponse(response);
         handleResponse(response);
     }
 
@@ -66,18 +67,6 @@ public abstract class ResponseHandler<T> {
                 RetryListener listener = call.request.retryListener;
                 if (listener != null) {
                     listener.onRetry(tryCount, maxCount);
-                }
-            }
-        });
-    }
-
-    final void onProgress(final long current, final long total) {
-        HttpLite.postOnMain(new Runnable() {
-            @Override
-            public void run() {
-                ProgressListener listener = call.request.progressListener;
-                if (listener != null) {
-                    listener.onProgressUpdate(current, total);
                 }
             }
         });

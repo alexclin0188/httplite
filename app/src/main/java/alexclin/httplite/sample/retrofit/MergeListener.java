@@ -12,7 +12,7 @@ import alexclin.httplite.util.LogUtil;
 public class MergeListener implements ProgressListener,RetryListener {
 
     @Override
-    public void onProgressUpdate(long current, long total) {
+    public void onProgressUpdate(boolean out,long current, long total) {
         LogUtil.e("current:"+current+",total:"+total);
     }
 

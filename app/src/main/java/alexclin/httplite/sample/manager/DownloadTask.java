@@ -72,7 +72,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     }
 
     @Override
-    public void onProgressUpdate(long current, long total) {
+    public void onProgressUpdate(boolean out,long current, long total) {
         this.total = total;
         this.current = current;
         if(stateListener!=null){

@@ -198,10 +198,8 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
                 checkCanceled();
                 bos.write(tmp, 0, len);
                 current += len;
-                onProgress(current,total);
             }
             bos.flush();
-            onProgress(current,total);
         } finally {
             Util.closeQuietly(bis);
             Util.closeQuietly(bos);

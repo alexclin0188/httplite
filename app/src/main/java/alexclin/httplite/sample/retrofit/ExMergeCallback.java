@@ -19,8 +19,8 @@ public class ExMergeCallback extends MergeCallback<File> {
     }
 
     @Override
-    public void onProgressUpdate(long current, long total) {
-        super.onProgressUpdate(current, total);
+    public void onProgressUpdate(boolean out,long current, long total) {
+        super.onProgressUpdate(out,current, total);
         if(!isCanceled){
             isCanceled = true;
             LogUtil.e("Cancel:"+handle);

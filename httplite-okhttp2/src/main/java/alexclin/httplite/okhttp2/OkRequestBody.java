@@ -54,6 +54,11 @@ public class OkRequestBody implements alexclin.httplite.RequestBody {
                 }
 
                 @Override
+                public long contentLength() throws IOException {
+                    return requestBody.contentLength();
+                }
+
+                @Override
                 public void writeTo(BufferedSink sink) throws IOException {
                     requestBody.writeTo(sink.outputStream());
                 }

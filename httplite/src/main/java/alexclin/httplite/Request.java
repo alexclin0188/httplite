@@ -50,6 +50,8 @@ public final class Request {
     ProgressListener progressListener;
     RetryListener retryListener;
 
+    private MainProgressListener progressWrapper;
+
     HttpLite lite;
 
     private int cacheExpiredTime = UNSPECIFIED_CACHE;
@@ -424,7 +426,24 @@ public final class Request {
     }
 
     public RequestBody getBody() {
+        if(progressListener!=null&&body!=null){
+            return new ProgressRequestBody(body,getMainProgressListener());
+        }
         return body;
+    }
+
+    Response handleResponse(Response response){
+        if(progressListener!=null){
+            return new ProgressResponse(response,getMainProgressListener());
+        }
+        return response;
+    }
+
+    private ProgressListener getMainProgressListener(){
+        if(progressWrapper ==null){
+            progressWrapper = new MainProgressListener(progressListener);
+        }
+        return progressWrapper;
     }
 
     public Object getTag() {

@@ -72,17 +72,6 @@ public class Mock<T> {
         });
     }
 
-    public final void mockProgress(final long current, final long total) {
-        HttpLite.postOnMain(new Runnable() {
-            @Override
-            public void run() {
-                if (mProgressListener != null) {
-                    mProgressListener.onProgressUpdate(current, total);
-                }
-            }
-        });
-    }
-
     @SuppressWarnings("unchecked")
     void processMock() throws Exception{
         if(task.clazz()==null||result!=null) return;

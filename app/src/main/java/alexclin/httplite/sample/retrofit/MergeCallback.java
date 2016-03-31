@@ -26,7 +26,7 @@ public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListe
     }
 
     @Override
-    public void onProgressUpdate(long current, long total) {
+    public void onProgressUpdate(boolean out,long current, long total) {
         LogUtil.e("current:"+current+",total:"+total);
     }
 

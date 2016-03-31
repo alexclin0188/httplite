@@ -109,6 +109,7 @@ public class HttpCall extends Call{
         if(preWork!=null) preWork.run();
         Response response = lite.getClient().executeSync(request);
         if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
+        response = request.handleResponse(response);
         return response;
     }
 

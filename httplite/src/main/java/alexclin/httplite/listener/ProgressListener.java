@@ -6,5 +6,5 @@ package alexclin.httplite.listener;
  * @author alexclin 16/1/1 21:42
  */
 public interface ProgressListener {
-    void onProgressUpdate(long current,long total);
+    void onProgressUpdate(boolean out,long current,long total);
 }
