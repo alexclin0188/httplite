@@ -96,10 +96,10 @@ class ProcessorFactory {
         @Override
         public void process(Annotation annotation, Retrofit retrofit, Request request) {
             if (annotation instanceof GET) {
-                retrofit.setMethod(request, alexclin.httplite.Method.GET);
+                retrofit.setMethod(request, alexclin.httplite.util.Method.GET);
                 retrofit.setUrl(request, ((GET) annotation).value());
             } else if (annotation instanceof POST) {
-                retrofit.setMethod(request, alexclin.httplite.Method.POST);
+                retrofit.setMethod(request, alexclin.httplite.util.Method.POST);
                 retrofit.setUrl(request, ((POST) annotation).value());
             } else if (annotation instanceof HTTP) {
                 retrofit.setMethod(request, ((HTTP) annotation).method());

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
 
-import alexclin.httplite.StringParser;
+import alexclin.httplite.impl.StringParser;
 
 /**
  * GsonParser

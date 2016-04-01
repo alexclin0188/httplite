@@ -5,6 +5,8 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Result;
 import alexclin.httplite.util.Util;
 
 /**
@@ -42,18 +44,19 @@ public class HttpCall extends Call{
     @Override
     public <T> Result<T> syncResult(Clazz<T> clazz){
         ResponseHandler<T> callback = createResultCallback(clazz, true);
-        Response response = null;
+        Response response;
         try {
             response = executeSyncInner(callback);
         } catch (Exception e) {
-            return new Result<T>(null,response!=null?response.headers():null,e);
+            return new Result<T>(-1,null,null,e);
         }
         T r = null;
+        int code = response.code();
         try {
             r = parseResult(response, callback);
-            return new Result<T>(r,response.headers());
+            return new Result<T>(code,r,response.headers());
         } catch (Exception e) {
-            return new Result<T>(r,response.headers(),e);
+            return new Result<T>(code,r,response.headers(),e);
         }
     }
 
@@ -78,7 +81,7 @@ public class HttpCall extends Call{
 
     protected  <T> ResponseHandler createHttpCallback(Callback<T> callback, Type type,boolean callOnMain) {
         HttpLite lite = request.lite;
-        ResponseHandler<T> rcb = new HttpResponseHandler<>(callback,this,type,callOnMain);
+        ResponseHandler<T> rcb = new ResponseHandler<>(callback,this,callOnMain);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
         return rcb;
     }

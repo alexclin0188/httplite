@@ -1,20 +1,13 @@
 package alexclin.httplite;
 
 
-import android.text.TextUtils;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.exception.HttpException;
+import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.Util;
@@ -24,11 +17,18 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin  16/1/1 19:05
  */
-public abstract class ResponseHandler<T> {
+public class ResponseHandler<T> {
     protected volatile boolean isCanceled;
     protected Callback<T> callback;
     protected HttpCall call;
     private boolean callOnMain;
+
+    private ObjectParser.Cancelable cancelable = new ObjectParser.Cancelable() {
+        @Override
+        public boolean isCanceled() {
+            return isCanceled;
+        }
+    };
 
     protected ResponseHandler(Callback<T> callback, HttpCall call, boolean callOnMain) {
         this.callback = callback;
@@ -44,16 +44,16 @@ public abstract class ResponseHandler<T> {
         ResponseFilter filter = getLite().getResponseFilter();
         if (filter != null) filter.onResponse(getLite(), call.request, response);
         response = call.request.handleResponse(response);
-        handleResponse(response);
+        try {
+            T result = parseResponse(response);
+            postSuccess(result, response.headers());
+        }catch (Exception e) {
+            postFailed(e);
+        }
     }
 
-    protected abstract void handleResponse(Response response);
-
-    protected abstract Type resultType();
-
-    protected boolean isSuccess(Response response) {
-        int code = response.code();
-        return code >= 200 && code < 300;
+    protected Type resultType() {
+        return Util.type(Callback.class,callback);
     }
 
     public final void onFailed(Exception e) {
@@ -104,7 +104,9 @@ public abstract class ResponseHandler<T> {
         return call.request.lite;
     }
 
-    abstract T parseResponse(Response response) throws Exception;
+    T parseResponse(Response response) throws Exception{
+        return call.request.lite.getObjectParser().parseObject(response,resultType(),cancelable);
+    }
 
     public void callCancelAndFailed(CanceledException e) {
         onCancel();
@@ -117,31 +119,7 @@ public abstract class ResponseHandler<T> {
         callCancelAndFailed(null);
     }
 
-    protected void handleFailedCode(Response response) throws HttpException {
-        String message = response.message();
-        if (TextUtils.isEmpty(message)) {
-            try {
-                message = decodeToString(response);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        throw new HttpException(response.code(), message);
-    }
 
-    static String decodeToString(Response response) throws IOException {
-        MediaType mt = response.body().contentType();
-        if (mt != null) {
-            Charset cs = mt.charset(Util.UTF_8);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().stream(), cs == null ? Util.UTF_8 : cs));
-            StringBuilder stringBuilder = new StringBuilder();
-            String s;
-            while ((s = reader.readLine()) != null) {
-                stringBuilder.append(s);
-            }
-            Util.closeQuietly(reader);
-            return stringBuilder.toString();
-        }
-        throw new RuntimeException("Not text response body,no Content-Type in response");
-    }
+
+
 }

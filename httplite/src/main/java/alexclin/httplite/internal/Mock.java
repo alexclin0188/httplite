@@ -16,6 +16,8 @@ import alexclin.httplite.Response;
 import alexclin.httplite.ResponseBody;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.exception.HttpException;
+import alexclin.httplite.impl.ResponseBodyImpl;
+import alexclin.httplite.impl.ResponseImpl;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;

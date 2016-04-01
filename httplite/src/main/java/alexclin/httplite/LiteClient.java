@@ -6,6 +6,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.util.ClientSettings;
+
 
 /**
  * LiteClient

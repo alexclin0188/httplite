@@ -1,6 +1,5 @@
 package alexclin.httplite.retrofit;
 
-import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -15,7 +14,6 @@ import alexclin.httplite.annotation.IntoFile;
 import alexclin.httplite.annotation.JsonField;
 import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
-import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.Util;
 
 /**
@@ -30,14 +28,14 @@ public class BasicAnnotationRule implements AnnotationRule {
     public void checkMethod(Method interfaceMethod,boolean isFileResult) throws RuntimeException {
         Type[] methodParameterTypes = interfaceMethod.getGenericParameterTypes();
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
-        alexclin.httplite.Method method = null;
+        alexclin.httplite.util.Method method = null;
         GET get = interfaceMethod.getAnnotation(GET.class);
         if(get!=null){
-            method = alexclin.httplite.Method.GET;
+            method = alexclin.httplite.util.Method.GET;
         }
         if(method==null){
             POST post = interfaceMethod.getAnnotation(POST.class);
-            if(post!=null) method = alexclin.httplite.Method.POST;
+            if(post!=null) method = alexclin.httplite.util.Method.POST;
         }
         if(method==null){
             HTTP http = interfaceMethod.getAnnotation(HTTP.class);

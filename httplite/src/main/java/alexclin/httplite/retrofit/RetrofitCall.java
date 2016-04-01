@@ -1,11 +1,11 @@
 package alexclin.httplite.retrofit;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.Clazz;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.Result;
+import alexclin.httplite.util.Result;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;

@@ -1,4 +1,4 @@
-package alexclin.httplite;
+package alexclin.httplite.util;
 
 import java.io.File;
 import java.net.CookieHandler;

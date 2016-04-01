@@ -23,6 +23,7 @@ import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.retrofit.Invoker;
+import alexclin.httplite.util.ClientSettings;
 
 /**
  * HttpLiteBuilder

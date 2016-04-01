@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.internal.ResponseImpl;
+import alexclin.httplite.impl.ResponseImpl;
 import alexclin.httplite.url.CacheDispatcher;
 import alexclin.httplite.url.URLCache;
 import alexclin.httplite.util.LogUtil;

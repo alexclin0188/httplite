@@ -5,12 +5,12 @@ import android.os.Looper;
 import android.util.Pair;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
@@ -18,6 +18,7 @@ import alexclin.httplite.internal.MockCall;
 import alexclin.httplite.retrofit.Invoker;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
+import alexclin.httplite.util.Method;
 
 /**
  * HttpLite
@@ -28,7 +29,6 @@ public class HttpLite {
     private static Handler sHandler = new Handler(Looper.getMainLooper());
 
     private LiteClient client;
-    private HashMap<String,ResponseParser> parserMap;
     private String baseUrl;
     private int maxRetryCount;
     private RequestFilter mRequestFilter;
@@ -38,11 +38,12 @@ public class HttpLite {
 
     private Retrofit retrofit;
     private final boolean isRelease;
+    private ObjectParser mObjectParser;
 
     HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
              RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap,List<Invoker> invokers) {
         this.client = client;
-        this.parserMap = parserMap;
+        this.mObjectParser = new ObjectParser(parserMap.values());
         this.baseUrl = baseUrl;
         this.maxRetryCount = maxRetryCount;
         this.isRelease = release;
@@ -111,8 +112,8 @@ public class HttpLite {
         return sHandler;
     }
 
-    Collection<ResponseParser> getParsers(){
-        return parserMap.values();
+    ObjectParser getObjectParser(){
+        return mObjectParser;
     }
 
     public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String,List<String>>,RequestBody>> headBodyList,

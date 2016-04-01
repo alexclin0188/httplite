@@ -1,8 +1,10 @@
-package alexclin.httplite;
+package alexclin.httplite.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
+import alexclin.httplite.MediaType;
+import alexclin.httplite.RequestBody;
 import alexclin.httplite.listener.ProgressListener;
 
 /**
@@ -10,7 +12,7 @@ import alexclin.httplite.listener.ProgressListener;
  *
  * @author alexclin  16/3/31 22:21
  */
-class ProgressRequestBody implements RequestBody{
+public class ProgressRequestBody implements RequestBody {
     private RequestBody requestBody;
     private ProgressListener progressListener;
 

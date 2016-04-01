@@ -1,7 +1,8 @@
-package alexclin.httplite;
+package alexclin.httplite.impl;
 
 import java.lang.reflect.Type;
 
+import alexclin.httplite.Response;
 import alexclin.httplite.listener.ResponseParser;
 
 /**
@@ -13,7 +14,7 @@ public abstract class StringParser implements ResponseParser{
 
     @Override
     public final <T> T parseResponse(Response response, Type type) throws Exception{
-        return parseResponse(HttpResponseHandler.decodeToString(response), type);
+        return parseResponse(ObjectParser.decodeToString(response), type);
     }
 
     public abstract <T> T parseResponse(String content, Type type) throws Exception;

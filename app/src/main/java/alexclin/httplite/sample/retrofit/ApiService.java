@@ -6,9 +6,9 @@ import com.example.UserInfo;
 
 import java.io.File;
 
-import alexclin.httplite.Clazz;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;
-import alexclin.httplite.Method;
+import alexclin.httplite.util.Method;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
@@ -117,5 +117,5 @@ public interface ApiService {
     Observable<ZhihuData> testZhihu();
 
     @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
+    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
 }

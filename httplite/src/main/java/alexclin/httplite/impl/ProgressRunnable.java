@@ -1,5 +1,6 @@
-package alexclin.httplite;
+package alexclin.httplite.impl;
 
+import alexclin.httplite.HttpLite;
 import alexclin.httplite.listener.ProgressListener;
 
 /**
@@ -7,7 +8,7 @@ import alexclin.httplite.listener.ProgressListener;
  *
  * @author alexclin  16/3/31 23:15
  */
-public class ProgressRunnable implements Runnable {
+class ProgressRunnable implements Runnable {
     private static final int GAP = 1000;
     public interface ProgressSource extends ProgressListener{
         long progress();

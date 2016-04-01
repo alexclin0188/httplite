@@ -13,9 +13,12 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
+import alexclin.httplite.impl.ProgressRequestBody;
+import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
+import alexclin.httplite.util.Method;
 import alexclin.httplite.util.Util;
 
 /**
@@ -433,7 +436,7 @@ public final class Request {
     }
 
     Response handleResponse(Response response){
-        if(progressListener!=null){
+        if(progressListener!=null&&getDownloadParams()==null){
             return new ProgressResponse(response,getMainProgressListener());
         }
         return response;
@@ -505,6 +508,24 @@ public final class Request {
 
     public Object getMark(){
         return mark;
+    }
+
+    public static class MainProgressListener implements ProgressListener{
+        private ProgressListener listener;
+
+        public MainProgressListener(ProgressListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void onProgressUpdate(final boolean out,final long current,final long total) {
+            HttpLite.postOnMain(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onProgressUpdate(out,current,total);
+                }
+            });
+        }
     }
 }
 

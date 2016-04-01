@@ -5,8 +5,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.Clazz;
-import alexclin.httplite.Result;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Result;
 import alexclin.httplite.retrofit.Invoker;
 import alexclin.httplite.util.Util;
 import rx.Observable;

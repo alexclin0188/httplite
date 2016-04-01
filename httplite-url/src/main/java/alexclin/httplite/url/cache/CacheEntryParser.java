@@ -30,7 +30,7 @@ import java.util.TimeZone;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.internal.ResponseImpl;
+import alexclin.httplite.impl.ResponseImpl;
 import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;

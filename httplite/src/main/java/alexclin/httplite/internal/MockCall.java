@@ -1,7 +1,7 @@
 package alexclin.httplite.internal;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.Clazz;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpCall;
 import alexclin.httplite.MediaType;

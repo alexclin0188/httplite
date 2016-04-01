@@ -16,10 +16,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -47,41 +50,36 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
     }
 
     @Override
-    protected void handleResponse(Response response) {
-        try {
-            if(!isSuccess(response)){
-                handleFailedCode(response);
-            }
-            checkCanceled();
-            File file = parseResponse(response);
-            postSuccess(file,response.headers());
-        }catch (Exception e){
-            postFailed(e);
-            if(e instanceof CanceledException){
-                if(params!=null)
-                    Util.deleteFileOrDir(params.targetFile);
-            }else{
-                isExecuted = true;
-            }
-        }
-    }
-
-    @Override
     protected Type resultType() {
         return File.class;
     }
 
     @Override
     File parseResponse(Response response) throws Exception {
-        if(params.autoRename){
-            String name = getResponseFileName(response);
-            params.targetFile = renameTargetFile(name,params.targetFile);
+        try {
+            if(ObjectParser.isSuccess(response)){
+                checkCanceled();
+                if(params.autoRename){
+                    String name = getResponseFileName(response);
+                    params.targetFile = renameTargetFile(name,params.targetFile);
+                }
+                if(params.autoResume){
+                    params.autoResume = isSupportRange(response);
+                }
+                saveToFile(response);
+                return params.targetFile;
+            }else{
+                throw ObjectParser.responseToException(response);
+            }
+        }catch (Exception e){
+            if(e instanceof CanceledException){
+                if(params!=null)
+                    Util.deleteFileOrDir(params.targetFile);
+            }else{
+                isExecuted = true;
+            }
+            throw e;
         }
-        if(params.autoResume){
-            params.autoResume = isSupportRange(response);
-        }
-        saveToFile(response);
-        return params.targetFile;
     }
 
     private File renameTargetFile(String newName,File oldTargetFile) {
@@ -198,12 +196,26 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
                 checkCanceled();
                 bos.write(tmp, 0, len);
                 current += len;
+                onProgress(current,total);
             }
             bos.flush();
+            onProgress(current,total);
         } finally {
             Util.closeQuietly(bis);
             Util.closeQuietly(bos);
         }
+    }
+
+    final void onProgress(final long current, final long total) {
+        HttpLite.postOnMain(new Runnable() {
+            @Override
+            public void run() {
+                ProgressListener listener = call.request.progressListener;
+                if (listener != null) {
+                    listener.onProgressUpdate(false,current, total);
+                }
+            }
+        });
     }
 
     private boolean isThreadCanceled(){
@@ -231,11 +243,11 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
         File parentDir = new File(path);
         if(TextUtils.isEmpty(fileName)){
             if(path.endsWith("/")){
-                fileName = String.format("lite%d.tmp",System.currentTimeMillis());
+                fileName = String.format(Locale.getDefault(),"lite%d.tmp",System.currentTimeMillis());
                 autoRename = true;
             }else{
                 if(parentDir.exists()&&parentDir.isDirectory()){
-                    fileName = String.format("lite%d.tmp", System.currentTimeMillis());
+                    fileName = String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
                     autoRename = true;
                 }else{
                     int index = path.lastIndexOf("/");
@@ -293,11 +305,11 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
         checkCanceled();
         downloadRetryCount++;
         if(downloadRetryCount>MAX_DOWNLOAD_RETRY){
-            postFailed(new RuntimeException(String.format("Download retry over limit count:%d",downloadRetryCount),throwable));
-            return;
+            throw new RuntimeException(String.format(Locale.getDefault(),
+                    "Download retry over limit count:%d",downloadRetryCount),throwable);
         }
         try {
-            handleResponse(call.sync());
+            params.targetFile = parseResponse(call.sync());
         } catch (Exception e) {
             retryDownload(throwable);
         }

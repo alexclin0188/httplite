@@ -1,4 +1,4 @@
-package alexclin.httplite.internal;
+package alexclin.httplite.impl;
 
 import java.io.IOException;
 import java.io.InputStream;

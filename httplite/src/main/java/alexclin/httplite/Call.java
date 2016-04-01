@@ -1,6 +1,8 @@
 package alexclin.httplite;
 
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Result;
 import alexclin.httplite.util.Util;
 
 /**

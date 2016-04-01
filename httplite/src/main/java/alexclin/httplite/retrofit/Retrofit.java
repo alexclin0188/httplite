@@ -10,16 +10,15 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.Clazz;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.Result;
+import alexclin.httplite.util.Result;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
@@ -114,7 +113,7 @@ public abstract class Retrofit {
 
     public abstract Request makeRequest(String baseUrl);
 
-    public abstract Request setMethod(Request request,alexclin.httplite.Method method);
+    public abstract Request setMethod(Request request, alexclin.httplite.util.Method method);
 
     public abstract Request setUrl(Request request, String url);
 

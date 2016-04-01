@@ -1,4 +1,4 @@
-package alexclin.httplite;
+package alexclin.httplite.util;
 
 /**
  * Method http method
