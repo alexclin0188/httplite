@@ -26,7 +26,6 @@ public class BasicAnnotationRule implements AnnotationRule {
 
     @Override
     public void checkMethod(Method interfaceMethod,boolean isFileResult) throws RuntimeException {
-        Type[] methodParameterTypes = interfaceMethod.getGenericParameterTypes();
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
         alexclin.httplite.util.Method method = null;
         GET get = interfaceMethod.getAnnotation(GET.class);
