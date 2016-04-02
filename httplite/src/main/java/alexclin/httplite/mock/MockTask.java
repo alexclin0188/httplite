@@ -1,4 +1,4 @@
-package alexclin.httplite.internal;
+package alexclin.httplite.mock;
 
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;

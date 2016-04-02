@@ -48,15 +48,14 @@ public class HttpCall extends Call{
         try {
             response = executeSyncInner(callback);
         } catch (Exception e) {
-            return new Result<T>(-1,null,null,e);
+            return new Result<T>(null,null,e);
         }
         T r = null;
-        int code = response.code();
         try {
             r = parseResult(response, callback);
-            return new Result<T>(code,r,response.headers());
+            return new Result<T>(r,response.headers());
         } catch (Exception e) {
-            return new Result<T>(code,r,response.headers(),e);
+            return new Result<T>(r,response.headers(),e);
         }
     }
 
@@ -81,7 +80,7 @@ public class HttpCall extends Call{
 
     protected  <T> ResponseHandler createHttpCallback(Callback<T> callback, Type type,boolean callOnMain) {
         HttpLite lite = request.lite;
-        ResponseHandler<T> rcb = new ResponseHandler<>(callback,this,callOnMain);
+        ResponseHandler<T> rcb = new ResponseHandler<>(callback,this,type,callOnMain);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
         return rcb;
     }

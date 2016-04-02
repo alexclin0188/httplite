@@ -1,4 +1,4 @@
-package alexclin.httplite.internal;
+package alexclin.httplite.mock;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

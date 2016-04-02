@@ -22,6 +22,7 @@ public class ResponseHandler<T> {
     protected Callback<T> callback;
     protected HttpCall call;
     private boolean callOnMain;
+    private Type type;
 
     private ObjectParser.Cancelable cancelable = new ObjectParser.Cancelable() {
         @Override
@@ -30,10 +31,11 @@ public class ResponseHandler<T> {
         }
     };
 
-    protected ResponseHandler(Callback<T> callback, HttpCall call, boolean callOnMain) {
+    protected ResponseHandler(Callback<T> callback, HttpCall call,Type type, boolean callOnMain) {
         this.callback = callback;
         this.call = call;
         this.callOnMain = callOnMain;
+        this.type = type;
     }
 
     public final void onResponse(Response response) {
@@ -53,7 +55,7 @@ public class ResponseHandler<T> {
     }
 
     protected Type resultType() {
-        return Util.type(Callback.class,callback);
+        return type;
     }
 
     public final void onFailed(Exception e) {

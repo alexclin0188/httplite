@@ -9,27 +9,21 @@ import java.util.Map;
  * @author alexclin  16/3/18 22:57
  */
 public class Result<T> {
-    private int code;
     private T result;
     private Map<String,List<String>> headers;
     private Throwable throwable;
 
-    public Result(int code,T result, Map<String, List<String>> headers) {
-        this.code = code;
+    public Result(T result, Map<String, List<String>> headers) {
         this.result = result;
         this.headers = headers;
     }
 
-    public Result(int code,T result, Map<String, List<String>> headers, Throwable throwable) {
-        this.code = code;
+    public Result(T result, Map<String, List<String>> headers, Throwable throwable) {
         this.result = result;
         this.headers = headers;
         this.throwable = throwable;
     }
 
-    public int getCode() {
-        return code;
-    }
 
     public T result() {
         return result;

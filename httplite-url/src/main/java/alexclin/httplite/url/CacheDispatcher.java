@@ -1,7 +1,6 @@
 package alexclin.httplite.url;
 
 import android.os.Process;
-import android.util.Log;
 import android.util.Pair;
 
 import java.io.IOException;
@@ -14,8 +13,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.exception.HttpException;
-import alexclin.httplite.internal.Dispatcher;
-import alexclin.httplite.internal.TaskDispatcher;
+import alexclin.httplite.mock.Dispatcher;
+import alexclin.httplite.mock.TaskDispatcher;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 

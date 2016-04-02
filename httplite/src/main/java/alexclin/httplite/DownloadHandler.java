@@ -45,13 +45,8 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
     private Handle httpHandle;
 
     public DownloadHandler(Callback<File> mCallback, HttpCall call, DownloadParams params, boolean callOnMain) {
-        super(mCallback,call,callOnMain);
+        super(mCallback,call,File.class,callOnMain);
         this.params = params;
-    }
-
-    @Override
-    protected Type resultType() {
-        return File.class;
     }
 
     @Override

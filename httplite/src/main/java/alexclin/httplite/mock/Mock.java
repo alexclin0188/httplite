@@ -1,4 +1,4 @@
-package alexclin.httplite.internal;
+package alexclin.httplite.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

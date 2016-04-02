@@ -3,16 +3,13 @@ package alexclin.httplite.sample;
 import android.app.Application;
 import android.content.Context;
 
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
-import alexclin.httplite.internal.Mock;
+import alexclin.httplite.mock.Mock;
 import alexclin.httplite.listener.MockHandler;
-import alexclin.httplite.okhttp2.Ok2Lite;
-import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.sample.json.GsonParser;
 import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;

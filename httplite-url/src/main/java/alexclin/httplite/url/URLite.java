@@ -24,10 +24,10 @@ import alexclin.httplite.RequestBody;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseBody;
 import alexclin.httplite.ResponseHandler;
-import alexclin.httplite.internal.Dispatcher;
+import alexclin.httplite.mock.Dispatcher;
 import alexclin.httplite.impl.ResponseBodyImpl;
 import alexclin.httplite.impl.ResponseImpl;
-import alexclin.httplite.internal.TaskDispatcher;
+import alexclin.httplite.mock.TaskDispatcher;
 import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.util.LogUtil;
 
