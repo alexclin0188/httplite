@@ -15,6 +15,7 @@ import alexclin.httplite.Response;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.mock.Dispatcher;
 import alexclin.httplite.mock.TaskDispatcher;
+import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -31,12 +32,12 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
     private TaskDispatcher<Response> networkDispatcher;
 
-    private URLCache cache;
+    private CacheImpl cache;
 
     /** Used for telling us to die. */
     private volatile boolean mQuit = false;
 
-    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,URLCache cache) {
+    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,CacheImpl cache) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
         start();

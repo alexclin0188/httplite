@@ -41,7 +41,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
 
     private TaskDispatcher<Response> mNetDispatcher;
     private CacheDispatcher mCacheDispatcher;
-    private URLCache mCache;
+    private CacheImpl mCache;
 
     public static HttpLiteBuilder create() {
         return new URLite();

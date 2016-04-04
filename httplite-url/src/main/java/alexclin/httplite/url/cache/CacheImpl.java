@@ -7,13 +7,12 @@ import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.impl.ResponseImpl;
 import alexclin.httplite.url.CacheDispatcher;
-import alexclin.httplite.url.URLCache;
 import alexclin.httplite.util.LogUtil;
 
 /**
  * URLCacheImpl
  */
-public class CacheImpl implements URLCache{
+public class CacheImpl{
 
     private static final int MAX_CONTENT_LENGTH = 5 * 1024 * 1024;
     private static final int APP_VERSION = 1;
@@ -31,7 +30,6 @@ public class CacheImpl implements URLCache{
         this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE));
     }
 
-    @Override
     public Response get(Request request,boolean force) throws IOException {
         String key = CacheDispatcher.getCacheKey(request);
         DiskLruCache.Snapshot snapshot = cache.get(key);
@@ -52,14 +50,12 @@ public class CacheImpl implements URLCache{
         return entry.getResponse();
     }
 
-    @Override
     public boolean remove(Request request) throws IOException {
         String key = CacheDispatcher.getCacheKey(request);
         cache.remove(key);
         return true;
     }
 
-    @Override
     public Response put(Response response) throws IOException {
         if(response.body().contentLength()>MAX_CONTENT_LENGTH||response.body().contentLength()>cache.getMaxSize()/3){
             return response;

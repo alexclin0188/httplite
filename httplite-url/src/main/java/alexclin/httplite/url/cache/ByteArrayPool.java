@@ -131,5 +131,4 @@ public class ByteArrayPool {
             mCurrentSize -= buf.length;
         }
     }
-
 }
