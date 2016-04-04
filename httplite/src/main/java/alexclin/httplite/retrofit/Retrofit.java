@@ -30,7 +30,7 @@ import alexclin.httplite.util.Util;
  */
 public abstract class Retrofit {
 
-    private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();  //TODO LinkedHashMap合不合适？
+    private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();  //TODO LinkedHashMap？
 
     private MethodListener methodListener;
     private List<Invoker> mInvokers;
@@ -129,41 +129,9 @@ public abstract class Retrofit {
         }
     }
 
-    public static void unregisterParamterProcessor(ParameterProcessor processor) {
-        if (processor != null) {
-            ProcessorFactory.parameterProcessorList.remove(processor);
-        }
-    }
-
-    public static void unregisterParamterProcessor(Class<? extends ParameterProcessor> clazz) {
-        Iterator<ParameterProcessor> iterator = ProcessorFactory.parameterProcessorList.iterator();
-        while (iterator.hasNext()){
-            ParameterProcessor processor = iterator.next();
-            if(processor.getClass()==clazz){
-                iterator.remove();
-            }
-        }
-    }
-
     public static void registerParamMiscProcessor(ParamMiscProcessor processor) {
         if (processor != null && !ProcessorFactory.paramMiscProcessors.contains(processor)) {
             ProcessorFactory.paramMiscProcessors.add(processor);
-        }
-    }
-
-    public static void unregisterParamMiscProcessor(ParamMiscProcessor processor) {
-        if (processor != null) {
-            ProcessorFactory.paramMiscProcessors.remove(processor);
-        }
-    }
-
-    public static void unregisterParamMiscProcessor(Class<? extends ParamMiscProcessor> clazz) {
-        Iterator<ParamMiscProcessor> iterator = ProcessorFactory.paramMiscProcessors.iterator();
-        while (iterator.hasNext()){
-            ParamMiscProcessor processor = iterator.next();
-            if(processor.getClass()==clazz){
-                iterator.remove();
-            }
         }
     }
 
@@ -173,42 +141,19 @@ public abstract class Retrofit {
         }
     }
 
-    public static void unregisterMethodProcessor(MethodProcessor processor) {
-        if (processor != null) {
-            ProcessorFactory.methodProcessorList.remove(processor);
-        }
-    }
-
-    public static void unregisterMethodProcessor(Class<? extends MethodProcessor> clazz) {
-        Iterator<MethodProcessor> iterator = ProcessorFactory.methodProcessorList.iterator();
-        while (iterator.hasNext()){
-            MethodProcessor processor = iterator.next();
-            if(processor.getClass()==clazz){
-                iterator.remove();
-            }
-        }
-    }
-
     public static void registerAnnotationRule(AnnotationRule rule) {
         if (rule != null && !ProcessorFactory.annotationRuleList.contains(rule)) {
             ProcessorFactory.annotationRuleList.add(rule);
         }
     }
 
-    public static void unregisterAnnotationRule(AnnotationRule rule) {
-        if (rule != null) {
-            ProcessorFactory.annotationRuleList.remove(rule);
-        }
-    }
-
-    public static void unregisterAnnotationRule(Class<? extends AnnotationRule> clazz) {
-        Iterator<AnnotationRule> iterator = ProcessorFactory.annotationRuleList.iterator();
-        while (iterator.hasNext()){
-            AnnotationRule processor = iterator.next();
-            if(processor.getClass()==clazz){
-                iterator.remove();
+    public static BasicAnnotationRule basicAnnotationRule(){
+        for(AnnotationRule rule:ProcessorFactory.annotationRuleList){
+            if(rule instanceof BasicAnnotationRule){
+                return (BasicAnnotationRule) rule;
             }
         }
+        return null;
     }
 
     private Invoker searchInvoker(Method method) throws RuntimeException{
