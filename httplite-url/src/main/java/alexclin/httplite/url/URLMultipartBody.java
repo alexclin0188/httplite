@@ -182,6 +182,7 @@ public class URLMultipartBody implements RequestBody {
             sink.write(DASHDASH);
             sink.write(CRLF);
 
+            sink.flush();
             if (countBytes) {
                 byteCount += bos.size();
                 Util.closeQuietly(byteCountBuffer);

@@ -120,7 +120,7 @@ public class CacheEntryParser {
         if (headerValues != null && !headerValues.isEmpty()) {
             serverEtag = headerValues.get(0);
         }
-
+        LogUtil.e("Headers:"+headers);
         // Cache-Control takes precedence over an Expires header, even if both exist and Expires
         // is more restrictive.
         if (hasCacheControl) {
@@ -132,7 +132,9 @@ public class CacheEntryParser {
             // Default semantic for Expire header in HTTP specification is softExpire.
             softExpire = now + (serverExpires - serverDate);
             finalExpire = softExpire;
-        }else{
+        }else if(response.request().getCacheExpiredTime()>0){
+            finalExpire = softExpire = now+response.request().getCacheExpiredTime()*1000;
+        }else {
             return null;
         }
 
@@ -144,6 +146,7 @@ public class CacheEntryParser {
         entry.setTtl(finalExpire);
         entry.setServerDate(serverDate);
         entry.setLastModified(lastModified);
+        LogUtil.e("Entry:"+entry);
         return entry;
     }
 
@@ -159,7 +162,7 @@ public class CacheEntryParser {
     public static long parseDateAsEpoch(String dateStr) {
         for (String pattern : DEFAULT_PATTERNS) {
             try {
-                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern,Locale.getDefault());
+                SimpleDateFormat dateFormat = new SimpleDateFormat(pattern,Locale.ENGLISH);
                 return dateFormat.parse(dateStr).getTime();
             } catch (ParseException e) {
 
@@ -171,7 +174,7 @@ public class CacheEntryParser {
 
     public static String formatDateAsEpoch(long time) {
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(PATTERN_RFC1123,Locale.getDefault());
+            SimpleDateFormat dateFormat = new SimpleDateFormat(PATTERN_RFC1123,Locale.ENGLISH);
             return dateFormat.format(new Date(time));
         } catch (Exception e) {
             e.printStackTrace();

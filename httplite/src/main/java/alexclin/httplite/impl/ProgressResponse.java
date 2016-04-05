@@ -109,9 +109,15 @@ public class ProgressResponse implements Response {
 
         @Override
         public int read() throws IOException {
-            int read = inputStream.read();
-            total++;
             if(total==0) runnable.run();
+            total++;
+            int read;
+            try {
+                read = inputStream.read();
+            } catch (IOException e) {
+                runnable.end();
+                throw e;
+            }
             if(read==-1){
                 runnable.end();
             }

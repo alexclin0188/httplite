@@ -23,6 +23,10 @@ public class ProgressRequestBody implements RequestBody {
 
     private long contentLength;
 
+    public boolean isWrappBody(RequestBody body){
+        return requestBody==body;
+    }
+
     @Override
     public MediaType contentType() {
         return requestBody.contentType();
@@ -39,8 +43,11 @@ public class ProgressRequestBody implements RequestBody {
         if(contentLength>0){
             ProgressOutputStream outputStream = new ProgressOutputStream(sink,progressListener,contentLength);
             outputStream.startProgress();
-            requestBody.writeTo(outputStream);
-            outputStream.stopProgress();
+            try {
+                requestBody.writeTo(outputStream);
+            } finally {
+                outputStream.stopProgress();
+            }
         }else{
             requestBody.writeTo(sink);
         }
@@ -80,6 +87,7 @@ public class ProgressRequestBody implements RequestBody {
 
         public void stopProgress(){
             runnable.end();
+            ProgressRequestBody.this.contentLength = 0;
         }
     }
 }

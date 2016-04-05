@@ -48,6 +48,8 @@ public final class Request {
     private Map<String,List<String>> headers;
     private List<Pair<String,Pair<String,Boolean>>> params;
     private RequestBody body;
+    private ProgressRequestBody progressBody;
+
     private Object tag;
 
     ProgressListener progressListener;
@@ -430,7 +432,10 @@ public final class Request {
 
     public RequestBody getBody() {
         if(progressListener!=null&&body!=null){
-            return new ProgressRequestBody(body,getMainProgressListener());
+            if(progressBody==null||!progressBody.isWrappBody(body)){
+                progressBody = new ProgressRequestBody(body,getMainProgressListener());
+            }
+            return progressBody;
         }
         return body;
     }

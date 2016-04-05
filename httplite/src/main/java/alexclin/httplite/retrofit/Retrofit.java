@@ -168,12 +168,7 @@ public abstract class Retrofit {
     private class SyncInvoker implements Invoker {
         @Override
         public Object invoke(Call call,final Type returnType, Object... args) throws Exception{
-            Clazz clazz = new Clazz() {
-                @Override
-                public Type type() {
-                    return returnType;
-                }
-            };
+            Clazz clazz = Clazz.ofType(returnType);
             if(Util.isSubType(returnType, Result.class)){
                 return call.syncResult(clazz);
             }else{

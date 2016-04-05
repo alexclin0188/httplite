@@ -22,6 +22,10 @@ public abstract class Clazz<T> {
         _type = ((ParameterizedType) superClass).getActualTypeArguments()[0];
     }
 
+    private Clazz(Type type){
+        _type = type;
+    }
+
     public Type type(){
         return _type;
     }
@@ -36,5 +40,13 @@ public abstract class Clazz<T> {
         };
     }
 
+    public static <R> Clazz<R> ofType(Type type){
+        return new InnerClazz<R>(type);
+    }
 
+    private static class InnerClazz<E> extends Clazz<E>{
+        public InnerClazz(Type type) {
+            super(type);
+        }
+    }
 }

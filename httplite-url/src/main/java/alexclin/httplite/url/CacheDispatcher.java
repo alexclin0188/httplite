@@ -6,6 +6,7 @@ import android.util.Pair;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -122,7 +123,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         synchronized (mWaitingRequests) {
             Queue<Pair<Task<Response>,Boolean>> waitingRequests = mWaitingRequests.remove(cacheKey);
             if (waitingRequests != null) {
-                LogUtil.i(String.format("Releasing %d waiting requests for cacheKey=%s.",
+                LogUtil.i(String.format(Locale.ENGLISH,"Releasing %d waiting requests for cacheKey=%s.",
                         waitingRequests.size(), cacheKey));
                 // Process all queued up requests. They won't be considered as in flight, but
                 // that's not a problem as the cache has been primed by 'request'.

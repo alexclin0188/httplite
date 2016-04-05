@@ -71,11 +71,13 @@ public class URLFormBody implements RequestBody {
 
         BufferedWriter buffer;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        OutputStreamWriter outputStreamWriter;
         if (countBytes) {
-            buffer = new BufferedWriter(new OutputStreamWriter(new ByteArrayOutputStream(), Util.UTF_8));
+            outputStreamWriter = new OutputStreamWriter(bos, Util.UTF_8);
         } else {
-            buffer = new BufferedWriter(new OutputStreamWriter(sink,Util.UTF_8));
+            outputStreamWriter = new OutputStreamWriter(sink,Util.UTF_8);
         }
+        buffer = new BufferedWriter(outputStreamWriter);
 
         try {
             for (int i = 0, size = encodedNames.size(); i < size; i++) {
@@ -84,7 +86,7 @@ public class URLFormBody implements RequestBody {
                 buffer.write('=');
                 buffer.write(encodedValues.get(i));
             }
-
+            buffer.flush();
             if (countBytes) {
                 byteCount = bos.size();
                 Util.closeQuietly(buffer);

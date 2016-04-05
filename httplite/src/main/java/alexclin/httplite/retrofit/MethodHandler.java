@@ -143,7 +143,7 @@ public class MethodHandler<T> {
             MethodProcessor processor = methodProcessors[i];
             if(processor!=null) processor.process(methodAnnotations[i],retrofit,request);
         }
-        int length = args.length;
+        int length = args==null?0:args.length;
         for(int i=0;i<length;i++){
             ParameterProcessor[] processors = parameterProcessors[i];
             Annotation[] parameterAnnotations = methodParameterAnnotationArrays[i];

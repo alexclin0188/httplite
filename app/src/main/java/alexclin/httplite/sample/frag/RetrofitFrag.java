@@ -16,9 +16,11 @@ import com.example.UserInfo;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
@@ -225,6 +227,13 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                     @Override
                     public void onRequest(HttpLite lite, Request request, Type type) {
                         request.header("handle", "misc");
+                        request.cacheExpire(Request.NO_CACHE);
+                        request.onProgress(new ProgressListener() {
+                            @Override
+                            public void onProgressUpdate(boolean out, long current, long total) {
+                                LogUtil.e(String.format(Locale.ENGLISH,"Out:%b,cur:%d,total:%d",out,current,total));
+                            }
+                        });
                     }
                 })
                 .addRetrofitInvoker(new RxInvoker())
