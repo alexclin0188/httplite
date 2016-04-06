@@ -5,12 +5,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import alexclin.httplite.Call;
+import alexclin.httplite.Request;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.Result;
 import alexclin.httplite.retrofit.Invoker;
 import alexclin.httplite.util.Util;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func3;
 
 /**
  * RxInvoker
@@ -19,9 +21,22 @@ import rx.Subscriber;
  */
 public class RxInvoker implements Invoker {
 
+    private Func3<Request,Type,Observable<?>,Observable<?>> invokeFilter;
+
+    public RxInvoker(Func3<Request, Type, Observable<?>, Observable<?>> invokeFilter) {
+        this.invokeFilter = invokeFilter;
+    }
+
+    public RxInvoker() {
+    }
+
     @Override
     public Object invoke(Call call, Type returnType, Object... args) throws Exception {
-        return invokeInner(call,returnType);
+        Observable<?> observable = invokeInner(call,returnType);
+        if(invokeFilter!=null){
+            observable = invokeFilter.call(call.request(),Util.getTypeParameter(returnType),observable);
+        }
+        return observable;
     }
 
     @SuppressWarnings("unchecked")

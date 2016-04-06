@@ -70,9 +70,10 @@ public class URLFormBody implements RequestBody {
         long byteCount = 0L;
 
         BufferedWriter buffer;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ByteArrayOutputStream bos = null;
         OutputStreamWriter outputStreamWriter;
         if (countBytes) {
+            bos = new ByteArrayOutputStream();
             outputStreamWriter = new OutputStreamWriter(bos, Util.UTF_8);
         } else {
             outputStreamWriter = new OutputStreamWriter(sink,Util.UTF_8);
