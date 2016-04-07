@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
@@ -42,13 +43,19 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     private TaskDispatcher<Response> mNetDispatcher;
     private CacheDispatcher mCacheDispatcher;
     private CacheImpl mCache;
+    private CachePolicy mCachePolicy;
 
-    public static HttpLiteBuilder create() {
-        return new URLite();
+    public static HttpLiteBuilder create(CachePolicy mCachePolicy) {
+        return new URLite(mCachePolicy);
     }
 
-    public URLite() {
+    public static HttpLiteBuilder create() {
+        return create(null);
+    }
+
+    public URLite(CachePolicy cachePolicy) {
         mNetDispatcher = new TaskDispatcher<>();
+        mCachePolicy = cachePolicy;
     }
 
     @Override
@@ -61,7 +68,8 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache);
+            if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
+            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache,mCachePolicy);
         }
     }
 
@@ -216,7 +224,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     private void dispatchTask(Dispatcher.Task task) {
-        if (task.request().canCache()&&mCacheDispatcher!=null) {
+        if (isCacheAble(task)) {
             mCacheDispatcher.dispatch(task);
         } else {
             mNetDispatcher.dispatch(task);
@@ -224,14 +232,14 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     private Response dispatchTaskSync(Dispatcher.Task<Response> task) throws Exception {
-        if (task.request().canCache())
+        if (isCacheAble(task))
             return mCacheDispatcher.execute(task);
         else
             return mNetDispatcher.execute(task);
     }
 
     boolean isCacheAble(Dispatcher.Task task) {
-        return task.request().canCache() && mCacheDispatcher != null;
+        return mCacheDispatcher!=null&&mCacheDispatcher.canCache(task.request());
     }
 
     public Response createCacheResponse(Response response) throws IOException {

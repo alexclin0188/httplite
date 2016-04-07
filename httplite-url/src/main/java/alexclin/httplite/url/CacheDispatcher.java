@@ -17,7 +17,9 @@ import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.mock.Dispatcher;
 import alexclin.httplite.mock.TaskDispatcher;
 import alexclin.httplite.url.cache.CacheImpl;
+import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.LogUtil;
+import alexclin.httplite.util.Method;
 import alexclin.httplite.util.Util;
 
 /**
@@ -34,13 +36,15 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     private TaskDispatcher<Response> networkDispatcher;
 
     private CacheImpl cache;
+    private CachePolicy cachePolicy;
 
     /** Used for telling us to die. */
     private volatile boolean mQuit = false;
 
-    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,CacheImpl cache) {
+    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,CacheImpl cache,CachePolicy cachePolicy) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
+        this.cachePolicy = cachePolicy;
         start();
     }
 
@@ -55,7 +59,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
             try {
                 return networkDispatcher.execute(task);
             } finally {
-                notifyTaskFinish(getCacheKey(task.request()));
+                notifyTaskFinish(cachePolicy.createCacheKey(task.request()));
             }
         }else{
             task.wait();
@@ -99,7 +103,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     }
 
     public Response cacheResponse(Response response) throws IOException {
-        String cacheKey = getCacheKey(response.request());
+        String cacheKey = cachePolicy.createCacheKey(response.request());
         if (cacheKey != null) {
             try {
                 if (response.code() < 300) {
@@ -138,13 +142,9 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
     }
 
-    public static String getCacheKey(Request request){
-        return Util.md5Hex(request.getUrl());
-    }
-
     private boolean isSameKeyTaskRunning(Task<Response> task,boolean sync){
         synchronized (mWaitingRequests) {
-            String cacheKey = getCacheKey(task.request());
+            String cacheKey = cachePolicy.createCacheKey(task.request());
             if (mWaitingRequests.containsKey(cacheKey)) {
                 // There is already a request in flight. Queue up.
                 Queue<Pair<Task<Response>,Boolean>> stagedRequests = mWaitingRequests.get(cacheKey);
@@ -196,6 +196,10 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         cache.addCacheHeaders(request);
     }
 
+    public boolean canCache(Request request) {
+        return cachePolicy.canCache(request);
+    }
+
     static class CacheTask implements Task<Response>{
         private Task task;
         private Response response;
@@ -238,6 +242,19 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         @Override
         public void cancel() {
             task.cancel();
+        }
+    }
+
+    public static class DefaultCachePolicy implements CachePolicy{
+
+        @Override
+        public String createCacheKey(Request request) {
+            return Util.md5Hex(request.rawUrl());
+        }
+
+        @Override
+        public boolean canCache(Request request) {
+            return request.getMethod()== Method.GET&&request.getCacheExpiredTime()!=Request.NO_CACHE;
         }
     }
 }

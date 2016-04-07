@@ -38,7 +38,7 @@ import alexclin.httplite.util.Util;
 /**
  * Utility methods for parsing HTTP headers.
  */
-public class CacheEntryParser {
+public class CacheParser {
 
     private static final int ENTRY_METADATA = 0;
     private static final int ENTRY_DATA = 1;

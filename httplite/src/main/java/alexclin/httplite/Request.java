@@ -502,10 +502,6 @@ public final class Request {
         return downloadParams;
     }
 
-    public boolean canCache(){
-        return method==Method.GET && cacheExpiredTime!=NO_CACHE;
-    }
-
     public Request mark(Object mark){
         this.mark = mark;
         return this;

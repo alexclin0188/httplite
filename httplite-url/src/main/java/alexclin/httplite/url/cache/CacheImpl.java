@@ -36,7 +36,7 @@ public class CacheImpl{
         if(snapshot==null){
             return null;
         }
-        CacheEntry entry = CacheEntryParser.newEntry(snapshot, pool, request);
+        CacheEntry entry = CacheParser.newEntry(snapshot, pool, request);
         if (force||request.getCacheExpiredTime() == Request.FORCE_CACHE) {
             return entry.getResponse();
         }
@@ -61,9 +61,9 @@ public class CacheImpl{
             return response;
         }
         byte[] data = IOUtil.readAllBytes(response.body().stream());
-        Response returnResponse = new ResponseImpl(response,new CacheEntryParser.PoolingStream(data,pool),data.length);
+        Response returnResponse = new ResponseImpl(response,new CacheParser.PoolingStream(data,pool),data.length);
 
-        CacheEntry entry = CacheEntryParser.parseCacheEntry(response,new CacheEntryParser.PoolingStream(data,pool),data.length);
+        CacheEntry entry = CacheParser.parseCacheEntry(response,new CacheParser.PoolingStream(data,pool),data.length);
         if(entry==null){
             return returnResponse;
         }
@@ -80,7 +80,7 @@ public class CacheImpl{
             return returnResponse;
         }
         try {
-            CacheEntryParser.writeEntryTo(entry, editor);
+            CacheParser.writeEntryTo(entry, editor);
             editor.commit();
         } catch (Exception e){
             abortQuietly(editor);
@@ -96,7 +96,7 @@ public class CacheImpl{
             if(snapshot==null){
                 return;
             }
-            entry = CacheEntryParser.newEntry(snapshot);
+            entry = CacheParser.newEntry(snapshot);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -110,7 +110,7 @@ public class CacheImpl{
         }
 
         if (entry.getLastModified() > 0) {
-            String lastModified = CacheEntryParser.formatDateAsEpoch(entry.getLastModified());
+            String lastModified = CacheParser.formatDateAsEpoch(entry.getLastModified());
             if(lastModified!=null)
                 request.header("If-Modified-Since", lastModified);
         }
