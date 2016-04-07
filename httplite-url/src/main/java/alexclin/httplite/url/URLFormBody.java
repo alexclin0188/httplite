@@ -19,7 +19,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin  16/1/2 20:01
  */
-public class URLFormBody implements RequestBody {
+public class URLFormBody extends URLRequestBody {
     private static final URLMediaType CONTENT_TYPE =
             URLMediaType.parse("application/x-www-form-urlencoded");
 
@@ -70,10 +70,10 @@ public class URLFormBody implements RequestBody {
         long byteCount = 0L;
 
         BufferedWriter buffer;
-        ByteArrayOutputStream bos = null;
+        CountOutputStream bos = null;
         OutputStreamWriter outputStreamWriter;
         if (countBytes) {
-            bos = new ByteArrayOutputStream();
+            bos = new CountOutputStream();
             outputStreamWriter = new OutputStreamWriter(bos, Util.UTF_8);
         } else {
             outputStreamWriter = new OutputStreamWriter(sink,Util.UTF_8);
@@ -89,7 +89,7 @@ public class URLFormBody implements RequestBody {
             }
             buffer.flush();
             if (countBytes) {
-                byteCount = bos.size();
+                byteCount = bos.countBytes();
                 Util.closeQuietly(buffer);
             }
         } catch (IOException e) {
