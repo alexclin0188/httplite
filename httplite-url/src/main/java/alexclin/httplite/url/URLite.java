@@ -63,13 +63,13 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         this.settings = settings;
         mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
         if (settings.getCacheDir() != null) {
+            if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
             try {
-                mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize());
+                mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize(),mCachePolicy);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
-            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache,mCachePolicy);
+            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache);
         }
     }
 

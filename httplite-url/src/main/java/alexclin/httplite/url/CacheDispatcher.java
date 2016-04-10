@@ -36,15 +36,13 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     private TaskDispatcher<Response> networkDispatcher;
 
     private CacheImpl cache;
-    private CachePolicy cachePolicy;
 
     /** Used for telling us to die. */
     private volatile boolean mQuit = false;
 
-    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,CacheImpl cache,CachePolicy cachePolicy) {
+    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,CacheImpl cache) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
-        this.cachePolicy = cachePolicy;
         start();
     }
 
@@ -59,7 +57,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
             try {
                 return networkDispatcher.execute(task);
             } finally {
-                notifyTaskFinish(cachePolicy.createCacheKey(task.request()));
+                notifyTaskFinish(cache.createCacheKey(task.request()));
             }
         }else{
             task.wait();
@@ -103,7 +101,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     }
 
     public Response cacheResponse(Response response) throws IOException {
-        String cacheKey = cachePolicy.createCacheKey(response.request());
+        String cacheKey = cache.createCacheKey(response.request());
         if (cacheKey != null) {
             try {
                 if (response.code() < 300) {
@@ -144,7 +142,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
     private boolean isSameKeyTaskRunning(Task<Response> task,boolean sync){
         synchronized (mWaitingRequests) {
-            String cacheKey = cachePolicy.createCacheKey(task.request());
+            String cacheKey = cache.createCacheKey(task.request());
             if (mWaitingRequests.containsKey(cacheKey)) {
                 // There is already a request in flight. Queue up.
                 Queue<Pair<Task<Response>,Boolean>> stagedRequests = mWaitingRequests.get(cacheKey);
@@ -197,7 +195,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     }
 
     public boolean canCache(Request request) {
-        return cachePolicy.canCache(request);
+        return cache.canCache(request)&&request.getCacheExpiredTime()!=Request.NO_CACHE;
     }
 
     static class CacheTask implements Task<Response>{
@@ -254,7 +252,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
         @Override
         public boolean canCache(Request request) {
-            return request.getMethod()== Method.GET&&request.getCacheExpiredTime()!=Request.NO_CACHE;
+            return request.getMethod()== Method.GET;
         }
     }
 }

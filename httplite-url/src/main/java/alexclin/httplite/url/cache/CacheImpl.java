@@ -20,18 +20,20 @@ public class CacheImpl{
 
     private DiskLruCache cache;
     private ByteArrayPool pool;
+    private CachePolicy cachePolicy;
 
-    public CacheImpl(File directory, long maxSize, ByteArrayPool pool) throws IOException{
+    public CacheImpl(File directory, long maxSize, ByteArrayPool pool,CachePolicy cachePolicy) throws IOException{
         cache = DiskLruCache.open(directory,APP_VERSION,2,maxSize,2048);
         this.pool = pool;
+        this.cachePolicy = cachePolicy;
     }
 
-    public CacheImpl(File directory, long maxSize) throws IOException{
-        this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE));
+    public CacheImpl(File directory, long maxSize,CachePolicy cachePolicy) throws IOException{
+        this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE),cachePolicy);
     }
 
     public Response get(Request request,boolean force) throws IOException {
-        String key = CacheDispatcher.getCacheKey(request);
+        String key = cachePolicy.createCacheKey(request);
         DiskLruCache.Snapshot snapshot = cache.get(key);
         if(snapshot==null){
             return null;
@@ -51,7 +53,7 @@ public class CacheImpl{
     }
 
     public boolean remove(Request request) throws IOException {
-        String key = CacheDispatcher.getCacheKey(request);
+        String key = cachePolicy.createCacheKey(request);
         cache.remove(key);
         return true;
     }
@@ -67,7 +69,7 @@ public class CacheImpl{
         if(entry==null){
             return returnResponse;
         }
-        String cacheKey = CacheDispatcher.getCacheKey(response.request());
+        String cacheKey = cachePolicy.createCacheKey(response.request());
         DiskLruCache.Snapshot snapshot = cache.get(cacheKey);
         DiskLruCache.Editor editor;
         if (snapshot == null){
@@ -92,7 +94,7 @@ public class CacheImpl{
     public void addCacheHeaders(Request request){
         CacheEntry entry = null;
         try {
-            DiskLruCache.Snapshot snapshot = cache.get(CacheDispatcher.getCacheKey(request));
+            DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request));
             if(snapshot==null){
                 return;
             }
@@ -114,6 +116,14 @@ public class CacheImpl{
             if(lastModified!=null)
                 request.header("If-Modified-Since", lastModified);
         }
+    }
+
+    public String createCacheKey(Request request){
+        return cachePolicy.createCacheKey(request);
+    }
+
+    public boolean canCache(Request request){
+        return cachePolicy.canCache(request);
     }
 
     private void abortQuietly(DiskLruCache.Editor editor) {
