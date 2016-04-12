@@ -8,7 +8,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ public abstract class Retrofit {
 
     private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();  //TODO LinkedHashMap？
 
-    private MethodListener methodListener;
     private List<Invoker> mInvokers;
 
     public Retrofit(List<Invoker> invokers) {
@@ -45,27 +43,13 @@ public abstract class Retrofit {
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> T create(final Class<T> service,final RequestFilter filter){
+    public final <T> T create(Class<T> service,RequestFilter filter,MethodFilter methodFilter){
         Util.validateServiceInterface(service);
         if (!isReleaseMode()) {
             eagerlyValidateMethods(service);
         }
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
-                new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object... args)
-                            throws Throwable {
-                        // If the method is a method from Object then defer to normal invocation.
-                        if (method.getDeclaringClass() == Object.class) {
-                            return method.invoke(this, args);
-                        }
-                        if (isDefaultMethod(method)) {
-                            return invokeDefaultMethod(method, service, proxy, args);
-                        }
-                        dispatchMethodEvent(method,Retrofit.this,args);
-                        return loadMethodHandler(method).invoke(Retrofit.this,filter,args);
-                    }
-                });
+                new ProxyInvoker<T>(service,filter,methodFilter));
     }
 
     private <T> void eagerlyValidateMethods(Class<T> service) {
@@ -73,16 +57,6 @@ public abstract class Retrofit {
             if(!isDefaultMethod(method))
                 loadMethodHandler(method);
         }
-    }
-
-    protected void dispatchMethodEvent(Method method, Retrofit retrofit, Object... args){
-        if(methodListener!=null){
-            methodListener.onMethod(method,retrofit,args);
-        }
-    }
-
-    public void setMethodListener(MethodListener methodListener){
-        this.methodListener = methodListener;
     }
 
     private static boolean isDefaultMethod(Method method){
@@ -165,7 +139,7 @@ public abstract class Retrofit {
         return null;
     }
 
-    private class SyncInvoker implements Invoker {
+    private static class SyncInvoker implements Invoker {
         @Override
         public Object invoke(Call call,final Type returnType, Object... args) throws Exception{
             Clazz clazz = Clazz.ofType(returnType);
@@ -196,7 +170,7 @@ public abstract class Retrofit {
     }
 
     @SuppressWarnings("unchecked")
-    private class AsyncInvoker implements Invoker {
+    private static class AsyncInvoker implements Invoker {
         @Override
         public Object invoke(Call call, Type returnType, Object... args) throws Exception{
             Handle obj = call.async(true,(Callback)args[args.length-1]);
@@ -227,6 +201,49 @@ public abstract class Retrofit {
                 }
             }
             return Util.getTypeParameter(lastParamType)==File.class;
+        }
+    }
+
+    private class ProxyInvoker<T> implements InvocationHandler{
+        private final Class<T> service;
+        private final RequestFilter filter;
+        private final MethodFilter methodFilter;
+        private final LinkedHashMap<Method,MethodInvoker> invokerMap;
+
+        public ProxyInvoker(Class<T> service, RequestFilter filter, MethodFilter methodFilter) {
+            this.service = service;
+            this.filter = filter;
+            this.methodFilter = methodFilter;
+            if(this.methodFilter!=null){
+                this.invokerMap = new LinkedHashMap<>();
+            }else {
+                this.invokerMap = null;
+            }
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            // If the method is a method from Object then defer to normal invocation.
+            if (method.getDeclaringClass() == Object.class) {
+                return method.invoke(this, args);
+            }
+            if (isDefaultMethod(method)) {
+                return invokeDefaultMethod(method, service, proxy, args);
+            }
+            MethodHandler<?> handler = loadMethodHandler(method);
+            if(invokerMap==null){
+                return handler.invoke(Retrofit.this,filter,args);
+            }else{
+                MethodInvoker methodInvoker;
+                synchronized (invokerMap){
+                    methodInvoker = invokerMap.get(method);
+                    if(methodInvoker==null){
+                        methodInvoker = new MethodInvoker(handler,method,Retrofit.this,filter);
+                        invokerMap.put(method,methodInvoker);
+                    }
+                }
+                return methodFilter.onMethod(lite(),methodInvoker,args);
+            }
         }
     }
 }

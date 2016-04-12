@@ -16,6 +16,7 @@ import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.mock.MockCall;
 import alexclin.httplite.retrofit.Invoker;
+import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
 import alexclin.httplite.util.Method;
@@ -152,7 +153,11 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz,RequestFilter filter){
-        return retrofit.create(clazz,filter);
+        return retrofit.create(clazz,filter,null);
+    }
+
+    public <T> T retrofit(Class<T> clazz, RequestFilter filter, MethodFilter methodFilter){
+        return retrofit.create(clazz,filter,methodFilter);
     }
 
     public Retrofit getRetrofit() {
