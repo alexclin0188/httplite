@@ -52,7 +52,7 @@ public class MockTask<T> implements Dispatcher.Task<T>,Handle {
     }
 
     @Override
-    public void executeAsync() {
+    public void enqueueTask() {
         try {
             call.factory.callMock(request(), mock);
             mock.processMock();
@@ -81,7 +81,7 @@ public class MockTask<T> implements Dispatcher.Task<T>,Handle {
     }
 
     @Override
-    public T execute() throws Exception {
+    public T executeTask() throws Exception {
         call.factory.callMock(request(), mock);
         mock.processMock();
         return mock.result();
@@ -111,7 +111,7 @@ public class MockTask<T> implements Dispatcher.Task<T>,Handle {
     public boolean resume() {
         if(isExecuted){
             isCanceled = false;
-            executeAsync();
+            enqueueTask();
             return true;
         }
         return false;

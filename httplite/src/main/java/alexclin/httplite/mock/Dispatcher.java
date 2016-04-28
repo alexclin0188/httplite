@@ -20,8 +20,8 @@ public interface Dispatcher<T> {
 
     interface Task<T> {
         Request request();
-        void executeAsync();
-        T execute() throws Exception;
+        void enqueueTask();
+        T executeTask() throws Exception;
         Object tag();
         boolean isCanceled();
         boolean isExecuted();

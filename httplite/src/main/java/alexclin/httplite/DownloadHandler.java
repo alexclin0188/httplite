@@ -49,6 +49,76 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
         this.params = params;
     }
 
+    private static boolean isSupportRange(Response response) {
+        if (response == null) return false;
+        String ranges = response.header("Accept-Ranges");
+        if (ranges != null) {
+            return ranges.contains("bytes");
+        }
+        ranges = response.header("Content-Range");
+        return ranges != null && ranges.contains("bytes");
+    }
+
+    static DownloadParams createParams(String path, String fileName, boolean autoResume, boolean autoRename) {
+        if(TextUtils.isEmpty(path)){
+            return null;
+        }
+        File parentDir = new File(path);
+        if(TextUtils.isEmpty(fileName)){
+            if(path.endsWith("/")){
+                fileName = String.format(Locale.getDefault(),"lite%d.tmp",System.currentTimeMillis());
+                autoRename = true;
+            }else{
+                if(parentDir.exists()&&parentDir.isDirectory()){
+                    fileName = String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
+                    autoRename = true;
+                }else{
+                    int index = path.lastIndexOf("/");
+                    if(index!=-1){
+                        fileName = parentDir.getName();
+                        parentDir = parentDir.getParentFile();
+                    }else
+                        return null;
+                }
+            }
+        }
+        File targetFile = new File(parentDir,fileName);
+        if(!parentDir.exists()){
+            if(!parentDir.mkdirs()){
+                return null;
+            }
+        }
+        if(!parentDir.canWrite()){
+            return null;
+        }
+        return new DownloadParams(parentDir,targetFile,autoResume,autoRename);
+    }
+
+    private static String getResponseFileName(Response response) {
+        if (response == null) return null;
+        String disposition = response.header("Content-Disposition");
+        if (!TextUtils.isEmpty(disposition)) {
+            int startIndex = disposition.indexOf("filename=");
+            if (startIndex > 0) {
+                startIndex += 9; // "filename=".length()
+                int endIndex = disposition.indexOf(";", startIndex);
+                if (endIndex < 0) {
+                    endIndex = disposition.length();
+                }
+                if (endIndex > startIndex) {
+                    try {
+                        return URLDecoder.decode(
+                                disposition.substring(startIndex, endIndex),
+                                response.body().contentType().charset().toString());
+                    } catch (UnsupportedEncodingException ex) {
+                        LogUtil.e(ex.getMessage(), ex);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     File parseResponse(Response response) throws Exception {
         try {
@@ -95,16 +165,6 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
             }
             return newFile;
         }
-    }
-
-    private static boolean isSupportRange(Response response) {
-        if (response == null) return false;
-        String ranges = response.header("Accept-Ranges");
-        if (ranges != null) {
-            return ranges.contains("bytes");
-        }
-        ranges = response.header("Content-Range");
-        return ranges != null && ranges.contains("bytes");
     }
 
     void processHeaders(Map<String, List<String>> headers){
@@ -231,69 +291,9 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
         }
     }
 
-    static DownloadParams createParams(String path, String fileName, boolean autoResume, boolean autoRename) {
-        if(TextUtils.isEmpty(path)){
-            return null;
-        }
-        File parentDir = new File(path);
-        if(TextUtils.isEmpty(fileName)){
-            if(path.endsWith("/")){
-                fileName = String.format(Locale.getDefault(),"lite%d.tmp",System.currentTimeMillis());
-                autoRename = true;
-            }else{
-                if(parentDir.exists()&&parentDir.isDirectory()){
-                    fileName = String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
-                    autoRename = true;
-                }else{
-                    int index = path.lastIndexOf("/");
-                    if(index!=-1){
-                        fileName = parentDir.getName();
-                        parentDir = parentDir.getParentFile();
-                    }else
-                        return null;
-                }
-            }
-        }
-        File targetFile = new File(parentDir,fileName);
-        if(!parentDir.exists()){
-            if(!parentDir.mkdirs()){
-                return null;
-            }
-        }
-        if(!parentDir.canWrite()){
-            return null;
-        }
-        return new DownloadParams(parentDir,targetFile,autoResume,autoRename);
-    }
-
     @Override
     public void run() {
         processHeaders(call.request.getHeaders());
-    }
-
-    private static String getResponseFileName(Response response) {
-        if (response == null) return null;
-        String disposition = response.header("Content-Disposition");
-        if (!TextUtils.isEmpty(disposition)) {
-            int startIndex = disposition.indexOf("filename=");
-            if (startIndex > 0) {
-                startIndex += 9; // "filename=".length()
-                int endIndex = disposition.indexOf(";", startIndex);
-                if (endIndex < 0) {
-                    endIndex = disposition.length();
-                }
-                if (endIndex > startIndex) {
-                    try {
-                        return URLDecoder.decode(
-                                disposition.substring(startIndex, endIndex),
-                                response.body().contentType().charset().toString());
-                    } catch (UnsupportedEncodingException ex) {
-                        LogUtil.e(ex.getMessage(), ex);
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     private void retryDownload(Throwable throwable) throws Exception{
@@ -315,6 +315,11 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
         isCanceled = false;
         call.executeSelf(this);
         return true;
+    }
+
+    @Override
+    public Runnable getPreWork() {
+        return this;
     }
 
     @Override

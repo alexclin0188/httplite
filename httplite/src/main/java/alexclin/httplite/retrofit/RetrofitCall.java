@@ -21,6 +21,7 @@ public class RetrofitCall extends Call {
     private Retrofit retrofit;
 
     public RetrofitCall(Call realCall, RequestFilter filter, Retrofit retrofit) {
+        super(realCall.request());
         this.realCall = realCall;
         this.filter = filter;
         this.retrofit = retrofit;

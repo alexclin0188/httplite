@@ -213,12 +213,12 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
 
         @Override
-        public void executeAsync() {
+        public void enqueueTask() {
             ((URLTask)task).onResponse(response);
         }
 
         @Override
-        public Response execute() throws Exception {
+        public Response executeTask() throws Exception {
             return response;
         }
 

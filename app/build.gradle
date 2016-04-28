@@ -39,5 +39,5 @@ dependencies {
     compile project(':httplite-okhttp2')
     compile project(':httplite-okhttp3')
     compile project(':httplite-url')
-    compile project(':httplite-rx')
+    compile project(':retrofit-rx')
 }

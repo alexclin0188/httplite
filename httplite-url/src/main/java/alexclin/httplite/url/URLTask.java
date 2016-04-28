@@ -7,6 +7,7 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import alexclin.httplite.Executable;
 import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
@@ -19,7 +20,7 @@ import alexclin.httplite.mock.Dispatcher;
  *
  * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Dispatcher.Task<Response>>{
+public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Dispatcher.Task<Response>>,Executable{
 
     private URLite lite;
     private Request request;
@@ -31,14 +32,12 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLite lite,Request request,ResponseHandler callback,Runnable runnable) {
-        this.request = request;
+    public URLTask(URLite lite, Request request) {
         this.lite = lite;
-        this.callback = callback;
-        this.preWork = runnable;
+        this.request = request;
     }
 
-    public void executeAsync() {
+    public void enqueueTask() {
         if(preWork!=null){
             preWork.run();
         }
@@ -69,7 +68,7 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         }
     }
 
-    public Response execute() throws Exception {
+    public Response executeTask() throws Exception {
         if(lite.isCacheAble(this)) lite.addCacheHeaders(request);
         String urlStr = request.getUrl();
         URL url = new URL(urlStr);
@@ -131,6 +130,19 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         }else{
             return lite.createCacheResponse(response);
         }
+    }
+
+    @Override
+    public Response execute() throws Exception {
+        return lite.dispatchTaskSync(this);
+    }
+
+    @Override
+    public Handle enqueue(ResponseHandler responseHandler) {
+        this.callback = responseHandler;
+        this.preWork = responseHandler.getPreWork();
+        lite.dispatchTask(this);
+        return this;
     }
 
     private void assertCanceled() throws Exception{

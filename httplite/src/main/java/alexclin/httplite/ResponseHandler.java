@@ -122,6 +122,7 @@ public class ResponseHandler<T> {
     }
 
 
-
-
+    public Runnable getPreWork(){
+        return null;
+    }
 }

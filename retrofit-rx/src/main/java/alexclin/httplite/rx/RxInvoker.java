@@ -94,6 +94,10 @@ public class RxInvoker implements Invoker {
         }
     }
 
+    private interface ExecuteAble<E>{
+        E execute() throws Exception;
+    }
+
     private static class CallOnSubscribe<R> implements Observable.OnSubscribe<R>{
         private ExecuteAble<R> wrapper;
 
@@ -117,9 +121,5 @@ public class RxInvoker implements Invoker {
                 subscriber.unsubscribe();
             }
         }
-    }
-
-    private interface ExecuteAble<E>{
-        E execute() throws Exception;
     }
 }

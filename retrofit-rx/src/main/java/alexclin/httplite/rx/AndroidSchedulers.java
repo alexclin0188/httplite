@@ -41,17 +41,16 @@ public final class AndroidSchedulers {
     /** A {@link Scheduler} backed by a {@link Handler}. */
     private static class HandleScheduler extends Scheduler {
         private static HandleScheduler SCHEDULER_INSTANCE = HandleScheduler.from(HttpLite.mainHandler());
+        private final Handler handler;
+
+        private HandleScheduler(Handler handler) {
+            this.handler = handler;
+        }
 
         /** Create a {@link Scheduler} which uses {@code handler} to execute actions. */
         public static HandleScheduler from(Handler handler) {
             if (handler == null) throw new NullPointerException("handler == null");
             return new HandleScheduler(handler);
-        }
-
-        private final Handler handler;
-
-        private HandleScheduler(Handler handler) {
-            this.handler = handler;
         }
 
         @Override

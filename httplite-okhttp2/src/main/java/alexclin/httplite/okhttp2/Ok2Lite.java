@@ -3,30 +3,22 @@ package alexclin.httplite.okhttp2;
 import android.util.Pair;
 
 import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.CacheControl;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.util.ClientSettings;
-import alexclin.httplite.Handle;
+import alexclin.httplite.Executable;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
 import alexclin.httplite.MediaType;
+import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.ResponseHandler;
-import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.util.ClientSettings;
 
 /**
  * Ok2Lite
@@ -40,15 +32,6 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
             return true;
         }
     };
-
-    public static HttpLiteBuilder create() {
-        return create(null);
-    }
-
-    public static HttpLiteBuilder create(OkHttpClient client) {
-        return new Ok2Lite(client);
-    }
-
     private OkHttpClient mClient;
 
     Ok2Lite(OkHttpClient client){
@@ -59,98 +42,22 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         }
     }
 
+    public static HttpLiteBuilder create() {
+        return create(null);
+    }
+
+    public static HttpLiteBuilder create(OkHttpClient client) {
+        return new Ok2Lite(client);
+    }
+
     @Override
     protected LiteClient initLiteClient() {
         return this;
     }
 
-    @Override
-    public Handle execute(final alexclin.httplite.Request request, final ResponseHandler callback, final Runnable preWork) {
-        final OkHandle handle = new OkHandle(request,callback);
-        if(preWork!=null){
-            mClient.getDispatcher().getExecutorService().execute(new Runnable() {
-                @Override
-                public void run() {
-                    preWork.run();
-                    if(!handle.isCanceled()){
-                        Call call = executeInternal(request,callback);
-                        handle.setRealCall(call);
-                    }else{
-                        callback.callCancelAndFailed();
-                    }
-                }
-            });
-        }else{
-            handle.setRealCall(executeInternal(request, callback));
-        }
-        return handle;
-    }
 
-    private Call executeInternal(final alexclin.httplite.Request request, final ResponseHandler handler){
-        com.squareup.okhttp.Request.Builder rb = Ok2Lite.createRequestBuilder(request);
-        Call realCall = mClient.newCall(rb.build());
-        realCall.enqueue(new Callback() {
-            @Override
-            public void onFailure(com.squareup.okhttp.Request request, IOException e) {
-                if("Canceled".equals(e.getMessage())){
-                    handler.onFailed(new CanceledException(e));
-                }else{
-                    handler.onFailed(e);
-                }
-            }
-
-            @Override
-            public void onResponse(Response response) throws IOException {
-                handler.onResponse(new OkResponse(response, request));
-            }
-        });
-        return realCall;
-    }
-
-    static Request.Builder createRequestBuilder(alexclin.httplite.Request request) {
-        Request.Builder rb = new Request.Builder().url(request.getUrl()).tag(request.getTag());
-        Headers okheader = createHeader(request.getHeaders());
-        if(okheader!=null){
-            rb.headers(okheader);
-        }
-        switch (request.getMethod()){
-            case GET:
-                rb = rb.get();
-                break;
-            case POST:
-                rb = rb.post(OkRequestBody.wrapperLite(request.getBody()));
-                break;
-            case PUT:
-                rb = rb.put(OkRequestBody.wrapperLite(request.getBody()));
-                break;
-            case PATCH:
-                rb = rb.patch(OkRequestBody.wrapperLite(request.getBody()));
-                break;
-            case HEAD:
-                rb = rb.head();
-                break;
-            case DELETE:
-                if(request.getBody()==null){
-                    rb = rb.delete();
-                }else{
-                    rb = rb.delete(OkRequestBody.wrapperLite(request.getBody()));
-                }
-                break;
-        }
-        if(request.getCacheExpiredTime()>0){
-            rb.cacheControl(new CacheControl.Builder().maxAge(request.getCacheExpiredTime(),TimeUnit.SECONDS).build());
-        }else if(request.getCacheExpiredTime()== alexclin.httplite.Request.FORCE_CACHE){
-            rb.cacheControl(CacheControl.FORCE_CACHE);
-        }else if(request.getCacheExpiredTime()== alexclin.httplite.Request.NO_CACHE){
-            rb.cacheControl(CacheControl.FORCE_NETWORK);
-        }
-        return rb;
-    }
-
-    @Override
-    public alexclin.httplite.Response executeSync(alexclin.httplite.Request request) throws IOException{
-        Request.Builder rb = createRequestBuilder(request);
-        return new OkResponse(mClient.newCall(rb.build()).execute(),request);
+    public Executable executable(Request request){
+        return new OkTask(request,mClient);
     }
 
     @Override
@@ -179,7 +86,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         }
         if(headBodyList!=null){
             for(Pair<Map<String,List<String>>,RequestBody> bodyPair:headBodyList){
-                builder.addPart(createHeader(bodyPair.first), OkRequestBody.wrapperLite(bodyPair.second));
+                builder.addPart(OkTask.createHeader(bodyPair.first), OkRequestBody.wrapperLite(bodyPair.second));
             }
         }
         if(paramList!=null){
@@ -261,17 +168,5 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         return new OkMediaType(oktype);
     }
 
-    private static Headers createHeader(Map<String, List<String>> headers){
-        if(headers!=null&&!headers.isEmpty()){
-            Headers.Builder hb = new Headers.Builder();
-            for(String key:headers.keySet()){
-                List<String> values = headers.get(key);
-                for(String value:values){
-                    hb.add(key,value);
-                }
-            }
-            return hb.build();
-        }
-        return null;
-    }
+
 }

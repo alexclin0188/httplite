@@ -18,24 +18,20 @@ import alexclin.httplite.util.Util;
  */
 public class TaskDispatcher<T> implements Dispatcher<T> {
 
-    private int maxRequests = 64;
-
-    /**
-     * Executes calls. Created lazily.
-     */
-    private ExecutorService executorService;
-
     /**
      * Ready calls in the order they'll be run.
      */
     private final Deque<AsyncWrapper> readyCalls = new ArrayDeque<>();
-
     /**
      * Running calls. Includes canceled calls that haven't finished yet.
      */
     private final Deque<AsyncWrapper> runningCalls = new ArrayDeque<>();
-
     private final Deque<Task> executingSyncCalls = new ArrayDeque<>();
+    private int maxRequests = 64;
+    /**
+     * Executes calls. Created lazily.
+     */
+    private ExecutorService executorService;
 
     public TaskDispatcher() {
         this(null);
@@ -53,7 +49,7 @@ public class TaskDispatcher<T> implements Dispatcher<T> {
     public T execute(Task<T> task) throws Exception{
         registerSyncCall(task);
         try {
-            return task.execute();
+            return task.executeTask();
         } finally {
             unregisterSyncCall(task);
         }
@@ -73,6 +69,10 @@ public class TaskDispatcher<T> implements Dispatcher<T> {
 
     void unregisterSyncCall(Task task) {
         executingSyncCalls.remove(task);
+    }
+
+    public synchronized int getMaxRequests() {
+        return maxRequests;
     }
 
     /**
@@ -96,10 +96,6 @@ public class TaskDispatcher<T> implements Dispatcher<T> {
             getExecutorService().execute(call);
             if (runningCalls.size() >= maxRequests) return;
         }
-    }
-
-    public synchronized int getMaxRequests() {
-        return maxRequests;
     }
 
     /**
@@ -180,7 +176,7 @@ public class TaskDispatcher<T> implements Dispatcher<T> {
 
         @Override
         public void run() {
-            realTask.executeAsync();
+            realTask.enqueueTask();
             final TaskDispatcher dispatcher = this.dispatcher;
             if(dispatcher!=null)dispatcher.onFinished(this);
             this.dispatcher = null;

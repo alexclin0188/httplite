@@ -15,10 +15,9 @@ import alexclin.httplite.util.Util;
  * @author alexclin at 16/1/26 22:12
  */
 public class HttpCall extends Call{
-    protected Request request;
 
     protected HttpCall(Request request) {
-        this.request = request;
+        super(request);
     }
 
     @Override @SuppressWarnings("unchecked")
@@ -109,7 +108,8 @@ public class HttpCall extends Call{
         HttpLite lite = request.lite;
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request,callback.resultType());
         if(preWork!=null) preWork.run();
-        Response response = lite.getClient().executeSync(request);
+        setExecutable(lite.getClient().executable(request));
+        Response response = executable().execute();
         if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
         response = request.handleResponse(response);
         return response;
@@ -118,7 +118,6 @@ public class HttpCall extends Call{
     <T> Handle executeSelf(final ResponseHandler<T> callback){
         HttpLite lite = request.lite;
         boolean isDownload = callback instanceof DownloadHandler;
-        final Runnable preWork = isDownload?(DownloadHandler)callback:null;
         final Executor executor = lite.getCustomDownloadExecutor();
         if(isDownload&&executor!=null){
             executor.execute(new Runnable() {
@@ -133,7 +132,8 @@ public class HttpCall extends Call{
             });
             return (DownloadHandler)callback;
         }else{
-            Handle handle = lite.getClient().execute(request,callback,preWork);
+            setExecutable(lite.getClient().executable(request));
+            Handle handle = executable().enqueue(callback);
             return isDownload?((DownloadHandler)callback).wrap(handle):handle;
         }
     }
