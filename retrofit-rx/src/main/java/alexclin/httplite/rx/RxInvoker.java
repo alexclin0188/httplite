@@ -3,6 +3,7 @@ package alexclin.httplite.rx;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import alexclin.httplite.Call;
 import alexclin.httplite.Request;
@@ -11,7 +12,10 @@ import alexclin.httplite.util.Result;
 import alexclin.httplite.retrofit.Invoker;
 import alexclin.httplite.util.Util;
 import rx.Observable;
+import rx.Producer;
 import rx.Subscriber;
+import rx.Subscription;
+import rx.exceptions.Exceptions;
 import rx.functions.Func3;
 
 /**
@@ -42,41 +46,7 @@ public class RxInvoker implements Invoker {
     @SuppressWarnings("unchecked")
     private <T> Observable<T> invokeInner(Call call,Type returnType){
         final Type observableType = Util.getTypeParameter(returnType);
-        Class<?> observableClass = Util.getRawType(observableType);
-        if(observableClass==Result.class){
-            final Type rT = Util.getTypeParameter(observableType);
-            return (Observable<T>) createResultObservable(call,rT);
-        }else{
-            return createObservable(call, observableType);
-        }
-    }
-
-    private <T> Observable<T> createObservable(final Call call, final Type observableType) {
-        return Observable.create(new CallOnSubscribe<T>(new ExecuteAble<T>() {
-            @Override
-            public T execute() throws Exception {
-                return call.sync(new Clazz<T>() {
-                    @Override
-                    public Type type() {
-                        return observableType;
-                    }
-                });
-            }
-        }));
-    }
-
-    private <R> Observable<Result<R>> createResultObservable(final Call call,final Type rT) {
-        return Observable.create(new CallOnSubscribe<Result<R>>(new ExecuteAble<Result<R>>() {
-            @Override
-            public Result<R> execute() throws Exception {
-                return call.syncResult(new Clazz<R>() {
-                    @Override
-                    public Type type() {
-                        return rT;
-                    }
-                });
-            }
-        }));
+        return Observable.create(new CallOnSubscribe<T>(call,observableType));
     }
 
     @Override
@@ -94,32 +64,81 @@ public class RxInvoker implements Invoker {
         }
     }
 
-    private interface ExecuteAble<E>{
-        E execute() throws Exception;
-    }
-
     private static class CallOnSubscribe<R> implements Observable.OnSubscribe<R>{
-        private ExecuteAble<R> wrapper;
+        private Call call;
+        private Type observableType;
 
-        public CallOnSubscribe(ExecuteAble<R> wrapper) {
-            this.wrapper = wrapper;
+        public CallOnSubscribe(Call call,Type observableType) {
+            this.call = call;
+            this.observableType = observableType;
         }
 
         @Override
         public void call(Subscriber<? super R> subscriber) {
+            RequestArbiter<R> requestArbiter = new RequestArbiter<>(call,subscriber,observableType);
+            subscriber.add(requestArbiter);
+            subscriber.setProducer(requestArbiter);
+        }
+    }
+
+    static final class RequestArbiter<T> extends AtomicBoolean implements Subscription, Producer{
+        private Call call;
+        private Subscriber<? super T> subscriber;
+        private Type observableType;
+
+        public RequestArbiter(Call call, Subscriber<? super T> subscriber, Type observableType) {
+            this.call = call;
+            this.subscriber = subscriber;
+            this.observableType = observableType;
+        }
+
+        @Override @SuppressWarnings("unchecked")
+        public void request(long n) {
+            if (n < 0) throw new IllegalArgumentException("n < 0: " + n);
+            if (n == 0) return; // Nothing to do when requesting 0.
+            if (!compareAndSet(false, true)) return; // Request was already triggered.
+
             try {
-                R r = wrapper.execute();
-                if (!subscriber.isUnsubscribed())
-                    subscriber.onNext(r);
-            } catch (Exception e) {
-                if (!subscriber.isUnsubscribed())
-                    subscriber.onError(e);
+                T response;
+                Class<?> observableClass = Util.getRawType(observableType);
+                if(observableClass==Result.class){
+                    final Type rT = Util.getTypeParameter(observableType);
+                    response = (T)call.syncResult(new Clazz<R>() {
+                        @Override
+                        public Type type() {
+                            return rT;
+                        }
+                    });
+                }else{
+                    response = call.sync(new Clazz<T>() {
+                        @Override
+                        public Type type() {
+                            return observableType;
+                        }
+                    });
+                }
+                if (!subscriber.isUnsubscribed()) {
+                    subscriber.onNext(response);
+                }
+            } catch (Throwable t) {
+                Exceptions.throwIfFatal(t);
+                if (!subscriber.isUnsubscribed()) {
+                    subscriber.onError(t);
+                }
+                return;
             }
-            if (!subscriber.isUnsubscribed())
-                subscriber.onCompleted();
+
             if (!subscriber.isUnsubscribed()) {
-                subscriber.unsubscribe();
+                subscriber.onCompleted();
             }
+        }
+
+        @Override public void unsubscribe() {
+            call.cancel();
+        }
+
+        @Override public boolean isUnsubscribed() {
+            return call.isCanceled();
         }
     }
 }

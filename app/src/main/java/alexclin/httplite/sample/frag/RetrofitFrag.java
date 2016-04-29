@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.listener.ProgressListener;
+import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
@@ -213,7 +214,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private HttpLite initHttpLite(){
         if(this.httpLite!=null) return this.httpLite;
 //        String baseUrl = "http://192.168.99.238:10080/";
-        HttpLiteBuilder builder = URLite.create();
+        HttpLiteBuilder builder = Ok2Lite.create();//URLite.create();
         HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
