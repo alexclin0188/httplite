@@ -14,7 +14,6 @@ import java.util.Map;
 
 import alexclin.httplite.Call;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.util.Result;
@@ -42,23 +41,6 @@ public abstract class Retrofit {
         mInvokers.add(new SyncInvoker());
     }
 
-    @SuppressWarnings("unchecked")
-    public final <T> T create(Class<T> service,RequestFilter filter,MethodFilter methodFilter){
-        Util.validateServiceInterface(service);
-        if (!isReleaseMode()) {
-            eagerlyValidateMethods(service);
-        }
-        return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
-                new ProxyInvoker<T>(service,filter,methodFilter));
-    }
-
-    private <T> void eagerlyValidateMethods(Class<T> service) {
-        for(Method method:service.getDeclaredMethods()){
-            if(!isDefaultMethod(method))
-                loadMethodHandler(method);
-        }
-    }
-
     private static boolean isDefaultMethod(Method method){
         if(Build.VERSION.SDK_INT>23){
             //TODO java8
@@ -72,30 +54,6 @@ public abstract class Retrofit {
         }
         return null;
     }
-
-    MethodHandler loadMethodHandler(Method method) {
-        MethodHandler handler;
-        synchronized (methodHandlerCache) {
-            handler = methodHandlerCache.get(method);
-            if (handler == null) {
-                handler = new MethodHandler(method,!isReleaseMode(),searchInvoker(method));
-                methodHandlerCache.put(method, handler);
-            }
-        }
-        return handler;
-    }
-
-    public abstract Request makeRequest(String baseUrl);
-
-    public abstract Request setMethod(Request request, alexclin.httplite.util.Method method);
-
-    public abstract Request setUrl(Request request, String url);
-
-    public abstract Call makeCall(Request request);
-
-    public abstract boolean isReleaseMode();
-
-    public abstract HttpLite lite();
 
     public static void registerParamterProcessor(ParameterProcessor processor) {
         if (processor != null && !ProcessorFactory.parameterProcessorList.contains(processor)) {
@@ -129,6 +87,47 @@ public abstract class Retrofit {
         }
         return null;
     }
+
+    @SuppressWarnings("unchecked")
+    public final <T> T create(Class<T> service,RequestFilter filter,MethodFilter methodFilter){
+        Util.validateServiceInterface(service);
+        if (!isReleaseMode()) {
+            eagerlyValidateMethods(service);
+        }
+        return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
+                new ProxyInvoker<T>(service,filter,methodFilter));
+    }
+
+    private <T> void eagerlyValidateMethods(Class<T> service) {
+        for(Method method:service.getDeclaredMethods()){
+            if(!isDefaultMethod(method))
+                loadMethodHandler(method);
+        }
+    }
+
+    MethodHandler loadMethodHandler(Method method) {
+        MethodHandler handler;
+        synchronized (methodHandlerCache) {
+            handler = methodHandlerCache.get(method);
+            if (handler == null) {
+                handler = new MethodHandler(method,!isReleaseMode(),searchInvoker(method));
+                methodHandlerCache.put(method, handler);
+            }
+        }
+        return handler;
+    }
+
+    public abstract Request makeRequest(String baseUrl);
+
+    public abstract Request setMethod(Request request, alexclin.httplite.util.Method method);
+
+    public abstract Request setUrl(Request request, String url);
+
+    public abstract Call makeCall(Request request);
+
+    public abstract boolean isReleaseMode();
+
+    public abstract HttpLite lite();
 
     private Invoker searchInvoker(Method method) throws RuntimeException{
         for(Invoker invoker:mInvokers){
@@ -173,8 +172,8 @@ public abstract class Retrofit {
     private static class AsyncInvoker implements Invoker {
         @Override
         public Object invoke(Call call, Type returnType, Object... args) throws Exception{
-            Handle obj = call.async(true,(Callback)args[args.length-1]);
-            return returnType==void.class?null:obj;
+            call.async(true,(Callback)args[args.length-1]);
+            return null;
         }
 
         @Override
@@ -196,8 +195,8 @@ public abstract class Retrofit {
                         "Method lastParamType must not include a type variable or wildcard: %s", lastParamType);
             }
             if(Util.isSubType(lastParamType, Callback.class)){
-                if(returnType != void.class && returnType != Handle.class){
-                    throw Util.methodError(method, "the method define in the interface must return void or Handle");
+                if(returnType != void.class){
+                    throw Util.methodError(method, "the method define in the interface must return void");
                 }
             }
             return Util.getTypeParameter(lastParamType)==File.class;

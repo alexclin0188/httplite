@@ -2,7 +2,6 @@ package alexclin.httplite.mock;
 
 import alexclin.httplite.Call;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.Handle;
 import alexclin.httplite.HttpCall;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
@@ -24,8 +23,8 @@ public class MockCall extends HttpCall{
     }
 
     @Override
-    public <T> Handle async(boolean callOnMain,Callback<T> callback) {
-        return mock(callback,callOnMain);
+    public <T> void async(boolean callOnMain,Callback<T> callback) {
+        mock(callback,callOnMain);
     }
 
     @Override

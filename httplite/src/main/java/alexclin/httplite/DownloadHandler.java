@@ -31,7 +31,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin at 16/1/1 19:12
  */
-class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
+class DownloadHandler extends ResponseHandler<File> implements Runnable{
     private static final int CHECK_SIZE = 512;
     private static final int MAX_DOWNLOAD_RETRY = 2;
     private int downloadRetryCount;
@@ -42,7 +42,7 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
 
     private volatile boolean isExecuted = false;
 
-    private Handle httpHandle;
+    private Executable httpHandle;
 
     public DownloadHandler(Callback<File> mCallback, HttpCall call, DownloadParams params, boolean callOnMain) {
         super(mCallback,call,File.class,callOnMain);
@@ -311,40 +311,18 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
     }
 
     @Override
-    public boolean resume() {
-        isCanceled = false;
-        call.executeSelf(this);
-        return true;
-    }
-
-    @Override
     public Runnable getPreWork() {
         return this;
     }
 
-    @Override
-    public Request request() {
-        return call.request;
-    }
 
-    @Override
-    public void cancel() {
-        isCanceled = true;
-    }
-
-    @Override
-    public boolean isExecuted() {
-        return isExecuted;
-    }
-
-    @Override
     public boolean isCanceled() {
-        return isCanceled||(httpHandle!=null&&httpHandle.isCanceled());
+        return (httpHandle!=null&&httpHandle.isCanceled())||isCanceled;
     }
 
-    public Handle wrap(Handle handle) {
-        this.httpHandle = handle;
-        return this;
+    public Executable wrap(Executable handle) {
+        this.httpHandle = new ExecutableWrapper(handle);
+        return httpHandle;
     }
 
     public static class DownloadParams{
@@ -358,6 +336,40 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable,Handle{
             this.targetFile = targetFile;
             this.autoResume = autoResume;
             this.autoRename = autoRename;
+        }
+    }
+
+    private class ExecutableWrapper implements Executable{
+        private Executable real;
+
+        public ExecutableWrapper(Executable real) {
+            this.real = real;
+        }
+
+        @Override
+        public Response execute() throws Exception {
+            return real.execute();
+        }
+
+        @Override
+        public void enqueue(ResponseHandler responseHandler) {
+            real.enqueue(responseHandler);
+        }
+
+        @Override
+        public void cancel() {
+            isCanceled = true;
+            real.cancel();
+        }
+
+        @Override
+        public boolean isExecuted() {
+            return real.isExecuted()&&isExecuted;
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return real.isCanceled()||isCanceled;
         }
     }
 }

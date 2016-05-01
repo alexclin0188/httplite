@@ -7,7 +7,6 @@ import com.example.UserInfo;
 import java.io.File;
 
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.Handle;
 import alexclin.httplite.util.Method;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;

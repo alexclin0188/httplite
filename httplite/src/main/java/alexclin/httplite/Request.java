@@ -45,20 +45,15 @@ public final class Request {
     String baseUrl;
     String url;
     Method method;
+    ProgressListener progressListener;
+    RetryListener retryListener;
+    HttpLite lite;
     private Map<String,List<String>> headers;
     private List<Pair<String,Pair<String,Boolean>>> params;
     private RequestBody body;
     private ProgressRequestBody progressBody;
-
     private Object tag;
-
-    ProgressListener progressListener;
-    RetryListener retryListener;
-
     private MainProgressListener progressWrapper;
-
-    HttpLite lite;
-
     private int cacheExpiredTime = UNSPECIFIED_CACHE;
 
     private FormBuilder formBuilder;
@@ -77,6 +72,23 @@ public final class Request {
 
     public Request(HttpLite lite) {
         this.lite = lite;
+    }
+
+    public static boolean permitsRequestBody(Method method) {
+        return requiresRequestBody(method)
+                || method.name().equals("OPTIONS")
+                || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
+                || method.name().equals("PROPFIND")  // (WebDAV) without body: call <allprop/>
+                || method.name().equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
+                || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
+    }
+
+    public static boolean requiresRequestBody(Method method) {
+        return method.name().equals("POST")
+                || method.name().equals("PUT")
+                || method.name().equals("PATCH")
+                || method.name().equals("PROPPATCH") // WebDAV
+                || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
     }
 
     public Map<String,List<String>> getHeaders(){
@@ -307,23 +319,6 @@ public final class Request {
         return this;
     }
 
-    public static boolean permitsRequestBody(Method method) {
-        return requiresRequestBody(method)
-                || method.name().equals("OPTIONS")
-                || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
-                || method.name().equals("PROPFIND")  // (WebDAV) without body: call <allprop/>
-                || method.name().equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
-                || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
-    }
-
-    public static boolean requiresRequestBody(Method method) {
-        return method.name().equals("POST")
-                || method.name().equals("PUT")
-                || method.name().equals("PATCH")
-                || method.name().equals("PROPPATCH") // WebDAV
-                || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
-    }
-
     private void initFormBuilder(){
         if(multipartBuilder!=null){
             throw new IllegalOperationException("You cannot call form-Method after you have called multipart method on call");
@@ -485,8 +480,8 @@ public final class Request {
         return this;
     }
 
-    public Handle download(Callback<File> callback){
-        return get().async(callback);
+    public void download(Callback<File> callback){
+        get().async(callback);
     }
 
     private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){

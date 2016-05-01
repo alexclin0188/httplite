@@ -2,7 +2,6 @@ package alexclin.httplite.sample.retrofit;
 
 import java.io.File;
 
-import alexclin.httplite.Handle;
 import alexclin.httplite.util.LogUtil;
 
 /**

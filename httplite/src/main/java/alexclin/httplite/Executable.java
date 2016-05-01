@@ -10,7 +10,7 @@ import java.io.IOException;
 public interface Executable {
     Response execute() throws Exception;
 
-    Handle enqueue(ResponseHandler responseHandler);
+    void enqueue(ResponseHandler responseHandler);
 
     void cancel();
 

@@ -2,7 +2,6 @@ package alexclin.httplite.retrofit;
 
 import alexclin.httplite.Call;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.util.Result;
@@ -28,9 +27,9 @@ public class RetrofitCall extends Call {
     }
 
     @Override
-    public <T> Handle async(boolean callOnMain, Callback<T> callback) {
+    public <T> void async(boolean callOnMain, Callback<T> callback) {
         if(filter!=null) filter.onRequest(retrofit.lite(),request(), Util.type(Callback.class, callback));
-        return realCall.async(callOnMain,callback);
+        realCall.async(callOnMain,callback);
     }
 
     @Override

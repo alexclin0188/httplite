@@ -35,12 +35,10 @@ public class Mock<T> {
 
     private MockTask<T> task;
 
-    private ProgressListener mProgressListener;
     private RetryListener mRetryListener;
 
     Mock(MockTask<T> task) {
         this.task = task;
-        this.mProgressListener = task.request().getProgressListener();
         this.mRetryListener = task.request().getRetryListener();
     }
 

@@ -1,7 +1,6 @@
 package alexclin.httplite.mock;
 
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
@@ -13,7 +12,7 @@ import alexclin.httplite.listener.Callback;
  *
  * @author alexclin  16/3/12 13:15
  */
-public class MockTask<T> implements Dispatcher.Task<T>,Handle {
+public class MockTask<T> implements Dispatcher.Task<T> {
     private MockCall call;
     private boolean isCanceled;
     private volatile boolean isExecuted;
@@ -105,15 +104,5 @@ public class MockTask<T> implements Dispatcher.Task<T>,Handle {
     @Override
     public void cancel() {
         isCanceled = true;
-    }
-
-    @Override
-    public boolean resume() {
-        if(isExecuted){
-            isCanceled = false;
-            enqueueTask();
-            return true;
-        }
-        return false;
     }
 }

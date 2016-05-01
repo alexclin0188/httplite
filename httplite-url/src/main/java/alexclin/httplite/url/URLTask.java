@@ -8,7 +8,6 @@ import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 
 import alexclin.httplite.Executable;
-import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseHandler;
@@ -20,7 +19,7 @@ import alexclin.httplite.mock.Dispatcher;
  *
  * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Dispatcher.Task<Response>>,Executable{
+public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.Task<Response>>,Executable{
 
     private URLite lite;
     private Request request;
@@ -138,11 +137,10 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
     }
 
     @Override
-    public Handle enqueue(ResponseHandler responseHandler) {
+    public void enqueue(ResponseHandler responseHandler) {
         this.callback = responseHandler;
         this.preWork = responseHandler.getPreWork();
         lite.dispatchTask(this);
-        return this;
     }
 
     private void assertCanceled() throws Exception{
@@ -168,12 +166,6 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
     public boolean isCanceled() {
         return isCanceled;
     }
-
-    @Override
-    public boolean resume() {
-        return false;
-    }
-
 
     public boolean isExecuted() {
         return isExecuted;

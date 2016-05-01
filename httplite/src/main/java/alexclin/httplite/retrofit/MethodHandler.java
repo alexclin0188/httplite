@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.listener.Callback;
@@ -97,45 +96,6 @@ public class MethodHandler<T> {
         list.add(new Pair<>(i,j));
     }
 
-    private boolean checkReturnAndLastParameter(Method method, Type returnType, Type[] methodParameterTypes, boolean check) {
-        Type lastParamType;
-        if(check){
-            if(methodParameterTypes.length==0){
-                throw new IllegalArgumentException("the method define in the interface must have at least one paramter as Callback<T> or Clazz<T>");
-            }
-            lastParamType = methodParameterTypes[methodParameterTypes.length-1];
-            if(Util.hasUnresolvableType(returnType)){
-                throw Util.methodError(method,
-                        "Method return type must not include a type variable or wildcard: %s", returnType);
-            }
-            if(Util.hasUnresolvableType(lastParamType)){
-                throw Util.methodError(method,
-                        "Method lastParamType must not include a type variable or wildcard: %s", returnType);
-            }
-        }else{
-            lastParamType = methodParameterTypes[methodParameterTypes.length-1];
-        }
-
-        Type lastParamTypeRaw = Util.getRawType(lastParamType);
-        boolean isSync = lastParamTypeRaw==Callback.class;
-
-        if(check){
-            if(Util.isSubType(lastParamType,Callback.class)){
-                if(returnType != void.class && returnType != Handle.class){
-                    throw Util.methodError(method, "the method define in the interface must return void or Handle/DownloadHandle");
-                }
-            }
-            if(!isSync){
-                Class[] exceptionClazzs = method.getExceptionTypes();
-                if(exceptionClazzs.length!=1|| exceptionClazzs[0]!=Exception.class){
-                    throw Util.methodError(method,"Sync method must declare throws Exception");
-                }
-            }
-        }
-
-        return isSync;
-    }
-
     public Object invoke(Retrofit retrofit,RequestFilter filter,Object... args) throws Exception{
         Request request = retrofit.makeRequest(baseUrl);
         int maCount = methodProcessors.length;
@@ -161,19 +121,4 @@ public class MethodHandler<T> {
         call = new RetrofitCall(call,filter,retrofit);
         return invoker.invoke(call,returnType,args);
     }
-
-//    @SuppressWarnings("unchecked")
-//    private Object performReturn(Retrofit retrofit,RequestFilter filter,Request request, Type returnType,Object lastParam) throws Exception{
-//
-//        if(isCallbackMethod){
-//            if(filter!=null) filter.onRequest(retrofit.lite(),request,Util.type(Callback.class, lastParam));
-//            Object result = call.async((Callback) lastParam);
-//            return (returnType == void.class) ? null:result;
-//        }else{
-//            if(filter!=null) filter.onRequest(retrofit.lite(),request,((Clazz)lastParam).type());
-//            return call.sync((Clazz) lastParam);
-//        }
-//    }
-
-
 }

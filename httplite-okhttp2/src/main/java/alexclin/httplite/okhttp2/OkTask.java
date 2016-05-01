@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.Executable;
-import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseHandler;
@@ -23,7 +22,7 @@ import alexclin.httplite.exception.CanceledException;
  *
  * @author alexclin 16/2/17 19:46
  */
-public class OkTask implements Handle,Executable {
+public class OkTask implements Executable {
     private Call realCall;
     private volatile boolean isCanceled = false;
     private Request request;
@@ -89,11 +88,6 @@ public class OkTask implements Handle,Executable {
     }
 
     @Override
-    public Request request() {
-        return request;
-    }
-
-    @Override
     public Response execute() throws IOException {
         com.squareup.okhttp.Request req = createRequestBuilder(request).build();
         realCall = mClient.newCall(req);
@@ -101,7 +95,7 @@ public class OkTask implements Handle,Executable {
     }
 
     @Override
-    public Handle enqueue(final ResponseHandler handler) {
+    public void enqueue(final ResponseHandler handler) {
         if(handler.getPreWork()!=null){
             mClient.getDispatcher().getExecutorService().execute(new Runnable() {
                 @Override
@@ -118,7 +112,6 @@ public class OkTask implements Handle,Executable {
         }else{
             setRealCall(enqueueInternal(request, handler));
         }
-        return this;
     }
 
     @Override
@@ -141,11 +134,6 @@ public class OkTask implements Handle,Executable {
             return isCanceled;
         else
             return realCall.isCanceled();
-    }
-
-    @Override
-    public boolean resume() {
-        return false;
     }
 
     void setRealCall(Call realCall) {

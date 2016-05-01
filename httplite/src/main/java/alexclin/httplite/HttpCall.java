@@ -21,16 +21,15 @@ public class HttpCall extends Call{
     }
 
     @Override @SuppressWarnings("unchecked")
-    public <T> Handle async(boolean callOnMain, Callback<T> callback) {
+    public <T> void async(boolean callOnMain, Callback<T> callback) {
         Type type = Util.type(Callback.class, callback);
+        ResponseHandler rcb;
         if(type==File.class){
-            final DownloadHandler rcb = createDownloadCallback((Callback<File>) callback,callOnMain);
-            executeSelf(rcb);
-            return rcb;
+            rcb = createDownloadCallback((Callback<File>) callback,callOnMain);
         }else{
-            ResponseHandler rcb = createHttpCallback(callback, type,callOnMain);
-            return executeSelf(rcb);
+            rcb = createHttpCallback(callback, type,callOnMain);
         }
+        executeSelf(rcb);
     }
 
     @Override
@@ -115,11 +114,12 @@ public class HttpCall extends Call{
         return response;
     }
 
-    <T> Handle executeSelf(final ResponseHandler<T> callback){
+    <T> void executeSelf(final ResponseHandler<T> callback){
         HttpLite lite = request.lite;
         boolean isDownload = callback instanceof DownloadHandler;
         final Executor executor = lite.getCustomDownloadExecutor();
         if(isDownload&&executor!=null){
+            setExecutable(((DownloadHandler)callback).wrap(null));
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -130,11 +130,13 @@ public class HttpCall extends Call{
                     }
                 }
             });
-            return (DownloadHandler)callback;
         }else{
-            setExecutable(lite.getClient().executable(request));
-            Handle handle = executable().enqueue(callback);
-            return isDownload?((DownloadHandler)callback).wrap(handle):handle;
+            Executable executable = lite.getClient().executable(request);
+            if(isDownload){
+                executable = ((DownloadHandler)callback).wrap(executable);
+            }
+            setExecutable(executable);
+            executable().enqueue(callback);
         }
     }
 

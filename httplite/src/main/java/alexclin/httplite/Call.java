@@ -18,11 +18,11 @@ public abstract class Call {
         this.request = request;
     }
 
-    public final <T> Handle async(Callback<T> callback){
-        return async(Util.type(Callback.class,callback)!=Response.class,callback);
+    public final <T> void async(Callback<T> callback){
+        async(Util.type(Callback.class,callback)!=Response.class,callback);
     }
 
-    public abstract <T> Handle async(boolean callOnMain,Callback<T> callback);
+    public abstract <T> void async(boolean callOnMain,Callback<T> callback);
 
     public final Response sync() throws Exception{
         return sync(new Clazz<Response>() {});
@@ -49,9 +49,9 @@ public abstract class Call {
     }
 
     protected void setExecutable(Executable executable){
-        if(this.executable!=null){
-            throw new IllegalStateException("Call can only execute once");
-        }
+//        if(this.executable!=null){
+//            throw new IllegalStateException("Call can only execute once");
+//        }
         this.executable = executable;
     }
 
