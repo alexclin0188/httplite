@@ -34,7 +34,8 @@ public class DownloadManager {
         init();
         if(!mTaskMap.containsKey(url)){
             DownloadTask task = new DownloadTask(name,dir,hash);
-            task.setHandle(App.httpLite(ctx).url(url).onProgress(task).intoFile(dir,name,true,true).download(task));
+            App.httpLite(ctx).url(url).onProgress(task).intoFile(dir,name,true,true).download(task);
+            //TODO task.setHandle();
             mTaskMap.put(url, task);
             mTaskList.add(task);
             if(mDownloadListener!=null){

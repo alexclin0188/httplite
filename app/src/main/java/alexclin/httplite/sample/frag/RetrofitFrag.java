@@ -143,7 +143,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit6:
                 String saveDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
                 MergeListener mergeListener = new MergeListener();
-                Handle handle = apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
+                apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
 
                     @Override
                     public void onSuccess(File result, Map<String, List<String>> headers) {

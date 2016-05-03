@@ -60,7 +60,7 @@ public interface ApiService {
     void testZhihu(Callback<ZhihuData> callback);
 
     @GET("/download/{test_holder}")
-    DownloadHandle downdloadFile(
+    void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
@@ -97,19 +97,37 @@ public interface ApiService {
     void putJsonBody(
             @Path("holde_test") String holder,
             @JsonField("field1") String field1,
-            @JsonField("field2") String field2,
-            @JsonField("field3") String field3,
+            @JsonField("field2") int field2,
+            @JsonField("field3") Double field3,
+            @JsonField("field4") long field4,
             Callback<ExRequestInfo> callback
     );
 
     @GET("/download/{test_holder}")
-    DownloadHandle downdloadFile(
+    void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
             @IntoFile String path,
             @Progress @Retry MergeCallback<File> callback
     );
+
+//    @HTTP(path = "test2",method = Method.POST)
+//    void test2(
+//            @Progress @Retry @Cancel @Tag MergeListener listener,
+//            @Param("123") TestModel[] array,
+//            @Header("test1") List<String> list,
+//            @Headers Map<String,String> map,
+//            @IntoFile String str,
+//            @Multipart MultiPart multiPart,
+//            Clazz<TestModel> clazz
+//    );
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<ZhihuData> testZhihu();
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
 }
 ```
 
@@ -192,7 +210,7 @@ HttpLiteBuilder builder = URLite.create(); //使用URLConnection实现的http
 
 具体测试代码详见代码中RetrofitFrag类
 
-### Retrofit使用需要注意的地方
+### Retrofit功能使用需要注意的地方
 
 * 1.使用注解定义的API接口函数在调用时，会忽略掉所有传入的null参数，建议develop时对方法调用和参数做监听，可以通过设置MethodListener来实现
 

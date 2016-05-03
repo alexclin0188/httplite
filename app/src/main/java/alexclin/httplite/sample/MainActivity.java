@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import alexclin.httplite.sample.event.ChangeFragEvent;
-import alexclin.httplite.sample.frag.CustomFrag;
+import alexclin.httplite.sample.frag.RequestFrag;
 import alexclin.httplite.sample.frag.DownloadFrag;
 import alexclin.httplite.sample.frag.GetFrag;
 import alexclin.httplite.sample.frag.PostFrag;
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<LeftMenuAdapter.MenuItem> list = new ArrayList<>();
         list.add(new LeftMenuAdapter.MenuItem("Get请求", GetFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("Post请求", PostFrag.class));
-        list.add(new LeftMenuAdapter.MenuItem("自定义请求", CustomFrag.class));
+        list.add(new LeftMenuAdapter.MenuItem("自定义请求", RequestFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("下载上传管理", DownloadFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("Retrofit", RetrofitFrag.class));
         leftMenuAdapter = new LeftMenuAdapter(list,this);

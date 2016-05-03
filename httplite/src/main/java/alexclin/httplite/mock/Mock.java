@@ -127,4 +127,8 @@ public class Mock<T> {
     public final void mock(File inFile,String mediaType) throws Exception{
         mock(new FileInputStream(inFile),mediaType);
     }
+
+    public final void mockFailed(Exception e) throws Exception{
+        throw e;
+    }
 }

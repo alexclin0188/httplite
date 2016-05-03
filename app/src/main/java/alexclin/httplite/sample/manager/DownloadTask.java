@@ -18,7 +18,7 @@ import alexclin.httplite.util.LogUtil;
  */
 public class DownloadTask implements Callback<File>,ProgressListener {
     private TaskStateListener stateListener;
-    private Handle handle;
+
     private long total;
     private long current;
     private boolean isFinished;
@@ -75,7 +75,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         }
         isCanceled = false;
         isFailed = false;
-        handle.resume();
+        //TODO handle.resume();
     }
 
     public long getTotal() {
@@ -106,9 +106,9 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         return headers;
     }
 
-    public void setHandle(Handle handle) {
-        this.handle = handle;
-    }
+//    public void setHandle(Handle handle) {
+//        this.handle = handle;
+//    }
 
     public boolean isValidHash(){
         return isFinished&&(hash.equals(realHash));

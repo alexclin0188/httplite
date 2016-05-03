@@ -49,7 +49,7 @@ public interface ApiService {
     void testZhihu(Callback<ZhihuData> callback);
 
     @GET("/download/{test_holder}")
-    Handle downdloadFile(
+    void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
@@ -93,7 +93,7 @@ public interface ApiService {
     );
 
     @GET("/download/{test_holder}")
-    Handle downdloadFile(
+    void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,

@@ -18,11 +18,11 @@ import alexclin.httplite.sample.model.ZhihuData;
 import alexclin.httplite.util.LogUtil;
 
 /**
- * CustomFrag
+ * RequestFrag
  *
  * @author alexclin 16/1/10 11:37
  */
-public class CustomFrag extends Fragment {
+public class RequestFrag extends Fragment {
 
     private TextView mInfoTv;
 
