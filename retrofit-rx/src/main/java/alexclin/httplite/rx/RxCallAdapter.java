@@ -9,7 +9,7 @@ import alexclin.httplite.Call;
 import alexclin.httplite.Request;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.Result;
-import alexclin.httplite.retrofit.Invoker;
+import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.util.Util;
 import rx.Observable;
 import rx.Producer;
@@ -19,23 +19,23 @@ import rx.exceptions.Exceptions;
 import rx.functions.Func3;
 
 /**
- * RxInvoker
+ * RxCallAdapter
  *
  * @author alexclin  16/3/18 23:03
  */
-public class RxInvoker implements Invoker {
+public class RxCallAdapter implements CallAdapter {
 
     private Func3<Request,Type,Observable<?>,Observable<?>> invokeFilter;
 
-    public RxInvoker(Func3<Request, Type, Observable<?>, Observable<?>> invokeFilter) {
+    public RxCallAdapter(Func3<Request, Type, Observable<?>, Observable<?>> invokeFilter) {
         this.invokeFilter = invokeFilter;
     }
 
-    public RxInvoker() {
+    public RxCallAdapter() {
     }
 
     @Override
-    public Object invoke(Call call, Type returnType, Object... args) throws Exception {
+    public Object adapt(Call call, Type returnType, Object... args) throws Exception {
         Observable<?> observable = invokeInner(call,returnType);
         if(invokeFilter!=null){
             observable = invokeFilter.call(call.request(),Util.getTypeParameter(returnType),observable);

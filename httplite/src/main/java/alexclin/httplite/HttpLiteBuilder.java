@@ -22,7 +22,7 @@ import alexclin.httplite.mock.MockCall;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.retrofit.Invoker;
+import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.util.ClientSettings;
 
 /**
@@ -36,7 +36,7 @@ public abstract class HttpLiteBuilder{
     private RequestFilter mRequestFilter;
     private ResponseFilter mResponseFilter;
     private Executor downloadExecutor;
-    private List<Invoker> invokers;
+    private List<CallAdapter> invokers;
 
     private ClientSettings settings = new ClientSettings();
 
@@ -180,7 +180,7 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder addRetrofitInvoker(Invoker invoker){
+    public HttpLiteBuilder addRetrofitInvoker(CallAdapter invoker){
         if(invokers==null) invokers = new ArrayList<>();
         if(invoker!=null&&!invokers.contains(invoker)){
             this.invokers.add(invoker);

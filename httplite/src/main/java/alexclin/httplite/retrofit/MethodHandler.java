@@ -13,7 +13,6 @@ import java.util.Map;
 import alexclin.httplite.Call;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.BaseURL;
-import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
 
@@ -30,9 +29,9 @@ public class MethodHandler<T> {
     private Annotation[] methodAnnotations;
     private Map<ParamMiscProcessor,List<Pair<Integer,Integer>>> paramMiscProcessors;
     private String baseUrl;
-    private Invoker invoker;
+    private CallAdapter invoker;
 
-    public MethodHandler(Method method,boolean check,Invoker invoker) {
+    public MethodHandler(Method method,boolean check,CallAdapter invoker) {
         if(check){
             boolean isFileResult = invoker.checkMethod(method);
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
@@ -119,6 +118,6 @@ public class MethodHandler<T> {
         }
         Call call = retrofit.makeCall(request);
         call = new RetrofitCall(call,filter,retrofit);
-        return invoker.invoke(call,returnType,args);
+        return invoker.adapt(call,returnType,args);
     }
 }

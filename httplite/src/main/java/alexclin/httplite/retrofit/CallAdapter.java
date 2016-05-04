@@ -6,12 +6,12 @@ import java.lang.reflect.Type;
 import alexclin.httplite.Call;
 
 /**
- * Invoker
+ * CallAdapter
  *
  * @author alexclin  16/3/24 23:24
  */
-public interface Invoker {
-    Object invoke(Call call,Type returnType,Object... args) throws Exception;
+public interface CallAdapter {
+    Object adapt(Call call, Type returnType, Object... args) throws Exception;
     boolean support(Method method);
 
     /**

@@ -15,7 +15,7 @@ import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.listener.ResponseFilter;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.mock.MockCall;
-import alexclin.httplite.retrofit.Invoker;
+import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
@@ -28,7 +28,7 @@ import alexclin.httplite.util.Method;
  */
 public class HttpLite {
     private static Handler sHandler = new Handler(Looper.getMainLooper());
-
+    private final boolean isRelease;
     private LiteClient client;
     private String baseUrl;
     private int maxRetryCount;
@@ -36,13 +36,11 @@ public class HttpLite {
     private ResponseFilter mResponseFilter;
     private Executor customDownloadExecutor;
     private CallFactory callFactory;
-
     private Retrofit retrofit;
-    private final boolean isRelease;
     private ObjectParser mObjectParser;
 
     HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
-             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap,List<Invoker> invokers) {
+             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap,List<CallAdapter> invokers) {
         this.client = client;
         this.mObjectParser = new ObjectParser(parserMap.values());
         this.baseUrl = baseUrl;
@@ -55,13 +53,25 @@ public class HttpLite {
         this.retrofit = new RetrofitImpl(invokers);
     }
 
-    public HttpLite setBaseUrl(String baseUrl){
-        this.baseUrl = baseUrl;
-        return this;
+    public static void postOnMain(Runnable runnable){
+        if(Thread.currentThread()==Looper.getMainLooper().getThread()){
+            runnable.run();
+        }else{
+            sHandler.post(runnable);
+        }
+    }
+
+    public static Handler mainHandler(){
+        return sHandler;
     }
 
     public String getBaseUrl(){
         return baseUrl;
+    }
+
+    public HttpLite setBaseUrl(String baseUrl){
+        this.baseUrl = baseUrl;
+        return this;
     }
 
     public int getMaxRetryCount() {
@@ -99,18 +109,6 @@ public class HttpLite {
         }else{
             this.client.shutDown();
         }
-    }
-
-    public static void postOnMain(Runnable runnable){
-        if(Thread.currentThread()==Looper.getMainLooper().getThread()){
-            runnable.run();
-        }else{
-            sHandler.post(runnable);
-        }
-    }
-
-    public static Handler mainHandler(){
-        return sHandler;
     }
 
     ObjectParser getObjectParser(){
@@ -182,7 +180,7 @@ public class HttpLite {
 
     class RetrofitImpl extends Retrofit{
 
-        public RetrofitImpl(List<Invoker> invokers) {
+        public RetrofitImpl(List<CallAdapter> invokers) {
             super(invokers);
         }
 

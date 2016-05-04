@@ -29,7 +29,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.rx.AndroidSchedulers;
-import alexclin.httplite.rx.RxInvoker;
+import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.json.JacksonParser;
 import alexclin.httplite.sample.model.ZhihuData;
@@ -235,7 +235,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                         });
                     }
                 })
-                .addRetrofitInvoker(new RxInvoker())
+                .addRetrofitInvoker(new RxCallAdapter())
                 .build();
         return lite;
     }
