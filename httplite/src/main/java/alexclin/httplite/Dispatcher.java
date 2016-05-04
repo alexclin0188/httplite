@@ -1,6 +1,4 @@
-package alexclin.httplite.mock;
-
-import alexclin.httplite.Request;
+package alexclin.httplite;
 
 /**
  * Dispatcher

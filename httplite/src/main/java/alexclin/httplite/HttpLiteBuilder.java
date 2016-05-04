@@ -180,7 +180,7 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder addRetrofitInvoker(CallAdapter invoker){
+    public HttpLiteBuilder addCallAdapter(CallAdapter invoker){
         if(invokers==null) invokers = new ArrayList<>();
         if(invoker!=null&&!invokers.contains(invoker)){
             this.invokers.add(invoker);

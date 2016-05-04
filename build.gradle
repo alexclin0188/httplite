@@ -27,6 +27,7 @@ def httplite_version = '1.0.2'
 def okhttp2_version = '1.0.2'
 def okhttp3_version = '1.0.2'
 def urlite_version = '1.0.2'
+def httplite_rx_version = '1.0.0';
 def libDir = 'build/libs'
 
 task makeHttplite(type: Jar, dependsOn: ':httplite:build') {
@@ -73,6 +74,17 @@ task makeHttpUrl(type: Jar,dependsOn: ':httplite-url:build') {
     include('alexclin/httplite/**/*.class')
 }
 
-task makeJar (dependsOn:[clean,makeHttplite,makeHttpOk2Lib,makeHttpOk3Lib,makeHttpUrl]){
+task makeHttpRx(type: Jar,dependsOn: ':retrofit-rx:build') {
+    archiveName = 'httplite-rx' +httplite_rx_version+'.jar'
+    from('retrofit-rx/build/intermediates/classes/release/')
+    destinationDir = file(libDir)
+    exclude('**/BuildConfig.class')
+    exclude('**/BuildConfig\$*.class')
+    exclude('**/R.class')
+    exclude('**/R\$*.class')
+    include('alexclin/httplite/**/*.class')
+}
+
+task makeJar (dependsOn:[clean,makeHttplite,makeHttpOk2Lib,makeHttpOk3Lib,makeHttpUrl,makeHttpRx]){
 
 }

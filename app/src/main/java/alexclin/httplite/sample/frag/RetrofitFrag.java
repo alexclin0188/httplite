@@ -235,7 +235,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                         });
                     }
                 })
-                .addRetrofitInvoker(new RxCallAdapter())
+                .addCallAdapter(new RxCallAdapter())
                 .build();
         return lite;
     }

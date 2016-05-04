@@ -12,7 +12,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.mock.Dispatcher;
+import alexclin.httplite.Dispatcher;
 
 /**
  * URLTask

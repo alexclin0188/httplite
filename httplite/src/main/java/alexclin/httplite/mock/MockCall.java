@@ -1,6 +1,8 @@
 package alexclin.httplite.mock;
 
 import alexclin.httplite.Call;
+import alexclin.httplite.Dispatcher;
+import alexclin.httplite.impl.TaskDispatcher;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpCall;
 import alexclin.httplite.MediaType;

@@ -1,4 +1,4 @@
-package alexclin.httplite.mock;
+package alexclin.httplite.impl;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -8,6 +8,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import alexclin.httplite.Dispatcher;
 import alexclin.httplite.util.Util;
 
 /**

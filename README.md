@@ -303,3 +303,104 @@ public abstract class StringParser implements ResponseParser{
 }
 ```
 
+# 前言
+
+Http请求是做Android应用开发工作几乎必须要用到的东西。做Android开发这几年，从最开始仿照网上代码自己使用apache的DefaultHttpClient封装网络请求工具类，到后面开始使用GitHub上面的一些http框架，Afinal,xUtils到Volley,AsyncHttpClient等，网上这些http框架大多都还比较易用，但是做实际业务中还是感觉到业务和界面代码与Http请求的代码还是耦合性过高，特别是在服务器接口比较多的时候。所以自己在以前的项目中也一直在尝试做一些封装解耦，但是一直感觉达不到自己想要的效果，直到看到Retrofit这个类库。
+
+在我的上一篇文章中，简单介绍了一下Retrofit的实现原理。
+
+在断断续续看了几个月的OkHttpClient和Retrofit源码，我终于决定尝试着封装一个自己的框架：[httplite](https://github.com/alexclin0188/httplite)
+
+# 类库主要特性介绍
+[httplite](https://github.com/alexclin0188/httplite)类库主要实现了以下特性
+* 1.隔离了底层http实现，http实现可替换
+     虽然okhttpclient的实现很好，但是有时候也会因为项目包大小等原因需要使用系统UrlConection来实现
+* 2.建造者模式的流式调用和结果解析的解耦
+    使用Request.url().param().header().***.async(Callback<T>)方式调用，可自定义多重ResponseParser来实现不同的http返回结果(json,protocolbuf等)
+* 3.支持使用类似Retrofit的方式，使用java接口类来定义后后台API接口，并且支持RxJava，支持自定义注解
+
+目前类库底层的http实现提供了okhttp2.x/okhttp3.x/URLConnection三种可选。
+
+# 类库使用指南
+## 一、添加依赖
+* Gradle使用okhttp 2.7.5作为http实现
+```
+compile 'alexclin.httplite:httplite-okhttp2:1.0.1'
+```
+使用okhttp 3.2.0作为http实现
+```
+compile 'alexclin.httplite:httplite-okhttp3:1.0.1'
+```
+使用系统URLConnection作为http实现
+```
+compile 'alexclin.httplite:httplite-url:1.0.1'
+```
+或者直接使用releaselib中的jar包
+* 1 okhttp2: httplite1.0.1.jar+httplite-ok2lite1.0.1.jar+okhttp 2.x.x版本jar包
+* 2 okhttp3: httplite1.0.1.jar+httplite-ok3lite1.0.1.jar+okhttp 3.x.x版本jar包
+* 3 url: httplite1.0.1.jar+httplite-urlite1.0.1.jar
+
+## 二、类库初始化
+或者也可以直接使用jar包
+首先创建HttpLiteBuilder进行配置，目前有三种HTTP实现可选
+```
+//使用OkHttp2.x作为Http实现
+HttpLiteBuilder builder = Ok2Lite.create();
+//使用OkHttp3.x作为Http实现
+HttpLiteBuilder builder = Ok3Lite.create();
+//使用系统URLConnection作为http实现
+HttpLiteBuilder builder = URLite.create();
+```
+对Builder进行配置
+```
+builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
+              .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
+              .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
+              .setMaxRetryCount(2)  //设置失败重试次数
+              .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
+              .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
+              .addResponseParser(new GsonParser())
+              .baseUrl("http://192.168.99.238:10080/")//BaseUrl
+              .setProxy(...)//
+              .setProxySelector(...)//
+              .setSocketFactory(...)//
+              .setSslSocketFactory(...)//
+              .setHostnameVerifier(..)//
+              .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
+              .addCallAdapter(new RxCallAdapter());//添加Rx支持
+```
+创建HttpLite实例
+```
+HttpLite httpLite = builder.build();
+```
+另外提供mock支持，需传入MockHandler
+```
+httpLite = builder.mock(new MockHandler() {
+                      @Override
+                      public <T> void mock(Request request, Mock<T> mock) throws Exception {
+                          //模拟完整的http返回结果输入流
+                          mock.mock(int code,String msg,Map<String, List<String>> headers, final InputStream stream,MediaType mediaType);
+                          //直接模拟结果
+                          mock(T result, Map<String, List<String>> headers)；
+                          //模拟Json格式的结果
+                          mock.mockJson(....);
+                          //以文件内容作为Http返回结果输入流
+                          mock.mock(new File("...."))；
+                      }
+                      @Override
+                      public boolean needMock(Request request) {
+                          //TODO 判断该请求是否需要Mock
+                          return true;
+                      }
+            });
+```
+## 二、使用java接口定义API接口(类似Retrofit的功能)
+  ### 1.基础使用
+  ### 2.RxJava的支持
+  ### 3.自定义注解的使用
+
+## 三、非Retrofit方式发起http请求
+
+
+## 四、关于配置ResponseParser
+
