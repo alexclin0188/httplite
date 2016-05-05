@@ -33,7 +33,7 @@ public class RequestFrag extends Fragment {
                         .header("double_header","header1").addHeader("double_header","head2")
                         .param("param1","I'm god").param("param2","You dog").param("param3","中文").get().async(new Callback<String>() {
                     @Override
-                    public void onSuccess(String result,Map<String,List<String>> headers) {
+                    public void onSuccess(Request req,Map<String,List<String>> headers,String result) {
                         mInfoTv.setText(result);
                     }
 
@@ -46,7 +46,7 @@ public class RequestFrag extends Fragment {
             case R.id.btn_test2:
                 App.httpLite(getActivity()).url("http://news-at.zhihu.com/api/4/news/latest").get().async(new Callback<ZhihuData>() {
                     @Override
-                    public void onSuccess(ZhihuData result,Map<String,List<String>> headers) {
+                    public void onSuccess(Request req,Map<String,List<String>> headers,ZhihuData result) {
                         LogUtil.e("Result:" + result);
                         mInfoTv.setText("Rsult:"+result);
                     }
@@ -63,7 +63,7 @@ public class RequestFrag extends Fragment {
                         .header("double_header","header1").addHeader("double_header","head2")
                         .param("type","json").param("param2","You dog").param("param3", "中文").get().async(new Callback<Result<List<FileInfo>>>() {
                     @Override
-                    public void onSuccess(Result<List<FileInfo>> result,Map<String,List<String>> headers) {
+                    public void onSuccess(Request req,Map<String,List<String>> headers,Result<List<FileInfo>> result) {
                         mInfoTv.setText("Result:"+result);
                     }
 

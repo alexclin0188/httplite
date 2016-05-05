@@ -35,9 +35,9 @@ public class OkTask implements Executable {
 
     static com.squareup.okhttp.Request.Builder createRequestBuilder(alexclin.httplite.Request request) {
         com.squareup.okhttp.Request.Builder rb = new com.squareup.okhttp.Request.Builder().url(request.getUrl()).tag(request.getTag());
-        Headers okheader = createHeader(request.getHeaders());
-        if(okheader!=null){
-            rb.headers(okheader);
+        Headers headers = createHeader(request.getHeaders());
+        if(headers!=null){
+            rb.headers(headers);
         }
         switch (request.getMethod()){
             case GET:

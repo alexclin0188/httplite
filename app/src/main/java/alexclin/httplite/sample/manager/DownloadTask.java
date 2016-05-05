@@ -37,7 +37,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     }
 
     @Override
-    public void onSuccess(File result, Map<String, List<String>> headers) {
+    public void onSuccess(Request req,Map<String, List<String>> headers,File result) {
         isFinished = true;
         this.headers = headers;
         this.file = result;

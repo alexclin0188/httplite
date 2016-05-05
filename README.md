@@ -394,12 +394,203 @@ httpLite = builder.mock(new MockHandler() {
                       }
             });
 ```
-## 二、使用java接口定义API接口(类似Retrofit的功能)
-  ### 1.基础使用
-  ### 2.RxJava的支持
-  ### 3.自定义注解的使用
+## 二、普通方式发起http请求
 
-## 三、非Retrofit方式发起http请求
+发起普通GET请求
+
+```
+    mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
+                .header("double_header","header1").addHeader("double_header","head2")
+                .param("type","json").param("param2","You dog").param("param3", "中文")
+                .get().async(new Callback<Result<List<FileInfo>>>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers,Result<List<FileInfo>> result) {
+                //TODO
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                //TODO
+            }
+        });
+```
+
+发起post请求，监听进度
+
+```
+    //multipart上传文件
+    MediaType type = mHttpLite.parse(MediaType.MULTIPART_FORM+";charset=utf-8");
+    RequestBody body = mHttpLite.createRequestBody(mHttpLite.parse(MediaType.APPLICATION_STREAM),file);
+    mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
+       .onProgress(new ProgressListener() {
+            @Override
+            public void onProgressUpdate(boolean out, long current, long total) {
+                LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
+            }
+        })
+        .post().async(new Callback<Result<String>>() {
+            @Override
+            public void onSuccess(Request req,Map<String, List<String>> headers,Result<String> result) {
+                LogUtil.e("Result:"+result);
+            }
+            @Override
+            public void onFailed(Request req, Exception e) {
+                LogUtil.e("onFailed:"+e);
+                e.printStackTrace();
+           }
+    });
+    //post json
+    mHttpLite.url("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).async(new Callback<String>() {
+        @Override
+        public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
+            LogUtil.e("Result:" + result);
+        }
+        @Override
+        public void onFailed(Request req, Exception e) {
+            LogUtil.e("E:" + e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+    });
+    //post form表单
+    mHttpLite.url("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().async(new Callback<String>() {
+        @Override
+       public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
+            LogUtil.e("Result:" + result);
+        }
+        @Override
+        public void onFailed(Request req, Exception e) {
+            LogUtil.e("E:" + e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+    });
+```
+
+下载文件
+
+```
+mHttpLite.url(url).intoFile(dir,name,true,true)
+        .onProgress(new ProgressListener() {
+            @Override
+            public void onProgressUpdate(boolean out, long current, long total) {
+                        //TODO
+                    }
+                })
+                .download(new Callback<File>() {
+                    @Override
+                    public void onSuccess(Request req, Map<String, List<String>> headers, File result) {
+                        //TODO
+                    }
+
+                    @Override
+                    public void onFailed(Request req, Exception e) {
+                        //TODO
+                    }
+                });
+```
+
+## 三、使用java接口定义API接口(类似Retrofit的功能)
+
+### 1.基础使用
+
+```
+        //生成API接口实例
+        final SampleApi api = mHttplite.retrofit(SampleApi.class);
+        //调用异步方法
+        api.login("user", "pass", "token", new Callback<Result<UserInfo>>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
+                //TODO
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                //TODO
+            }
+        });
+        //调用异步方法
+        new Thread(){
+            @Override
+            public void run() {
+                //获取知乎主页数据
+                try {
+                    ZhihuData data = api.syncZhihu();
+                    //TODO
+                } catch (Exception e) {
+                    //TODO
+                }
+            }
+        }.start();
+        //生成Call
+        final Call call = api.zhihuCall();
+        //异步调用Call
+        call.async(new Callback<ZhihuData>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
+                //TODO
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                //TODO
+            }
+        });
+        //或者同步调用Call
+        new Thread(){
+            @Override
+            public void run() {
+                //获取知乎主页数据
+                try {
+                    ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
+                    //TODO
+                } catch (Exception e) {
+                    //TODO
+                }
+            }
+        }.start();
+```
+
+### 2.RxJava的支持
+
+支持RxJava需要在配置HttpLiteBuilder时添加RxCallAdapter
+
+```
+HttpLiteBuilder builder = ....
+.....
+builder.addCallAdapter(new RxCallAdapter());
+.....
+
+```
+定义返回Obserable的API函数
+
+```
+@GET("http://news-at.zhihu.com/api/4/news/latest")
+Observable<ZhihuData> testZhihu();
+```
+使用返回的Obserable
+
+```
+Observable<ZhihuData> observable = apiService.testZhihu();
+observable.subscribeOn(Schedulers.io())
+    .observeOn(AndroidSchedulers.mainThread())
+    .subscribe(new Subscriber<ZhihuData>() {
+       @Override
+       public void onCompleted() {
+           LogUtil.e("onCompleted");
+       }
+       @Override
+       public void onError(Throwable e) {
+           LogUtil.e("Onfailed", e);
+       }
+       @Override
+       public void onNext(ZhihuData zhihuData) {
+           LogUtil.e("Result:" + zhihuData);
+           LogUtil.e("Result:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
+       }
+    });
+```
+
+### 3.自定义注解的使用
+
 
 
 ## 四、关于配置ResponseParser

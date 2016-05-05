@@ -2,10 +2,16 @@ package alexclin.httplite.sample.manager;
 
 import android.content.Context;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import alexclin.httplite.HttpLite;
+import alexclin.httplite.Request;
+import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.adapter.DownloadAdpater;
 
@@ -21,10 +27,6 @@ public class DownloadManager {
     private static DownloadListener mDownloadListener;
 
     private static DownloadAdpater mDownloadAdapter;
-
-    public interface DownloadListener{
-        void onTaskChanged(List<DownloadTask> taskList);
-    }
 
     public static void setDownloadListener(DownloadListener listener){
         DownloadManager.mDownloadListener = listener;
@@ -42,6 +44,25 @@ public class DownloadManager {
                 mDownloadListener.onTaskChanged(mTaskList);
             }
         }
+        HttpLite mHttpLite = App.httpLite(ctx);
+        mHttpLite.url(url).intoFile(dir,name,true,true)
+                .onProgress(new ProgressListener() {
+                    @Override
+                    public void onProgressUpdate(boolean out, long current, long total) {
+                        //TODO
+                    }
+                })
+                .download(new Callback<File>() {
+                    @Override
+                    public void onSuccess(Request req, Map<String, List<String>> headers, File result) {
+                        //TODO
+                    }
+
+                    @Override
+                    public void onFailed(Request req, Exception e) {
+                        //TODO
+                    }
+                });
     }
 
     private static void init(){
@@ -54,6 +75,10 @@ public class DownloadManager {
     public static DownloadAdpater getDownloadAdapter(){
         init();
         return mDownloadAdapter;
+    }
+
+    public interface DownloadListener{
+        void onTaskChanged(List<DownloadTask> taskList);
     }
 
 }

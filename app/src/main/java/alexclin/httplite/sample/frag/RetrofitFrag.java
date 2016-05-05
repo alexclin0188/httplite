@@ -76,7 +76,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit1:
                 apiService.login("user_alexclin", "12345678", "sdfdsfdsfdsfsdf", this,new Callback<Result<UserInfo>>() {
                     @Override
-                    public void onSuccess(Result<UserInfo> result, Map<String, List<String>> headers) {
+                    public void onSuccess(Request req,Map<String, List<String>> headers,Result<UserInfo> result) {
                         LogUtil.e("Result:"+result);
                     }
 
@@ -90,7 +90,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit2:
                 apiService.testBaidu(new Callback<String>() {
                     @Override
-                    public void onSuccess(String result, Map<String, List<String>> headers) {
+                    public void onSuccess(Request req, Map<String, List<String>> headers,String result) {
                         LogUtil.e("BaiduResult:" + result);
                     }
 
@@ -103,7 +103,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit3:
                 apiService.testZhihu(new Callback<ZhihuData>() {
                     @Override
-                    public void onSuccess(ZhihuData result, Map<String, List<String>> headers) {
+                    public void onSuccess(Request req, Map<String, List<String>> headers,ZhihuData result) {
                         LogUtil.e("Zhihu:" + result);
                     }
 
@@ -116,7 +116,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit4:
                 apiService.doSomething("IamHolder", "12345", "67890","qwert", this, new Callback<Result<RequestInfo>>() {
                     @Override
-                    public void onSuccess(Result<RequestInfo> result, Map<String, List<String>> headers) {
+                    public void onSuccess(Request req, Map<String, List<String>> headers,Result<RequestInfo> result) {
                         LogUtil.e("Result:" + result);
                     }
 
@@ -146,7 +146,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
 
                     @Override
-                    public void onSuccess(File result, Map<String, List<String>> headers) {
+                    public void onSuccess(Request req, Map<String, List<String>> headers,File result) {
                         LogUtil.e("Result:" + result);
                         for(String key:headers.keySet()){
                             for(String head:headers.get(key)){
@@ -164,7 +164,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit7:
                 apiService.putJsonBody("JsonPath", "123", 3, 5.0,10, new Callback<ExRequestInfo>() {
                     @Override
-                    public void onSuccess(ExRequestInfo result, Map<String, List<String>> headers) {
+                    public void onSuccess(Request req, Map<String, List<String>> headers,ExRequestInfo result) {
                         LogUtil.e("Result:" + result);
                     }
 

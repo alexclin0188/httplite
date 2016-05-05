@@ -95,11 +95,11 @@ public class ResponseHandler<T> {
             HttpLite.postOnMain(new Runnable() {
                 @Override
                 public void run() {
-                    callback.onSuccess(result, headers);
+                    callback.onSuccess(call.request,headers,result);
                 }
             });
         else
-            callback.onSuccess(result, headers);
+            callback.onSuccess(call.request,headers,result);
     }
 
     protected final HttpLite getLite() {

@@ -16,7 +16,7 @@ import alexclin.httplite.util.LogUtil;
  */
 public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListener {
     @Override
-    public void onSuccess(T result, Map<String, List<String>> headers) {
+    public void onSuccess(Request req, Map<String, List<String>> headers,T result) {
         LogUtil.e("Result:"+result);
     }
 

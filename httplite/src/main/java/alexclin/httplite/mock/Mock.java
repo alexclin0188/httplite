@@ -43,7 +43,7 @@ public class Mock<T> {
     }
 
     void performCallback(Callback<T> callback) {
-        callback.onSuccess(result, headers);
+        callback.onSuccess(task.request(),headers,result);
     }
 
     T result() {

@@ -2,9 +2,17 @@ package alexclin.httplite.sample.retrofit;
 
 import com.example.FileInfo;
 import com.example.Result;
+import com.example.UserInfo;
 
+import java.util.List;
+import java.util.Map;
+
+import alexclin.httplite.Call;
 import alexclin.httplite.HttpLite;
+import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.sample.model.ZhihuData;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -73,5 +81,62 @@ public class TestRetrofit {
 //        ApiService service = lite.retrofit(ApiService.class);
 
 //        LogUtil.e("IsSub:"+Util.isSubType(ExMergeCallback.class, Callback.class));
+    }
+
+    public static void testSampleApi(HttpLite mHttplite){
+        //生成API接口实例
+        final SampleApi api = mHttplite.retrofit(SampleApi.class);
+        //调用异步方法
+        api.login("user", "pass", "token", new Callback<Result<UserInfo>>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
+                //TODO
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                //TODO
+            }
+        });
+        //调用异步方法
+        new Thread(){
+            @Override
+            public void run() {
+                //获取知乎主页数据
+                try {
+                    ZhihuData data = api.syncZhihu();
+                    //TODO
+                } catch (Exception e) {
+                    //TODO
+                }
+            }
+        }.start();
+        //生成Call
+        final Call call = api.zhihuCall();
+        //异步调用Call
+        call.async(new Callback<ZhihuData>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
+                //TODO
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                //TODO
+            }
+        });
+        //或者同步调用Call
+        new Thread(){
+            @Override
+            public void run() {
+                //获取知乎主页数据
+                try {
+                    ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
+                    //TODO
+                } catch (Exception e) {
+                    //TODO
+                }
+            }
+        }.start();
     }
 }

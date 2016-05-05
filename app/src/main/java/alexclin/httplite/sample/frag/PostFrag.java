@@ -27,6 +27,7 @@ import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.adapter.FileAdapter;
@@ -127,7 +128,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             File file = new File(basePath+info.filePath);
             mHttpLite.url(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).async(new Callback<Result<String>>() {
                 @Override
-                public void onSuccess(Result<String> result, Map<String, List<String>> headers) {
+                public void onSuccess(Request req, Map<String, List<String>> headers,Result<String> result) {
                     LogUtil.e("Result:"+result);
                 }
 
@@ -139,9 +140,16 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             });
             MediaType type = mHttpLite.parse(MediaType.MULTIPART_FORM+";charset=utf-8");
             RequestBody body = mHttpLite.createRequestBody(mHttpLite.parse(MediaType.APPLICATION_STREAM),file);
-            mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body).post().async(new Callback<Result<String>>() {
+            mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
+                    .onProgress(new ProgressListener() {
+                        @Override
+                        public void onProgressUpdate(boolean out, long current, long total) {
+                            LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
+                        }
+                    })
+                    .post().async(new Callback<Result<String>>() {
                 @Override
-                public void onSuccess(Result<String> result, Map<String, List<String>> headers) {
+                public void onSuccess(Request req,Map<String, List<String>> headers,Result<String> result) {
                     LogUtil.e("Result:"+result);
                 }
 
@@ -153,7 +161,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             });
             mHttpLite.url("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).async(new Callback<String>() {
                 @Override
-                public void onSuccess(String result, Map<String, List<String>> headers) {
+                public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
                     LogUtil.e("Result:" + result);
                 }
 
@@ -163,9 +171,9 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                     e.printStackTrace();
                 }
             });
-            mHttpLite.url("/").form("&test1","name&1").form("干撒呢","二逼").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().async(new Callback<String>() {
+            mHttpLite.url("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().async(new Callback<String>() {
                 @Override
-                public void onSuccess(String result, Map<String, List<String>> headers) {
+                public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
                     LogUtil.e("Result:" + result);
                 }
 
