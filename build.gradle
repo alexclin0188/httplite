@@ -23,11 +23,17 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-def httplite_version = '1.1.0'
-def okhttp2_version = '1.1.0'
-def okhttp3_version = '1.1.0'
-def urlite_version = '1.1.0'
-def httplite_rx_version = '1.0.0';
+apply from: 'config.gradle'
+
+subprojects{
+    apply from: "${project.rootDir}/config.gradle"
+}
+
+def httplite_version = project.ext.httpLiteVersion
+def okhttp2_version = project.ext.httpLiteOkhttp2Version
+def okhttp3_version = project.ext.httpLiteOkhttp3Version
+def urlite_version = project.ext.httpLiteURLVersion
+def httplite_rx_version = project.ext.retrofitRxVersion;
 def libDir = 'build/libs'
 
 task makeHttplite(type: Jar, dependsOn: ':httplite:build') {
