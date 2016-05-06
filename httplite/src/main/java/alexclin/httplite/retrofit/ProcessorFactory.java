@@ -37,11 +37,12 @@ class ProcessorFactory {
     static List<AnnotationRule> annotationRuleList = new CopyOnWriteArrayList<>();
     static List<ParamMiscProcessor> paramMiscProcessors = new CopyOnWriteArrayList<>();
     static List<Class<? extends Annotation>> ignoreAnnotations = new CopyOnWriteArrayList<>();
+    static BasicAnnotationRule basicAnnotationRule = new BasicAnnotationRule();
 
     static {
+        annotationRuleList.add(basicAnnotationRule);
         methodProcessorList.add(new HttpMethodProcessor());
         methodProcessorList.add(new MarkProcessor());
-        annotationRuleList.add(new BasicAnnotationRule());
         parameterProcessorList.add(new ListenerParamProcessor());
         parameterProcessorList.add(new BasicProcessors.BodyProcessor());
         parameterProcessorList.add(new BasicProcessors.FormProcessor());

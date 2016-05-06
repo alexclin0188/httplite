@@ -75,12 +75,7 @@ public abstract class Retrofit {
     }
 
     public static BasicAnnotationRule basicAnnotationRule(){
-        for(AnnotationRule rule:ProcessorFactory.annotationRuleList){
-            if(rule instanceof BasicAnnotationRule){
-                return (BasicAnnotationRule) rule;
-            }
-        }
-        return null;
+        return ProcessorFactory.basicAnnotationRule;
     }
 
     public static void ignoreAnnotation(Class<? extends Annotation>... classes){

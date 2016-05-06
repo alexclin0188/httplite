@@ -101,17 +101,6 @@ public interface ApiService {
             @Progress @Retry MergeCallback<File> callback
     );
 
-//    @HTTP(path = "test2",method = Method.POST)
-//    void test2(
-//            @Progress @Retry @Cancel @Tag MergeListener listener,
-//            @Param("123") TestModel[] array,
-//            @Header("test1") List<String> list,
-//            @Headers Map<String,String> map,
-//            @IntoFile String str,
-//            @Multipart MultiPart multiPart,
-//            Clazz<TestModel> clazz
-//    );
-
     @GET("http://news-at.zhihu.com/api/4/news/latest")
     Observable<ZhihuData> testZhihu();
 

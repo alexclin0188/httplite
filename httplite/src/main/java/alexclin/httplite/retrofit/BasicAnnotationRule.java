@@ -24,48 +24,22 @@ import alexclin.httplite.util.Util;
  * @author alexclin 16/2/1 19:49
  */
 public class BasicAnnotationRule implements AnnotationRule {
-    private static class BodyType {
-        public final Class<? extends Annotation> clazz;
-        public final String type;
-        public final boolean allowRepeat;
-
-        private BodyType(Class<? extends Annotation> clazz, String type, boolean allowRepeat) {
-            this.clazz = clazz;
-            this.type = type;
-            this.allowRepeat = allowRepeat;
-        }
-
-        @Override
-        public String toString() {
-            return "BodyType{" +
-                    "clazz=" + clazz +
-                    ", type='" + type + '\'' +
-                    ", allowRepeat=" + allowRepeat +
-                    '}';
-        }
-
-        @Override
-        public int hashCode() {
-            return clazz.getName().hashCode();
-        }
-    }
     public static final String BASE_BODY = "Body";
     public static final String FORM_BODY = "Form";
     public static final String MULTIPART_BODY = "Multipart";
     public static final String JSON_BODY = "JsonField";
-
     private List<BodyType> bodyAnnotationMap;
 
     public BasicAnnotationRule() {
-        this.bodyAnnotationMap = new ArrayList<>();
-        this.bodyAnnotationMap.add(new BodyType(Body.class,BASE_BODY,false));
-        this.bodyAnnotationMap.add(new BodyType(Form.class,FORM_BODY,true));
-        this.bodyAnnotationMap.add(new BodyType(Forms.class,FORM_BODY,true));
-        this.bodyAnnotationMap.add(new BodyType(Multipart.class,MULTIPART_BODY,true));
-        this.bodyAnnotationMap.add(new BodyType(JsonField.class,JSON_BODY,true));
+        registerBodyAnnotation(Body.class,BASE_BODY,false);
+        registerBodyAnnotation(Form.class,FORM_BODY,true);
+        registerBodyAnnotation(Forms.class,FORM_BODY,true);
+        registerBodyAnnotation(Multipart.class,MULTIPART_BODY,true);
+        registerBodyAnnotation(JsonField.class,JSON_BODY,true);
     }
 
     public void registerBodyAnnotation(Class<? extends Annotation> clazz, String type, boolean allowRepeat){
+        if(this.bodyAnnotationMap==null) this.bodyAnnotationMap = new ArrayList<>();
         this.bodyAnnotationMap.add(new BodyType(clazz,type,allowRepeat));
     }
 
@@ -160,5 +134,31 @@ public class BasicAnnotationRule implements AnnotationRule {
             }
         }
         return null;
+    }
+
+    private static class BodyType {
+        public final Class<? extends Annotation> clazz;
+        public final String type;
+        public final boolean allowRepeat;
+
+        private BodyType(Class<? extends Annotation> clazz, String type, boolean allowRepeat) {
+            this.clazz = clazz;
+            this.type = type;
+            this.allowRepeat = allowRepeat;
+        }
+
+        @Override
+        public String toString() {
+            return "BodyType{" +
+                    "clazz=" + clazz +
+                    ", type='" + type + '\'' +
+                    ", allowRepeat=" + allowRepeat +
+                    '}';
+        }
+
+        @Override
+        public int hashCode() {
+            return clazz.getName().hashCode();
+        }
     }
 }
