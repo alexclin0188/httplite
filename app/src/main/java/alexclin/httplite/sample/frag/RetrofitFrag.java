@@ -27,7 +27,7 @@ import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.RequestFilter;
+import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.rx.AndroidSchedulers;
 import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.R;
@@ -222,7 +222,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .setCache(getActivity().getCacheDir(), 10 * 1024 * 1024)
 //                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
-                .requestFilter(new RequestFilter() {
+                .requestFilter(new RequestListener() {
                     @Override
                     public void onRequest(HttpLite lite, Request request, Type type) {
                         request.header("handle", "misc");

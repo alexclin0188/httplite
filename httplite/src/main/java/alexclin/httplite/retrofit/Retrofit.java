@@ -2,23 +2,19 @@ package alexclin.httplite.retrofit;
 
 import android.os.Build;
 
-import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Call;
-import alexclin.httplite.util.Clazz;
+import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.util.Result;
-import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.RequestFilter;
 import alexclin.httplite.util.Util;
 
 /**
@@ -87,8 +83,12 @@ public abstract class Retrofit {
         return null;
     }
 
+    public static void ignoreAnnotation(Class<? extends Annotation>... classes){
+        ProcessorFactory.addIgnoreAnnotation(classes);
+    }
+
     @SuppressWarnings("unchecked")
-    public final <T> T create(Class<T> service,RequestFilter filter,MethodFilter methodFilter){
+    public final <T> T create(Class<T> service, RequestListener filter, MethodFilter methodFilter){
         Util.validateServiceInterface(service);
         if (!isReleaseMode()) {
             eagerlyValidateMethods(service);
@@ -139,11 +139,11 @@ public abstract class Retrofit {
 
     private class ProxyInvoker<T> implements InvocationHandler{
         private final Class<T> service;
-        private final RequestFilter filter;
+        private final RequestListener filter;
         private final MethodFilter methodFilter;
         private final LinkedHashMap<Method,MethodInvoker> invokerMap;
 
-        public ProxyInvoker(Class<T> service, RequestFilter filter, MethodFilter methodFilter) {
+        public ProxyInvoker(Class<T> service, RequestListener filter, MethodFilter methodFilter) {
             this.service = service;
             this.filter = filter;
             this.methodFilter = methodFilter;

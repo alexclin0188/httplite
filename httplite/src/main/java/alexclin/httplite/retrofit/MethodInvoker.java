@@ -3,7 +3,7 @@ package alexclin.httplite.retrofit;
 
 import java.lang.reflect.Method;
 
-import alexclin.httplite.listener.RequestFilter;
+import alexclin.httplite.listener.RequestListener;
 
 /**
  * MethodInvoker
@@ -14,9 +14,9 @@ public class MethodInvoker {
     private MethodHandler<?> methodHandler;
     private Method method;
     private Retrofit retrofit;
-    private RequestFilter filter;
+    private RequestListener filter;
 
-    MethodInvoker(MethodHandler<?> methodHandler, Method method, Retrofit retrofit, RequestFilter filter) {
+    MethodInvoker(MethodHandler<?> methodHandler, Method method, Retrofit retrofit, RequestListener filter) {
         this.methodHandler = methodHandler;
         this.method = method;
         this.retrofit = retrofit;

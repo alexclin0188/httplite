@@ -5,10 +5,10 @@ import alexclin.httplite.Request;
 import alexclin.httplite.Response;
 
 /**
- * ResponseFilter
+ * ResponseListener
  *
  * @author alexclin 16/1/20 22:34
  */
-public interface ResponseFilter {
+public interface ResponseListener {
     void onResponse(HttpLite lite,Request request,Response response);
 }

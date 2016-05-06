@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import alexclin.httplite.impl.ObjectParser;
-import alexclin.httplite.listener.RequestFilter;
-import alexclin.httplite.listener.ResponseFilter;
+import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.mock.MockCall;
 import alexclin.httplite.retrofit.CallAdapter;
@@ -32,15 +32,15 @@ public class HttpLite {
     private LiteClient client;
     private String baseUrl;
     private int maxRetryCount;
-    private RequestFilter mRequestFilter;
-    private ResponseFilter mResponseFilter;
+    private RequestListener mRequestFilter;
+    private ResponseListener mResponseFilter;
     private Executor customDownloadExecutor;
     private CallFactory callFactory;
     private Retrofit retrofit;
     private ObjectParser mObjectParser;
 
-    HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
-             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap,List<CallAdapter> invokers) {
+    HttpLite(LiteClient client, String baseUrl, int maxRetryCount, CallFactory factory, boolean release,
+             RequestListener requestFilter, ResponseListener responseFilter, Executor downloadExecutor, HashMap<String,ResponseParser> parserMap, List<CallAdapter> invokers) {
         this.client = client;
         this.mObjectParser = new ObjectParser(parserMap.values());
         this.baseUrl = baseUrl;
@@ -147,26 +147,30 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz){
-        return retrofit(clazz, null);
+        return retrofit.create(clazz,null,null);
     }
 
-    public <T> T retrofit(Class<T> clazz,RequestFilter filter){
+    public <T> T retrofit(Class<T> clazz,RequestListener filter){
         return retrofit.create(clazz,filter,null);
     }
 
-    public <T> T retrofit(Class<T> clazz, RequestFilter filter, MethodFilter methodFilter){
+    public <T> T retrofit(Class<T> clazz, RequestListener filter, MethodFilter methodFilter){
         return retrofit.create(clazz,filter,methodFilter);
+    }
+
+    public <T> T retrofit(Class<T> clazz,MethodFilter methodFilter){
+        return retrofit.create(clazz,null,methodFilter);
     }
 
     public Retrofit getRetrofit() {
         return retrofit;
     }
 
-    RequestFilter getRequestFilter() {
+    RequestListener getRequestFilter() {
         return mRequestFilter;
     }
 
-    ResponseFilter getResponseFilter() {
+    ResponseListener getResponseFilter() {
         return mResponseFilter;
     }
 

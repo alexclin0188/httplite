@@ -13,7 +13,7 @@ import java.util.Map;
 import alexclin.httplite.Call;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.BaseURL;
-import alexclin.httplite.listener.RequestFilter;
+import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.util.Util;
 
 /**
@@ -95,7 +95,7 @@ public class MethodHandler<T> {
         list.add(new Pair<>(i,j));
     }
 
-    public Object invoke(Retrofit retrofit,RequestFilter filter,Object... args) throws Exception{
+    public Object invoke(Retrofit retrofit, RequestListener filter, Object... args) throws Exception{
         Request request = retrofit.makeRequest(baseUrl);
         int maCount = methodProcessors.length;
         for(int i=0;i<maCount;i++){

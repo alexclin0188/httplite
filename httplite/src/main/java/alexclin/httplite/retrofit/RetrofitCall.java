@@ -6,7 +6,7 @@ import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.util.Result;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.RequestFilter;
+import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.util.Util;
 
 /**
@@ -16,10 +16,10 @@ import alexclin.httplite.util.Util;
  */
 public class RetrofitCall extends Call {
     private Call realCall;
-    private RequestFilter filter;
+    private RequestListener filter;
     private Retrofit retrofit;
 
-    public RetrofitCall(Call realCall, RequestFilter filter, Retrofit retrofit) {
+    public RetrofitCall(Call realCall, RequestListener filter, Retrofit retrofit) {
         super(realCall.request());
         this.realCall = realCall;
         this.filter = filter;

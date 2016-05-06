@@ -7,6 +7,7 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ class ProcessorFactory {
     static List<ParameterProcessor> parameterProcessorList = new CopyOnWriteArrayList<>();
     static List<AnnotationRule> annotationRuleList = new CopyOnWriteArrayList<>();
     static List<ParamMiscProcessor> paramMiscProcessors = new CopyOnWriteArrayList<>();
+    static List<Class<? extends Annotation>> ignoreAnnotations = new CopyOnWriteArrayList<>();
 
     static {
         methodProcessorList.add(new HttpMethodProcessor());
@@ -60,7 +62,7 @@ class ProcessorFactory {
     }
 
     static MethodProcessor methodProcessor(Annotation annotation) {
-        if(isSystemAnnotation(annotation)) return null;
+        if(isSystemAnnotation(annotation)||isIgnoreAnnotation(annotation.getClass())) return null;
         for (MethodProcessor processor : methodProcessorList) {
             if (processor.support(annotation)) return processor;
         }
@@ -68,7 +70,7 @@ class ProcessorFactory {
     }
 
     static AbsParamProcessor paramProcessor(Annotation annotation) {
-        if(isSystemAnnotation(annotation)) return null;
+        if(isSystemAnnotation(annotation)||isIgnoreAnnotation(annotation.getClass())) return null;
         for (ParameterProcessor processor : parameterProcessorList) {
             if (processor.support(annotation)) return processor;
         }
@@ -86,6 +88,14 @@ class ProcessorFactory {
     public static boolean isSystemAnnotation(Annotation annotation){
         String packageName = annotation.getClass().getName();
         return packageName.startsWith("java.lang.annotation") || packageName.startsWith("android.support.") || packageName.startsWith("android.annotation.");
+    }
+
+    public static void addIgnoreAnnotation(Class<? extends Annotation>... classes){
+        ignoreAnnotations.addAll(Arrays.asList(classes));
+    }
+
+    public static boolean isIgnoreAnnotation(Class<? extends Annotation> clazz){
+        return ignoreAnnotations.contains(clazz);
     }
 
     /**

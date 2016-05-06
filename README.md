@@ -591,7 +591,16 @@ observable.subscribeOn(Schedulers.io())
 
 ### 3.自定义注解的使用
 
+自定义注解支持**方法注解**和**参数注解**
+
+只需在HttpLite的Retrofit实例中添加对应注解的处理器即可
+
+```
+```
+
+### 4.RequestListener和MethodFilter的使用
 
 
-## 四、关于配置ResponseParser
+
+## 四、配置ResponseParser
 

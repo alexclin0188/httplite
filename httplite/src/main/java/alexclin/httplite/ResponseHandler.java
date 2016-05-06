@@ -8,9 +8,8 @@ import java.util.Map;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.ResponseFilter;
+import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.RetryListener;
-import alexclin.httplite.util.Util;
 
 /**
  * ResponseHandler
@@ -43,7 +42,7 @@ public class ResponseHandler<T> {
             callCancelAndFailed();
             return;
         }
-        ResponseFilter filter = getLite().getResponseFilter();
+        ResponseListener filter = getLite().getResponseFilter();
         if (filter != null) filter.onResponse(getLite(), call.request, response);
         response = call.request.handleResponse(response);
         try {
