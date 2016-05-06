@@ -24,7 +24,7 @@ android {
 }
 
 dependencies {
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile project(':thirdparty')
     //    compile project(':httplite')
     compile project(':httplite')
 }

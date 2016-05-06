@@ -18,7 +18,7 @@ import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
-import alexclin.httplite.util.Method;
+import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -26,7 +26,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/31 10:21
  */
-public final class Request {
+public final class Request implements Cloneable{
     public static final int NO_CACHE = 0;
     public static final int FORCE_CACHE = -1;
     public static final int UNSPECIFIED_CACHE = -100;
@@ -44,7 +44,7 @@ public final class Request {
 
     String baseUrl;
     String url;
-    Method method;
+    HttpMethod method;
     ProgressListener progressListener;
     RetryListener retryListener;
     HttpLite lite;
@@ -65,7 +65,7 @@ public final class Request {
 
     private Object mark;
 
-    Request(HttpLite lite,String url) {
+    Request(HttpLite lite, String url) {
         this.lite = lite;
         this.url = url;
     }
@@ -74,7 +74,7 @@ public final class Request {
         this.lite = lite;
     }
 
-    public static boolean permitsRequestBody(Method method) {
+    public static boolean permitsRequestBody(HttpMethod method) {
         return requiresRequestBody(method)
                 || method.name().equals("OPTIONS")
                 || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
@@ -83,7 +83,7 @@ public final class Request {
                 || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
     }
 
-    public static boolean requiresRequestBody(Method method) {
+    public static boolean requiresRequestBody(HttpMethod method) {
         return method.name().equals("POST")
                 || method.name().equals("PUT")
                 || method.name().equals("PATCH")
@@ -246,31 +246,31 @@ public final class Request {
     }
 
     public Call get() {
-        return method(Method.GET, null);
+        return method(HttpMethod.GET, null);
     }
 
     public Call head() {
-        return method(Method.HEAD, null);
+        return method(HttpMethod.HEAD, null);
     }
 
     public Call post(RequestBody body) {
-        return method(Method.POST, body);
+        return method(HttpMethod.POST, body);
     }
 
     public Call post(){
-        return method(Method.POST, null);
+        return method(HttpMethod.POST, null);
     }
 
     public Call post(String mediaType,String content){
-        return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), content));
+        return method(HttpMethod.POST, lite.createRequestBody(lite.parse(mediaType), content));
     }
 
     public Call post(String mediaType,File file){
-        return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), file));
+        return method(HttpMethod.POST, lite.createRequestBody(lite.parse(mediaType), file));
     }
 
     public Call delete(RequestBody body) {
-        return method(Method.DELETE, body);
+        return method(HttpMethod.DELETE, body);
     }
 
     public Call delete() {
@@ -278,14 +278,14 @@ public final class Request {
     }
 
     public Call put(RequestBody body) {
-        return method(Method.PUT, body);
+        return method(HttpMethod.PUT, body);
     }
 
     public Call patch(RequestBody body) {
-        return method(Method.PATCH, body);
+        return method(HttpMethod.PATCH, body);
     }
 
-    public Call method(Method method, RequestBody body) {
+    public Call method(HttpMethod method, RequestBody body) {
         preWorkForTask(body);
         boolean isBodyNull = body==null&&this.body==null;
         if (method == null) {
@@ -301,6 +301,7 @@ public final class Request {
         if(body!=null){
             this.body = body;
         }
+        checkContentType();
         return lite.makeCall(this);
     }
 
@@ -409,6 +410,18 @@ public final class Request {
         return pathHolders;
     }
 
+    private void checkContentType() {
+        if(headers==null||body==null) return;
+        String contentType = null;
+        for(String key:headers.keySet()){
+            if("Content-Type".equalsIgnoreCase(key)){
+                contentType = key;
+                break;
+            }
+        }
+        if(contentType!=null) headers.remove(contentType);
+    }
+
     public String getUrl() {
         return buildUrlAndParams(TextUtils.isEmpty(baseUrl)?lite.getBaseUrl():baseUrl,url);
     }
@@ -417,7 +430,7 @@ public final class Request {
         return url;
     }
 
-    public Method getMethod() {
+    public HttpMethod getMethod() {
         return method;
     }
 
@@ -504,6 +517,35 @@ public final class Request {
 
     public Object getMark(){
         return mark;
+    }
+
+    @Override
+    public Request clone() throws CloneNotSupportedException {
+        Request request = (Request) super.clone();
+        if(this.headers!=null){
+            request.headers = new HashMap<>();
+            for(Map.Entry<String,List<String>> entry:this.headers.entrySet()){
+                request.headers.put(entry.getKey(),new ArrayList<>(entry.getValue()));
+            }
+        }
+        request.params = new ArrayList<>(this.params);
+        request.pathHolders = new HashMap<>(this.pathHolders);
+//        request.lite = this.lite;
+//        request.url = this.url;
+//        request.baseUrl = this.baseUrl;
+//        request.method = this.method;
+//        request.progressListener = this.progressListener;
+//        request.retryListener = this.retryListener;
+//        request.body = this.body;
+//        request.progressBody = this.progressBody;
+//        request.tag = this.tag;
+//        request.progressWrapper = this.progressWrapper;
+//        request.cacheExpiredTime = this.cacheExpiredTime;
+//        request.formBuilder = this.formBuilder;
+//        request.multipartBuilder = this.multipartBuilder;
+//        request.downloadParams = this.downloadParams;
+//        request.mark = this.mark;
+        return request;
     }
 
     public static class MainProgressListener implements ProgressListener{

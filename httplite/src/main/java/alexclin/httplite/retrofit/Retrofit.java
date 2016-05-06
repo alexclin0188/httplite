@@ -15,6 +15,7 @@ import alexclin.httplite.Call;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -78,8 +79,8 @@ public abstract class Retrofit {
         return ProcessorFactory.basicAnnotationRule;
     }
 
-    public static void ignoreAnnotation(Class<? extends Annotation>... classes){
-        ProcessorFactory.addIgnoreAnnotation(classes);
+    public static void ignoreAnnotation(Class<? extends Annotation> annotation){
+        ProcessorFactory.addIgnoreAnnotation(annotation);
     }
 
     @SuppressWarnings("unchecked")
@@ -104,7 +105,7 @@ public abstract class Retrofit {
         synchronized (methodHandlerCache) {
             handler = methodHandlerCache.get(method);
             if (handler == null) {
-                handler = new MethodHandler(method,!isReleaseMode(),searchInvoker(method));
+                handler = new MethodHandler(method,this,searchInvoker(method));
                 methodHandlerCache.put(method, handler);
             }
         }
@@ -113,7 +114,7 @@ public abstract class Retrofit {
 
     public abstract Request makeRequest(String baseUrl);
 
-    public abstract Request setMethod(Request request, alexclin.httplite.util.Method method);
+    public abstract Request setMethod(Request request, HttpMethod method);
 
     public abstract Request setUrl(Request request, String url);
 

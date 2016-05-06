@@ -5,7 +5,7 @@ package alexclin.httplite.util;
  *
  * @author alexclin at 16/2/1 19:53
  */
-public enum Method{
+public enum HttpMethod {
     GET,POST,PUT,DELETE,HEAD,PATCH
 }
 

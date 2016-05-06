@@ -46,11 +46,6 @@ Http请求是做Android应用开发工作几乎必须要用到的东西。做And
 * 1 okhttp2: httplite1.1.0.jar+httplite-ok2lite1.0.1.jar+okhttp 2.x.x版本jar包
 * 2 okhttp3: httplite1.1.0.jar+httplite-ok3lite1.0.1.jar+okhttp 3.x.x版本jar包
 * 3 url: httplite1.1.0.jar+httplite-urlite1.1.0.jar
-```
-或者直接使用releaselib中的jar包
-* 1 okhttp2: httplite1.0.1.jar+httplite-ok2lite1.0.1.jar+okhttp 2.x.x版本jar包
-* 2 okhttp3: httplite1.0.1.jar+httplite-ok3lite1.0.1.jar+okhttp 3.x.x版本jar包
-* 3 url: httplite1.0.1.jar+httplite-urlite1.0.1.jar
 
 ## 二、类库初始化
 或者也可以直接使用jar包
@@ -321,7 +316,8 @@ public interface CustomApi {
 
     @POST("/test")
     void testPost(@GsonField("param1") String param1,
-                  @GsonField("param1")String param2, Callback<RequestInfo> callback);
+                  @GsonField("param1")String param2,
+                  Callback<RequestInfo> callback);
 }
 ```
 

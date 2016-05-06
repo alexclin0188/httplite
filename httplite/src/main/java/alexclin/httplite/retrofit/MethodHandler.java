@@ -22,17 +22,15 @@ import alexclin.httplite.util.Util;
  * @author alexclin 16/1/28 19:20
  */
 public class MethodHandler<T> {
-    private MethodProcessor[] methodProcessors;
     private ParameterProcessor[][] parameterProcessors;
     private Type returnType;
     private Annotation[][] methodParameterAnnotationArrays;
-    private Annotation[] methodAnnotations;
     private Map<ParamMiscProcessor,List<Pair<Integer,Integer>>> paramMiscProcessors;
-    private String baseUrl;
     private CallAdapter invoker;
+    private Request originRequest;
 
-    public MethodHandler(Method method,boolean check,CallAdapter invoker) {
-        if(check){
+    public MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
+        if(!retrofit.isReleaseMode()){
             boolean isFileResult = invoker.checkMethod(method);
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
             for(AnnotationRule rule:annotationRules){
@@ -42,14 +40,23 @@ public class MethodHandler<T> {
         this.invoker = invoker;
         Class<?> dc = method.getDeclaringClass();
         BaseURL baseURL = dc.getAnnotation(BaseURL.class);
-        if(baseURL!=null){
-            this.baseUrl = baseURL.value();
+        this.originRequest = retrofit.makeRequest(baseURL!=null?baseURL.value():null);
+
+        Annotation[] methodAnnotations = method.getAnnotations();
+        int methodAnnoCount = methodAnnotations.length;
+        MethodProcessor[] methodProcessors = new MethodProcessor[methodAnnoCount];
+        for(int i=0;i<methodAnnoCount;i++){
+            methodProcessors[i] = ProcessorFactory.methodProcessor(methodAnnotations[i]);
+        }
+        int maCount = methodProcessors.length;
+        for(int i=0;i<maCount;i++){
+            MethodProcessor processor = methodProcessors[i];
+            if(processor!=null) processor.process(method,methodAnnotations[i],retrofit,originRequest);
         }
 
         returnType = method.getGenericReturnType();
         Type[] methodParameterTypes = method.getGenericParameterTypes();
         methodParameterAnnotationArrays = method.getParameterAnnotations();
-        methodAnnotations = method.getAnnotations();
         paramMiscProcessors = new HashMap<>();
 
         if(Util.hasUnresolvableType(returnType)){
@@ -67,7 +74,7 @@ public class MethodHandler<T> {
             ParameterProcessor[] processors = new ParameterProcessor[annotationCount];
             for(int j=0;j<parameterAnnotations.length;j++){
                 AbsParamProcessor processor  = ProcessorFactory.paramProcessor(parameterAnnotations[j]);
-                if(check && processor!=null) processor.checkParameters(method,parameterAnnotations[j],parameterType);
+                if(!retrofit.isReleaseMode() && processor!=null) processor.checkParameters(method,parameterAnnotations[j],parameterType);
                 if(processor==null){
                     processors[j] = null;
                 }else if(processor instanceof ParameterProcessor){
@@ -78,11 +85,6 @@ public class MethodHandler<T> {
                 }
             }
             parameterProcessors[i] = processors;
-        }
-        int macount = methodAnnotations.length;
-        methodProcessors = new MethodProcessor[macount];
-        for(int i=0;i<macount;i++){
-            methodProcessors[i] = ProcessorFactory.methodProcessor(methodAnnotations[i]);
         }
     }
 
@@ -96,12 +98,7 @@ public class MethodHandler<T> {
     }
 
     public Object invoke(Retrofit retrofit, RequestListener filter, Object... args) throws Exception{
-        Request request = retrofit.makeRequest(baseUrl);
-        int maCount = methodProcessors.length;
-        for(int i=0;i<maCount;i++){
-            MethodProcessor processor = methodProcessors[i];
-            if(processor!=null) processor.process(methodAnnotations[i],retrofit,request);
-        }
+        Request request = originRequest.clone();
         int length = args==null?0:args.length;
         for(int i=0;i<length;i++){
             ParameterProcessor[] processors = parameterProcessors[i];

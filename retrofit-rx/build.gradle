@@ -22,7 +22,7 @@ android {
 
 dependencies {
     compile project(':httplite')
-    compile 'io.reactivex:rxjava:1.1.1'
+    compile project(':thirdparty')
 }
 
 def mavenDesc = 'A plugin for httplite library'
@@ -31,8 +31,8 @@ def gitUrl = "${siteUrl}.git"
 def issueUrl = "${siteUrl}/issues"
 
 group = "alexclin.httplite"
-def libname = "httplite-rx"
-version "1.0.0"
+def libname = "retrofit-rx"
+version "1.0.1"
 
 install {
     repositories.mavenInstaller {

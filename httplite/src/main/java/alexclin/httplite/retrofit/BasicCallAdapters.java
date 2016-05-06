@@ -26,7 +26,12 @@ class BasicCallAdapters {
     private static class SyncCallAdapter implements CallAdapter {
         @Override
         public Object adapt(Call call, final Type returnType, Object... args) throws Exception{
-            Clazz clazz = Clazz.ofType(returnType);
+            Clazz clazz = new Clazz() {
+                @Override
+                public Type type() {
+                    return returnType;
+                }
+            };
             if(Util.isSubType(returnType, Result.class)){
                 return call.syncResult(clazz);
             }else{

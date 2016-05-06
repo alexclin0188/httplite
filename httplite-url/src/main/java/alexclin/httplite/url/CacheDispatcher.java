@@ -19,7 +19,7 @@ import alexclin.httplite.impl.TaskDispatcher;
 import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.LogUtil;
-import alexclin.httplite.util.Method;
+import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -252,7 +252,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
         @Override
         public boolean canCache(Request request) {
-            return request.getMethod()== Method.GET;
+            return request.getMethod()== HttpMethod.GET;
         }
     }
 }

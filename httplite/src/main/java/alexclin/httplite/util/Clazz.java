@@ -26,10 +26,6 @@ public abstract class Clazz<T> {
         _type = type;
     }
 
-    public Type type(){
-        return _type;
-    }
-
     public static <T> Clazz<T> of(Callback<T> callback){
         final Type type = Util.type(Callback.class,callback);
         return new Clazz<T>() {
@@ -40,13 +36,7 @@ public abstract class Clazz<T> {
         };
     }
 
-    public static <R> Clazz<R> ofType(Type type){
-        return new InnerClazz<R>(type);
-    }
-
-    private static class InnerClazz<E> extends Clazz<E>{
-        public InnerClazz(Type type) {
-            super(type);
-        }
+    public Type type(){
+        return _type;
     }
 }

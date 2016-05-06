@@ -19,7 +19,7 @@ import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
-import alexclin.httplite.util.Method;
+import alexclin.httplite.util.HttpMethod;
 
 /**
  * HttpLite
@@ -196,7 +196,7 @@ public class HttpLite {
         }
 
         @Override
-        public Request setMethod(Request request, Method method) {
+        public Request setMethod(Request request, HttpMethod method) {
             request.method = method;
             return request;
         }

@@ -16,6 +16,7 @@ import alexclin.httplite.annotation.IntoFile;
 import alexclin.httplite.annotation.JsonField;
 import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
+import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -38,6 +39,27 @@ public class BasicAnnotationRule implements AnnotationRule {
         registerBodyAnnotation(JsonField.class,JSON_BODY,true);
     }
 
+    static HttpMethod checkHttpMethod(Method interfaceMethod){
+        HttpMethod method = null;
+        GET get = interfaceMethod.getAnnotation(GET.class);
+        if(get!=null){
+            method = HttpMethod.GET;
+        }
+        if(method==null){
+            POST post = interfaceMethod.getAnnotation(POST.class);
+            if(post!=null) method = HttpMethod.POST;
+        }
+        if(method==null){
+            HTTP http = interfaceMethod.getAnnotation(HTTP.class);
+            if(http!=null) method = http.method();
+        }
+        if (method==null) {
+            String info = Util.printArray("You must set one http annotation on each method but there is:%s", interfaceMethod.getAnnotations());
+            throw Util.methodError(interfaceMethod,info);
+        }
+        return method;
+    }
+
     public void registerBodyAnnotation(Class<? extends Annotation> clazz, String type, boolean allowRepeat){
         if(this.bodyAnnotationMap==null) this.bodyAnnotationMap = new ArrayList<>();
         this.bodyAnnotationMap.add(new BodyType(clazz,type,allowRepeat));
@@ -46,7 +68,7 @@ public class BasicAnnotationRule implements AnnotationRule {
     @Override
     public void checkMethod(Method interfaceMethod,boolean isFileResult) throws RuntimeException {
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
-        alexclin.httplite.util.Method method = checkHttpMethod(interfaceMethod);
+        HttpMethod method = checkHttpMethod(interfaceMethod);
 
         boolean allowBody = Request.permitsRequestBody(method);
         boolean requireBody = Request.requiresRequestBody(method);
@@ -104,27 +126,6 @@ public class BasicAnnotationRule implements AnnotationRule {
             }
         }
         return Util.methodError(interfaceMethod,"You can not use @%s and @%s on on the same one method",firstName,builder.toString());
-    }
-
-    private alexclin.httplite.util.Method checkHttpMethod(Method interfaceMethod){
-        alexclin.httplite.util.Method method = null;
-        GET get = interfaceMethod.getAnnotation(GET.class);
-        if(get!=null){
-            method = alexclin.httplite.util.Method.GET;
-        }
-        if(method==null){
-            POST post = interfaceMethod.getAnnotation(POST.class);
-            if(post!=null) method = alexclin.httplite.util.Method.POST;
-        }
-        if(method==null){
-            HTTP http = interfaceMethod.getAnnotation(HTTP.class);
-            if(http!=null) method = http.method();
-        }
-        if (method==null) {
-            String info = Util.printArray("You must set one http annotation on each method but there is:%s", interfaceMethod.getAnnotations());
-            throw Util.methodError(interfaceMethod,info);
-        }
-        return method;
     }
 
     private BodyType bodyTypeFor(Annotation annotation){
