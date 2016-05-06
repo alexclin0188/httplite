@@ -32,7 +32,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/28 19:20
  */
-class ProcessorFactory {
+public final class ProcessorFactory {
 
     static List<MethodProcessor> methodProcessorList = new CopyOnWriteArrayList<>();
     static List<ParameterProcessor> parameterProcessorList = new CopyOnWriteArrayList<>();
@@ -58,7 +58,9 @@ class ProcessorFactory {
         parameterProcessorList.add(new BasicProcessors.PathProcessor());
         parameterProcessorList.add(new BasicProcessors.PathsProcessor());
         paramMiscProcessors.add(new BasicProcessors.JsonFieldProcessor());
-        addIgnoreAnnotation(FixHeaders.class);
+    }
+
+    private ProcessorFactory() {
     }
 
     static List<AnnotationRule> getAnnotationRules() {
@@ -84,28 +86,31 @@ class ProcessorFactory {
         throw new RuntimeException("unknown parameter annotation:" + annotation + ", to use custom annotation, please set custom ParameterProcessor/ParamMiscProcessor in Retrofit");
     }
 
-    public static boolean isBasicHttpAnnotation(Annotation annotation) {
+    static boolean isBasicHttpAnnotation(Annotation annotation) {
         return (annotation instanceof GET) || (annotation instanceof POST) || (annotation instanceof HTTP);
     }
 
 
-    public static boolean isSystemAnnotation(Annotation annotation) {
+    static boolean isSystemAnnotation(Annotation annotation) {
         String packageName = annotation.getClass().getName();
         return packageName.startsWith("java.lang.annotation") || packageName.startsWith("android.support.") || packageName.startsWith("android.annotation.");
     }
 
-    public static void addIgnoreAnnotation(Class<? extends Annotation> annotation) {
+    static void addIgnoreAnnotation(Class<? extends Annotation> annotation) {
         ignoreAnnotations.add(annotation);
     }
 
-    public static boolean isIgnoreAnnotation(Class<? extends Annotation> clazz) {
-        return ignoreAnnotations.contains(clazz);
+    static boolean isIgnoreAnnotation(Class<? extends Annotation> clazz) {
+        for(Class<? extends Annotation> clz:ignoreAnnotations){
+            if(Util.isSubType(clazz,clz)) return true;
+        }
+        return false;
     }
 
     /**
      * GET/POST/HTTP注解的处理
      */
-    static class HttpMethodProcessor implements MethodProcessor {
+    public static class HttpMethodProcessor implements MethodProcessor {
 
         @Override
         public void process(Method method,Annotation annotation, Retrofit retrofit, Request request) {
@@ -127,7 +132,7 @@ class ProcessorFactory {
         }
     }
 
-    static class MarkAndHeadersProcessor implements MethodProcessor {
+    public static class MarkAndHeadersProcessor implements MethodProcessor {
 
         @Override
         public void process(Method method,Annotation annotation, Retrofit retrofit, Request request) {
@@ -157,7 +162,7 @@ class ProcessorFactory {
     /**
      * Progress/Retry/Cancel/Tag注解的处理
      */
-    static class ListenerParamProcessor implements ParameterProcessor {
+    public static class ListenerParamProcessor implements ParameterProcessor {
 
         @Override
         public void process(Annotation annotation, Request request, Object value) {
@@ -185,7 +190,7 @@ class ProcessorFactory {
         }
     }
 
-    abstract static class ObjectsProcessor implements ParameterProcessor {
+    public abstract static class ObjectsProcessor implements ParameterProcessor {
         @Override
         public void process(Annotation annotation, Request request, Object value) {
             if (value == null) return;
@@ -214,12 +219,12 @@ class ProcessorFactory {
             }
         }
 
-        abstract void performProcess(Annotation annotation, Request request, Object value);
+        protected abstract void performProcess(Annotation annotation, Request request, Object value);
 
-        abstract String value(Annotation annotation);
+        protected abstract String value(Annotation annotation);
     }
 
-    abstract static class MapProcessor implements ParameterProcessor {
+    public abstract static class MapProcessor implements ParameterProcessor {
 
         @Override
         @SuppressWarnings("unchecked")

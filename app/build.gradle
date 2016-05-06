@@ -38,8 +38,9 @@ dependencies {
     compile project(':httplite-url')
 //  compile project(':retrofit-rx')
     compile 'alexclin.httplite:retrofit-rx:1.0.2'
-//    compile project(':thirdparty')
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-    compile 'com.squareup.okhttp:okhttp:2.7.5'
-    compile 'alexclin.httplite:httplite:1.1.0'
+    compile project(':thirdparty')
+    compile project(':httplite')
+//    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+//    compile 'com.squareup.okhttp:okhttp:2.7.5'
+//    compile 'alexclin.httplite:httplite:1.1.0'
 }

@@ -55,12 +55,12 @@ public class RxCallAdapter implements CallAdapter {
     }
 
     @Override
-    public boolean checkMethod(Method method) throws RuntimeException {
+    public ResultType checkMethod(Method method) throws RuntimeException {
         Type type = Util.getTypeParameter(method.getGenericReturnType());
         if(Util.isSubType(type,Result.class)){
-            return Util.getTypeParameter(type)==File.class;
+            return Util.getTypeParameter(type)==File.class?ResultType.File:ResultType.NotFile;
         }else{
-            return type== File.class;
+            return type== File.class?ResultType.File:ResultType.NotFile;
         }
     }
 

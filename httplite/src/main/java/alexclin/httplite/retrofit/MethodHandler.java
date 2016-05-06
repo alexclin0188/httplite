@@ -31,10 +31,10 @@ public class MethodHandler<T> {
 
     public MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
         if(!retrofit.isReleaseMode()){
-            boolean isFileResult = invoker.checkMethod(method);
+            CallAdapter.ResultType rt = invoker.checkMethod(method);
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
             for(AnnotationRule rule:annotationRules){
-                rule.checkMethod(method,isFileResult);
+                rule.checkMethod(method,rt);
             }
         }
         this.invoker = invoker;

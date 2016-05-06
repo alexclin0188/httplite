@@ -528,8 +528,8 @@ public final class Request implements Cloneable{
                 request.headers.put(entry.getKey(),new ArrayList<>(entry.getValue()));
             }
         }
-        request.params = new ArrayList<>(this.params);
-        request.pathHolders = new HashMap<>(this.pathHolders);
+        request.params = this.params!=null?new ArrayList<>(this.params):null;
+        request.pathHolders = this.pathHolders!=null?new HashMap<>(this.pathHolders):null;
 //        request.lite = this.lite;
 //        request.url = this.url;
 //        request.baseUrl = this.baseUrl;

@@ -75,8 +75,8 @@ public abstract class Retrofit {
         }
     }
 
-    public static BasicAnnotationRule basicAnnotationRule(){
-        return ProcessorFactory.basicAnnotationRule;
+    public static void registerBodyAnnotation(Class<? extends Annotation> clazz, String type, boolean allowRepeat){
+        ProcessorFactory.basicAnnotationRule.registerBodyAnnotation(clazz,type,allowRepeat);
     }
 
     public static void ignoreAnnotation(Class<? extends Annotation> annotation){
@@ -130,7 +130,7 @@ public abstract class Retrofit {
                 return invoker;
             }
         }
-        return null;
+        throw Util.methodError(method,"no CallAdapter for %s",method.getName());
     }
 
     private class ProxyInvoker<T> implements InvocationHandler{

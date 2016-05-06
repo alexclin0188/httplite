@@ -17,6 +17,7 @@ import alexclin.httplite.annotation.JsonField;
 import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
 import alexclin.httplite.util.HttpMethod;
+import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -66,7 +67,7 @@ public class BasicAnnotationRule implements AnnotationRule {
     }
 
     @Override
-    public void checkMethod(Method interfaceMethod,boolean isFileResult) throws RuntimeException {
+    public void checkMethod(Method interfaceMethod,CallAdapter.ResultType resultType) throws RuntimeException {
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
         HttpMethod method = checkHttpMethod(interfaceMethod);
 
@@ -80,7 +81,7 @@ public class BasicAnnotationRule implements AnnotationRule {
         for (Annotation[] annotations : methodParameterAnnotationArrays) {
             for (Annotation annotation : annotations) {
                 if (annotation instanceof IntoFile) {
-                    if (!isFileResult)
+                    if (resultType== CallAdapter.ResultType.NotFile)
                         throw Util.methodError(interfaceMethod,"Method use @InfoFile must has result type File(Callback<File>/return-file/Observale<File>/...)");
                     hasIntoFile = true;
                 } else {
@@ -104,7 +105,7 @@ public class BasicAnnotationRule implements AnnotationRule {
             }
         }
 
-        if(isFileResult&&!hasIntoFile){
+        if(resultType== CallAdapter.ResultType.File&&!hasIntoFile){
             throw Util.methodError(interfaceMethod,"method with result type File(Callback<File>/return-file/Observable<File>/...) must has @IntoFile parameter");
         }
 

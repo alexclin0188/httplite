@@ -28,5 +28,6 @@ public interface CustomApi {
 
     @POST("/test")
     void testPost(@GsonField("param1") String param1,
-                  @GsonField("param1")String param2, Callback<RequestInfo> callback);
+                  @GsonField("param1")String param2,
+                  Callback<RequestInfo> callback);
 }

@@ -18,6 +18,7 @@ import alexclin.httplite.sample.frag.DownloadFrag;
 import alexclin.httplite.sample.frag.GetFrag;
 import alexclin.httplite.sample.frag.PostFrag;
 import alexclin.httplite.sample.frag.RetrofitFrag;
+import alexclin.httplite.sample.retrofit.TestRetrofit;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import de.greenrobot.event.EventBus;
@@ -54,6 +55,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mRecyclerView.setAdapter(leftMenuAdapter);
         onItemClick(leftMenuAdapter.getItem(4));
         EventBus.getDefault().register(this);
+
+        TestRetrofit.testCustom(App.httpLite(this));
+        TestRetrofit.testFilter(App.httpLite(this));
+        TestRetrofit.testSampleApi(App.httpLite(this));
     }
 
     @Override

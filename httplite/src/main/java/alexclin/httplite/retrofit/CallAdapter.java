@@ -11,6 +11,7 @@ import alexclin.httplite.Call;
  * @author alexclin  16/3/24 23:24
  */
 public interface CallAdapter {
+    enum ResultType{File,NotFile,Any}
     Object adapt(Call call, Type returnType, Object... args) throws Exception;
     boolean support(Method method);
 
@@ -20,5 +21,5 @@ public interface CallAdapter {
      * @return whether the result want to parse is File
      * @throws RuntimeException
      */
-    boolean checkMethod(Method method) throws RuntimeException;
+    ResultType checkMethod(Method method) throws RuntimeException;
 }

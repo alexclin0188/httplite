@@ -45,15 +45,15 @@ class BasicCallAdapters {
         }
 
         @Override
-        public boolean checkMethod(Method method) throws RuntimeException {
+        public ResultType checkMethod(Method method) throws RuntimeException {
             if(method.getReturnType()!=Result.class){
                 Class[] exceptionClasses = method.getExceptionTypes();
                 if(exceptionClasses.length!=1|| exceptionClasses[0]!=Exception.class){
                     throw Util.methodError(method,"Sync method must declare throws Exception");
                 }
-                return Util.getTypeParameter(method.getGenericReturnType())==File.class;
+                return Util.getTypeParameter(method.getGenericReturnType())==File.class?ResultType.File:ResultType.NotFile;
             }else{
-                return method.getReturnType().equals(File.class);
+                return method.getReturnType().equals(File.class)?ResultType.File:ResultType.NotFile;
             }
         }
     }
@@ -68,12 +68,12 @@ class BasicCallAdapters {
 
         @Override
         public boolean support(Method method) {
-            Class[] paramTypes = method.getParameterTypes();
-            return Util.isSubType(paramTypes[paramTypes.length-1],Callback.class);
+            Type[] paramTypes = method.getGenericParameterTypes();
+            return paramTypes.length>0&&Util.isSubType(paramTypes[paramTypes.length-1],Callback.class);
         }
 
         @Override
-        public boolean checkMethod(Method method) throws RuntimeException {
+        public ResultType checkMethod(Method method) throws RuntimeException {
             Type returnType = method.getGenericReturnType();
             Type[] methodParameterTypes  = method.getGenericParameterTypes();
             if(methodParameterTypes.length==0){
@@ -89,7 +89,7 @@ class BasicCallAdapters {
                     throw Util.methodError(method, "the method define in the interface must return void");
                 }
             }
-            return Util.getTypeParameter(lastParamType)==File.class;
+            return Util.getTypeParameter(lastParamType)==File.class?ResultType.File:ResultType.NotFile;
         }
     }
 
@@ -106,8 +106,8 @@ class BasicCallAdapters {
         }
 
         @Override
-        public boolean checkMethod(Method method) throws RuntimeException {
-            return Util.getTypeParameter(method.getGenericReturnType())==File.class;
+        public ResultType checkMethod(Method method) throws RuntimeException {
+            return ResultType.Any;
         }
     }
 }

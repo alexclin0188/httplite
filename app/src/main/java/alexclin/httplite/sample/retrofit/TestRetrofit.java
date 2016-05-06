@@ -159,8 +159,7 @@ public class TestRetrofit {
         //对个参数组合到一起的参数注解处理ParamMiscProcessor，如将多个参数组合成一个json字符串作为请求的BODY
         Retrofit.registerParamMiscProcessor(new GsonFieldProcesscor());
         //当注解处理的参数是用作Body时，还需要注册Body类型
-        Retrofit.basicAnnotationRule().registerBodyAnnotation(GsonField.class,
-                GsonFieldProcesscor.BODY_TYPE,true);
+        Retrofit.registerBodyAnnotation(GsonField.class,GsonFieldProcesscor.BODY_TYPE,true);
         //创建实例
         CustomApi api = mHttplite.retrofit(CustomApi.class);
         //发起请求
