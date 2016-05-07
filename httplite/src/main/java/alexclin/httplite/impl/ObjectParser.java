@@ -108,7 +108,7 @@ public class ObjectParser {
                             } catch (Exception e) {
                                 throw new ParserException(e);
                             }finally {
-                                Util.closeQuietly(response.body().stream());
+                                Util.closeQuietly(response.body());
                             }
                         }
                     }

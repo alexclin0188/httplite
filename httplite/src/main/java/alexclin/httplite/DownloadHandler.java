@@ -144,6 +144,7 @@ class DownloadHandler extends ResponseHandler<File>{
                         if(!params.autoResume||!newFile.exists()||newFile.length()<CHECK_SIZE){
                             params.targetFile = renameTargetFile(name,params.targetFile);
                         }else{
+                            Util.closeQuietly(response.body());
                             //需要重新发起请求
                             params.targetFile = newFile;
                             doResumeWork();
