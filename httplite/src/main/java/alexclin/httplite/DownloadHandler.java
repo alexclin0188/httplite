@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.URLDecoder;
@@ -226,9 +227,11 @@ class DownloadHandler extends ResponseHandler<File>{
                     if (filePos > 0) {
                         fis = new FileInputStream(params.targetFile);
                         byte[] fileCheckBuffer = Util.readBytes(fis, filePos, CHECK_SIZE);
-                        byte[] checkBuffer = Util.readBytes(response.body().stream(), 0, CHECK_SIZE);
+                        InputStream inputStream = response.body().stream();
+                        byte[] checkBuffer = Util.readBytes(inputStream, 0, CHECK_SIZE);
                         if (!Arrays.equals(checkBuffer, fileCheckBuffer)) {
                             Util.closeQuietly(fis); // 先关闭文件流, 否则文件删除会失败.
+                            Util.closeQuietly(inputStream);
                             Util.deleteFileOrDir(params.targetFile);
                             retryDownload(new RuntimeException("autoResume but file is changed"));
                             return;

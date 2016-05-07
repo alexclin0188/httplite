@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
@@ -53,15 +54,20 @@ public class ObjectParser {
     public static String decodeToString(Response response) throws IOException {
         MediaType mt = response.body().contentType();
         if (mt != null) {
-            Charset cs = mt.charset(Util.UTF_8);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(response.body().stream(), cs == null ? Util.UTF_8 : cs));
-            StringBuilder stringBuilder = new StringBuilder();
-            String s;
-            while ((s = reader.readLine()) != null) {
-                stringBuilder.append(s);
+            BufferedReader reader = null;
+            StringBuilder stringBuilder;
+            try {
+                Charset cs = mt.charset(Util.UTF_8);
+                reader = new BufferedReader(new InputStreamReader(response.body().stream(), cs == null ? Util.UTF_8 : cs));
+                stringBuilder = new StringBuilder();
+                String s;
+                while ((s = reader.readLine()) != null) {
+                    stringBuilder.append(s);
+                }
+                return stringBuilder.toString();
+            } finally {
+                Util.closeQuietly(reader);
             }
-            Util.closeQuietly(reader);
-            return stringBuilder.toString();
         }
         throw new RuntimeException("Not text response body,no Content-Type in response");
     }
@@ -101,6 +107,8 @@ public class ObjectParser {
                                 return parser.parseResponse(response, type);
                             } catch (Exception e) {
                                 throw new ParserException(e);
+                            }finally {
+                                Util.closeQuietly(response.body().stream());
                             }
                         }
                     }
@@ -111,10 +119,14 @@ public class ObjectParser {
     }
 
     private Bitmap decodeBitmap(Response response) throws Exception{
+        InputStream in = null;
         try {
-            return BitmapFactory.decodeStream(response.body().stream());
+            in = response.body().stream();
+            return BitmapFactory.decodeStream(in);
         } catch (IOException e) {
             throw new DecodeException("Decode Bitmap error",e);
+        }finally {
+            Util.closeQuietly(in);
         }
     }
 
