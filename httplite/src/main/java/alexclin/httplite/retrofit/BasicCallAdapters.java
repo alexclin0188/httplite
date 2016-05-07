@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import alexclin.httplite.Call;
+import alexclin.httplite.Handle;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.Result;
@@ -62,8 +63,8 @@ class BasicCallAdapters {
     private static class AsyncCallAdapter implements CallAdapter {
         @Override
         public Object adapt(Call call, Type returnType, Object... args) throws Exception{
-            call.async(true,(Callback)args[args.length-1]);
-            return null;
+            Handle handle = call.async(true,(Callback)args[args.length-1]);
+            return returnType==Handle.class?handle:null;
         }
 
         @Override
@@ -85,8 +86,8 @@ class BasicCallAdapters {
                         "Method lastParamType must not include a type variable or wildcard: %s", lastParamType);
             }
             if(Util.isSubType(lastParamType, Callback.class)){
-                if(returnType != void.class){
-                    throw Util.methodError(method, "the method define in the interface must return void");
+                if(returnType != void.class&& returnType!= Handle.class){
+                    throw Util.methodError(method, "the method define in the interface must return void/Handle");
                 }
             }
             return Util.getTypeParameter(lastParamType)==File.class?ResultType.File:ResultType.NotFile;

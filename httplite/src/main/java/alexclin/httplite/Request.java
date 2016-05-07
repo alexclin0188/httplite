@@ -500,10 +500,8 @@ public final class Request implements Cloneable{
         return this;
     }
 
-    public Call download(Callback<File> callback){
-        Call call = get();
-        call.async(callback);
-        return call;
+    public Handle download(Callback<File> callback){
+        return get().async(callback);
     }
 
     private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){

@@ -21,7 +21,7 @@ public class HttpCall extends Call{
     }
 
     @Override @SuppressWarnings("unchecked")
-    public <T> void async(boolean callOnMain, Callback<T> callback) {
+    public <T> Handle async(boolean callOnMain, Callback<T> callback) {
         Type type = Util.type(Callback.class, callback);
         ResponseHandler rcb;
         if(type==File.class){
@@ -30,6 +30,7 @@ public class HttpCall extends Call{
             rcb = createHttpCallback(callback, type,callOnMain);
         }
         executeSelf(rcb);
+        return this;
     }
 
     @Override

@@ -10,7 +10,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin at 16/1/29 21:15
  */
-public abstract class Call {
+public abstract class Call implements Handle{
     protected Request request;
     private Executable executable;
 
@@ -18,11 +18,12 @@ public abstract class Call {
         this.request = request;
     }
 
-    public final <T> void async(Callback<T> callback){
+    public final <T> Handle async(Callback<T> callback){
         async(Util.type(Callback.class,callback)!=Response.class,callback);
+        return this;
     }
 
-    public abstract <T> void async(boolean callOnMain,Callback<T> callback);
+    public abstract <T> Handle async(boolean callOnMain,Callback<T> callback);
 
     public final Response sync() throws Exception{
         return sync(new Clazz<Response>() {});
@@ -37,7 +38,8 @@ public abstract class Call {
     }
 
     public void cancel(){
-        if(executable!=null) executable.cancel();
+        if(executable!=null&&!executable().isCanceled()&&!executable().isExecuted())
+            executable.cancel();
     }
 
     public boolean isCanceled(){

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.R;
+import alexclin.httplite.sample.RecycleViewDivider;
 import alexclin.httplite.sample.adapter.FileAdapter;
 import alexclin.httplite.sample.event.ChangeFragEvent;
 import alexclin.httplite.sample.manager.DownloadManager;
@@ -53,7 +55,7 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
         mPathTv = (TextView) view.findViewById(R.id.tv_request_path);
         mAdapter = new FileAdapter(null,this);
         mRecyclerView.setAdapter(mAdapter);
-
+        mRecyclerView.addItemDecoration(new RecycleViewDivider(getContext(), LinearLayoutManager.HORIZONTAL));
         mBackUpBtn = (Button) view.findViewById(R.id.btn_back_up);
         mBackUpBtn.setOnClickListener(this);
         return view;

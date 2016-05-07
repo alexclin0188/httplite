@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import alexclin.httplite.Call;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
@@ -45,7 +45,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     private String url;
     private String path;
     private File file;
-    private Call mCall;
+    private Handle mRequestHandle;
 
     public DownloadTask(String url,String name,String path,String hash) {
         this.hash = hash;
@@ -93,7 +93,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         }
         current = 0;
         total = 0;
-        mCall = App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).download(this);
+        mRequestHandle = App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).download(this);
         updateState(State.Downloading);
     }
 
@@ -109,20 +109,17 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         return file;
     }
 
-//    public boolean isValidHash(){
-//        return mState==State.Finished&&hash!=null&&(hash.equals(realHash));
-//    }
     public String hashInfo(){
         return String.format(Locale.getDefault(),"realHash:%s,serverHash:%s",realHash,hash);
     }
 
     public String getPath() {
-        if(mCall!=null) return mCall.request().getDownloadParams().getTargetFile().getAbsolutePath();
+        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getAbsolutePath();
         return path+name;
     }
 
     public String getName() {
-        if(mCall!=null) return mCall.request().getDownloadParams().getTargetFile().getName();
+        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getName();
         return name;
     }
 
@@ -147,6 +144,6 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     }
 
     public void cancel() {
-        if(mCall!=null) mCall.cancel();
+        if(mRequestHandle !=null) mRequestHandle.cancel();
     }
 }

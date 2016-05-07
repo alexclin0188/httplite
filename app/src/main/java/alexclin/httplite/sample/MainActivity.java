@@ -3,6 +3,7 @@ package alexclin.httplite.sample;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -41,21 +42,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
+        mToolbar.setSubtitle("点击左侧机器人切换");
 
         mToolbar.setNavigationIcon(R.mipmap.ic_launcher);
         mToolbar.setNavigationOnClickListener(this);
 
         List<LeftMenuAdapter.MenuItem> list = new ArrayList<>();
-        list.add(new LeftMenuAdapter.MenuItem("Get请求", GetFrag.class));
-        list.add(new LeftMenuAdapter.MenuItem("Post请求", PostFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("自定义请求", RequestFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("下载上传管理", DownloadFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("Retrofit", RetrofitFrag.class));
+        list.add(new LeftMenuAdapter.MenuItem("获取文件列表", GetFrag.class));
+        list.add(new LeftMenuAdapter.MenuItem("列表选择上传", PostFrag.class));
         leftMenuAdapter = new LeftMenuAdapter(list,this);
+        mRecyclerView.addItemDecoration(new RecycleViewDivider(this,LinearLayoutManager.HORIZONTAL));
         mRecyclerView.setAdapter(leftMenuAdapter);
-        onItemClick(leftMenuAdapter.getItem(2));
         EventBus.getDefault().register(this);
-
+        onItemClick(list.get(0));
 //        TestRetrofit.testCustom(App.httpLite(this));
 //        TestRetrofit.testFilter(App.httpLite(this));
 //        TestRetrofit.testSampleApi(App.httpLite(this));
