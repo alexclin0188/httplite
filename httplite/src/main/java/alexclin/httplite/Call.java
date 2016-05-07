@@ -49,9 +49,6 @@ public abstract class Call {
     }
 
     protected void setExecutable(Executable executable){
-//        if(this.executable!=null){
-//            throw new IllegalStateException("Call can only execute once");
-//        }
         this.executable = executable;
     }
 

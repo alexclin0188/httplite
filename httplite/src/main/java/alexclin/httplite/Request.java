@@ -578,8 +578,7 @@ public final class Request implements Cloneable{
     @Override
     public String toString() {
         return "Request{" +
-                "baseUrl='" + baseUrl + '\'' +
-                ", url='" + url + '\'' +
+                ", url='" + getUrl() + '\'' +
                 ", method=" + method +
                 ", progressListener=" + progressListener +
                 ", retryListener=" + retryListener +

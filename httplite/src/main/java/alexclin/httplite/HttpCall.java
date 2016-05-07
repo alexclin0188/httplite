@@ -103,7 +103,9 @@ public class HttpCall extends Call{
         HttpLite lite = request.lite;
         if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request,callback.resultType());
-        setExecutable(lite.getClient().executable(request));
+        Executable executable = lite.getClient().executable(request);
+        if(callback instanceof DownloadHandler) executable = ((DownloadHandler) callback).wrap(executable);
+        setExecutable(executable);
         Response response = executable().execute();
         if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
         response = request.handleResponse(response);
@@ -116,7 +118,6 @@ public class HttpCall extends Call{
         if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         final Executor executor = lite.getCustomDownloadExecutor();
         if(isDownload&&executor!=null){
-            setExecutable(((DownloadHandler)callback).wrap(null));
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
