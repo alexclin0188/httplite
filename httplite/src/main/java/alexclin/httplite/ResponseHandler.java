@@ -119,9 +119,4 @@ public class ResponseHandler<T> {
     public void callCancelAndFailed() {
         callCancelAndFailed(null);
     }
-
-
-    public Runnable getPreWork(){
-        return null;
-    }
 }

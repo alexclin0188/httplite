@@ -26,7 +26,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
     private int retryCount;
 
     private ResponseHandler callback;
-    private Runnable preWork;
 
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
@@ -37,9 +36,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
     }
 
     public void enqueueTask() {
-        if(preWork!=null){
-            preWork.run();
-        }
         Response response = null;
         int maxRetry = lite.settings.getMaxRetryCount();
         while (retryCount<= maxRetry&& !isCanceled()){
@@ -81,7 +77,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
         connection.setReadTimeout(lite.settings.getReadTimeout());
         connection.setConnectTimeout(lite.settings.getConnectTimeout());
         connection.setInstanceFollowRedirects(lite.settings.isFollowRedirects());
-
         if (connection instanceof HttpsURLConnection) {
             HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
             httpsURLConnection.setSSLSocketFactory(lite.settings.getSslSocketFactory());
@@ -103,7 +98,9 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
             }
         }
         connection.setRequestMethod(request.getMethod().name());
-        if(Request.permitsRequestBody(request.getMethod())&&request.getBody()!=null){
+
+        connection.setDoInput(true);
+        if(request.getMethod().permitsRequestBody&&request.getBody()!=null){
             connection.setRequestProperty("Content-Type", request.getBody().contentType().toString());
             long contentLength = request.getBody().contentLength();
             if (contentLength < 0) {
@@ -121,6 +118,7 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
             connection.setDoOutput(true);
             request.getBody().writeTo(connection.getOutputStream());
         }
+
         Response response = URLite.createResponse(connection, request);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
@@ -139,7 +137,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
     @Override
     public void enqueue(ResponseHandler responseHandler) {
         this.callback = responseHandler;
-        this.preWork = responseHandler.getPreWork();
         lite.dispatchTask(this);
     }
 

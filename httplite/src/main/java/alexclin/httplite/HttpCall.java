@@ -100,13 +100,9 @@ public class HttpCall extends Call{
     }
 
     private Response executeSyncInner(ResponseHandler callback) throws Exception{
-        Runnable preWork = null;
-        if(callback instanceof DownloadHandler){
-            preWork = (DownloadHandler)callback;
-        }
         HttpLite lite = request.lite;
+        if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request,callback.resultType());
-        if(preWork!=null) preWork.run();
         setExecutable(lite.getClient().executable(request));
         Response response = executable().execute();
         if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
@@ -117,6 +113,7 @@ public class HttpCall extends Call{
     <T> void executeSelf(final ResponseHandler<T> callback){
         HttpLite lite = request.lite;
         boolean isDownload = callback instanceof DownloadHandler;
+        if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         final Executor executor = lite.getCustomDownloadExecutor();
         if(isDownload&&executor!=null){
             setExecutable(((DownloadHandler)callback).wrap(null));

@@ -6,7 +6,32 @@ package alexclin.httplite.util;
  * @author alexclin at 16/2/1 19:53
  */
 public enum HttpMethod {
-    GET,POST,PUT,DELETE,HEAD,PATCH
+    GET(false,false),POST(true,true),PUT(true,true),DELETE(true,false),HEAD(false,false),PATCH(true,true);
+
+    public final boolean permitsRequestBody;
+    public final boolean requiresRequestBody;
+
+    HttpMethod(boolean permitsRequestBody, boolean requiresRequestBody) {
+        this.permitsRequestBody = permitsRequestBody;
+        this.requiresRequestBody = requiresRequestBody;
+    }
+
+    public static boolean permitsRequestBody(HttpMethod method) {
+        return requiresRequestBody(method)
+                || method.name().equals("OPTIONS")
+                || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
+                || method.name().equals("PROPFIND")  // (WebDAV) without body: call <allprop/>
+                || method.name().equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
+                || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
+    }
+
+    public static boolean requiresRequestBody(HttpMethod method) {
+        return method.name().equals("POST")
+                || method.name().equals("PUT")
+                || method.name().equals("PATCH")
+                || method.name().equals("PROPPATCH") // WebDAV
+                || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
+    }
 }
 
 //    /**

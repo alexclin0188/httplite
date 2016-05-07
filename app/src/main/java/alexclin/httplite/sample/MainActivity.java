@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
         }
-        getFragmentManager().beginTransaction().replace(R.id.content_layout,item.frag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.content_layout,item.frag).commit();
         mToolbar.setTitle(item.name);
         mDrawerLayout.closeDrawer(mRecyclerView);
     }

@@ -8,17 +8,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Locale;
 
 import alexclin.httplite.sample.R;
-import alexclin.httplite.sample.manager.DownloadManager;
 import alexclin.httplite.sample.manager.DownloadTask;
+import alexclin.httplite.sample.manager.TaskStateListener;
 
 /**
  * DownloadAdapter
  *
  * @author alexclin 16/1/10 16:22
  */
-public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.DownloadViewHolder> implements DownloadManager.DownloadListener {
+public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.DownloadViewHolder> {
 
     private List<DownloadTask> mList;
 
@@ -29,8 +30,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.Downlo
     @Override
     public DownloadViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listitem_download, parent, false);
-        DownloadViewHolder holder = new DownloadViewHolder(view);
-        return holder;
+        return new DownloadViewHolder(view);
     }
 
     @Override
@@ -46,19 +46,15 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.Downlo
         return mList.size();
     }
 
-    @Override
-    public void onTaskChanged(List<DownloadTask> taskList) {
-        mList = taskList;
-        notifyDataSetChanged();
-    }
-
-    public static class DownloadViewHolder extends RecyclerView.ViewHolder implements DownloadTask.TaskStateListener{
+    public static class DownloadViewHolder extends RecyclerView.ViewHolder implements TaskStateListener,View.OnClickListener{
 
         private TextView mNameTv;
         private TextView mPathTv;
         private TextView mStateInfoTv;
         private TextView mProgressTv;
         private ProgressBar mProgressBar;
+
+        private DownloadTask mTask;
 
         public DownloadViewHolder(View itemView) {
             super(itemView);
@@ -67,6 +63,7 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.Downlo
             mStateInfoTv = (TextView) itemView.findViewById(R.id.tv_state_info);
             mProgressTv = (TextView) itemView.findViewById(R.id.tv_progress);
             mProgressBar = (ProgressBar) itemView.findViewById(R.id.progress_download);
+            mStateInfoTv.setOnClickListener(this);
         }
 
         @Override
@@ -77,17 +74,16 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.Downlo
             }else{
                 mProgressBar.setProgress(0);
             }
-            mProgressTv.setText(String.format("%d/%d",current,total));
+            mProgressTv.setText(String.format(Locale.getDefault(),"%d/%d",current,total));
         }
 
         @Override
         public void onStateChanged(DownloadTask task) {
+            mTask = task;
             DownloadViewHolder holder = this;
-            boolean isDownloading = !task.isFinished()&&!task.isCanceled()&&!task.isFailed();
             holder.mNameTv.setText(task.getName());
             holder.mPathTv.setText(task.getPath());
-            if(isDownloading){
-                holder.mStateInfoTv.setVisibility(View.GONE);
+            if(task.getState()== DownloadTask.State.Downloading){
                 holder.mProgressBar.setVisibility(View.VISIBLE);
                 holder.mProgressTv.setVisibility(View.VISIBLE);
                 onProgressUpdate(task.getCurrent(),task.getTotal());
@@ -95,13 +91,35 @@ public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.Downlo
                 holder.mStateInfoTv.setVisibility(View.VISIBLE);
                 holder.mProgressBar.setVisibility(View.GONE);
                 holder.mProgressTv.setVisibility(View.GONE);
-                if(task.isFinished()){
-                    holder.mStateInfoTv.setText(String.format("下载成功，hash校验：%b",task.isValidHash()));
-                }else if(task.isCanceled()){
-                    holder.mStateInfoTv.setText("下载已被取消");
-                }else if(task.isFailed()){
-                    holder.mStateInfoTv.setText("下载失败");
-                }
+            }
+            String info = null;
+            switch (task.getState()){
+                case IDLE:
+                    info = "未开启";
+                    break;
+                case Failed:
+                    info = "失败";
+                    break;
+                case Canceled:
+                    info = "已取消";
+                    break;
+                case Finished:
+                    info = "成功";
+                    break;
+                case Downloading:
+                    info = "下载中";
+                    break;
+            }
+            holder.mStateInfoTv.setText(info);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if(mTask!=null){
+                if(mTask.getState().startAble)
+                    mTask.resume(v.getContext());
+                else
+                    mTask.cancel();
             }
         }
     }

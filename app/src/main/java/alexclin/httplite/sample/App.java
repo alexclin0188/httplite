@@ -44,14 +44,14 @@ public class App extends Application {
         super.onCreate();
         LogUtil.setDebug(true);
 //        HttpLiteBuilder builder = Ok2Lite.create();
-        HttpLiteBuilder builder = Ok3Lite.create();
+//        HttpLiteBuilder builder = Ok3Lite.create();
 
         TrustAllManager manager = new TrustAllManager();
 
-//        HttpLiteBuilder builder = URLite.create();
-        builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
-                .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
-                .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
+        HttpLiteBuilder builder = URLite.create();
+        builder = builder.setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
+                .setWriteTimeout(30, TimeUnit.SECONDS)  //设置写超时
+                .setReadTimeout(30, TimeUnit.SECONDS)  //设置读超时
                 .setMaxRetryCount(2)  //设置失败重试次数
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects

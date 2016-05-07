@@ -55,22 +55,7 @@ public class OkTask implements Executable {
 
     @Override
     public void enqueue(final ResponseHandler responseHandler) {
-        if(responseHandler.getPreWork()!=null){
-            mClient.dispatcher().executorService().execute(new Runnable() {
-                @Override
-                public void run() {
-                    responseHandler.getPreWork().run();
-                    if(!isCanceled()){
-                        Call call = executeInternal(request,responseHandler);
-                        setRealCall(call);
-                    }else{
-                        responseHandler.callCancelAndFailed();
-                    }
-                }
-            });
-        }else{
-            setRealCall(executeInternal(request, responseHandler));
-        }
+        setRealCall(executeInternal(request, responseHandler));
     }
 
     @Override

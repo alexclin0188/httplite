@@ -31,7 +31,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin at 16/1/1 19:12
  */
-class DownloadHandler extends ResponseHandler<File> implements Runnable{
+class DownloadHandler extends ResponseHandler<File>{
     private static final int CHECK_SIZE = 512;
     private static final int MAX_DOWNLOAD_RETRY = 2;
     private int downloadRetryCount;
@@ -66,11 +66,9 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
         File parentDir = new File(path);
         if(TextUtils.isEmpty(fileName)){
             if(path.endsWith("/")){
-                fileName = String.format(Locale.getDefault(),"lite%d.tmp",System.currentTimeMillis());
                 autoRename = true;
             }else{
                 if(parentDir.exists()&&parentDir.isDirectory()){
-                    fileName = String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
                     autoRename = true;
                 }else{
                     int index = path.lastIndexOf("/");
@@ -82,6 +80,8 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
                 }
             }
         }
+        if(TextUtils.isEmpty(fileName))
+            fileName = String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
         File targetFile = new File(parentDir,fileName);
         if(!parentDir.exists()){
             if(!parentDir.mkdirs()){
@@ -109,7 +109,7 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
                     try {
                         return URLDecoder.decode(
                                 disposition.substring(startIndex, endIndex),
-                                response.body().contentType().charset().toString());
+                                response.body().contentType().charset(Util.UTF_8).name());
                     } catch (UnsupportedEncodingException ex) {
                         LogUtil.e(ex.getMessage(), ex);
                     }
@@ -124,26 +124,34 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
         try {
             if(ObjectParser.isSuccess(response)){
                 checkCanceled();
-                if(params.autoRename){
-                    String name = getResponseFileName(response);
-                    params.targetFile = renameTargetFile(name,params.targetFile);
-                }
                 if(params.autoResume){
                     params.autoResume = isSupportRange(response);
                 }
+                if(params.autoRename){
+                    String name = getResponseFileName(response);
+                    if(!TextUtils.isEmpty(name)&&!name.equals(params.targetFile.getName())){
+                        File newFile = new File(params.parentDir,name);
+                        if(!params.autoResume||!newFile.exists()||newFile.length()<CHECK_SIZE){
+                            params.targetFile = renameTargetFile(name,params.targetFile);
+                        }else{
+                            //需要重新发起请求
+                            params.targetFile = newFile;
+                            doResumeWork();
+                            response = call.sync();
+                        }
+                    }
+                }
+
                 saveToFile(response);
                 return params.targetFile;
             }else{
                 throw ObjectParser.responseToException(response);
             }
         }catch (Exception e){
-            if(e instanceof CanceledException){
-                if(params!=null)
-                    Util.deleteFileOrDir(params.targetFile);
-            }else{
-                isExecuted = true;
-            }
+            if(isCanceled()) e = new CanceledException(e);
             throw e;
+        }finally {
+            isExecuted = true;
         }
     }
 
@@ -167,10 +175,7 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
         }
     }
 
-    void processHeaders(Map<String, List<String>> headers){
-        if(headers==null){
-            headers = new HashMap<>();
-        }
+    private void processHeaders(Map<String, List<String>> headers){
         if(!params.targetFile.exists()||!params.autoResume){
             params.autoResume = false;
             return;
@@ -178,12 +183,15 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
         long range;
         long fileLen = params.targetFile.length();
         if (fileLen <= CHECK_SIZE) {
-            Util.deleteFileOrDir(params.targetFile);
-            range = 0;
+            params.autoResume = false;
+            return;
         } else {
             range = fileLen - CHECK_SIZE;
         }
         // retry 时需要覆盖RANGE参数
+        if(headers==null){
+            headers = new HashMap<>();
+        }
         headers.put("RANGE", Collections.singletonList("bytes=" + range + "-"));
     }
 
@@ -291,11 +299,6 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
         }
     }
 
-    @Override
-    public void run() {
-        processHeaders(call.request.getHeaders());
-    }
-
     private void retryDownload(Throwable throwable) throws Exception{
         checkCanceled();
         downloadRetryCount++;
@@ -310,11 +313,9 @@ class DownloadHandler extends ResponseHandler<File> implements Runnable{
         }
     }
 
-    @Override
-    public Runnable getPreWork() {
-        return this;
+    public void doResumeWork(){
+        processHeaders(call.request.getHeaders());
     }
-
 
     public boolean isCanceled() {
         return (httpHandle!=null&&httpHandle.isCanceled())||isCanceled;

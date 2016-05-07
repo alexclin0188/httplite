@@ -76,23 +76,6 @@ public final class Request implements Cloneable{
         this.lite = lite;
     }
 
-    public static boolean permitsRequestBody(HttpMethod method) {
-        return requiresRequestBody(method)
-                || method.name().equals("OPTIONS")
-                || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
-                || method.name().equals("PROPFIND")  // (WebDAV) without body: call <allprop/>
-                || method.name().equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
-                || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
-    }
-
-    public static boolean requiresRequestBody(HttpMethod method) {
-        return method.name().equals("POST")
-                || method.name().equals("PUT")
-                || method.name().equals("PATCH")
-                || method.name().equals("PROPPATCH") // WebDAV
-                || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
-    }
-
     public Map<String,List<String>> getHeaders(){
         if(headers==null){
             headers = new HashMap<>();
@@ -286,10 +269,10 @@ public final class Request implements Cloneable{
         if (method == null) {
             throw new IllegalArgumentException("method == null");
         }
-        if (!isBodyNull && !permitsRequestBody(method)) {
+        if (!isBodyNull && !method.permitsRequestBody) {
             throw new IllegalArgumentException("method " + method + " must not have a call body.");
         }
-        if (isBodyNull && requiresRequestBody(method)) {
+        if (isBodyNull && method.requiresRequestBody) {
             throw new IllegalArgumentException("method " + method + " must have a call body.");
         }
         this.method = method;
@@ -513,12 +496,14 @@ public final class Request implements Cloneable{
     }
 
     public Request intoFile(String path,String fileName,boolean autoResume,boolean autoRename){
-        this.downloadParams = checkAndCreateDownload(path,null,autoResume,autoRename);
+        this.downloadParams = checkAndCreateDownload(path,fileName,autoResume,autoRename);
         return this;
     }
 
-    public void download(Callback<File> callback){
-        get().async(callback);
+    public Call download(Callback<File> callback){
+        Call call = get();
+        call.async(callback);
+        return call;
     }
 
     private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){

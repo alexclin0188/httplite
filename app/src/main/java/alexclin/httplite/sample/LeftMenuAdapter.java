@@ -1,6 +1,6 @@
 package alexclin.httplite.sample;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.TypedValue;
 import android.view.Gravity;

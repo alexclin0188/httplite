@@ -1,9 +1,9 @@
 package alexclin.httplite.sample.frag;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -87,9 +87,9 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
             url = info.filePath;
             requestPath(url);
         }else{
-            DownloadManager.download(getActivity(),info.filePath,
-                    getActivity().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(),info.fileName,info.hash);
-            EventBus.getDefault().post(new ChangeFragEvent(3));
+//            DownloadManager.download(getActivity(),info.filePath,
+//                    getActivity().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(),info.fileName,info.hash);
+//            EventBus.getDefault().post(new ChangeFragEvent(3));
         }
     }
 

@@ -71,8 +71,8 @@ public class BasicAnnotationRule implements AnnotationRule {
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
         HttpMethod method = checkHttpMethod(interfaceMethod);
 
-        boolean allowBody = Request.permitsRequestBody(method);
-        boolean requireBody = Request.requiresRequestBody(method);
+        boolean allowBody = method.permitsRequestBody;
+        boolean requireBody = method.requiresRequestBody;
         boolean hasIntoFile = false;
 
         HashSet<BodyType> bodyTypeSet = new HashSet<>();

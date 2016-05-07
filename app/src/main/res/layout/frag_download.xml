@@ -7,7 +7,8 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/download_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1.0"
         android:layout_gravity="start"
         android:background="@color/white"
         android:choiceMode="singleChoice"
@@ -15,4 +16,9 @@
         android:dividerHeight="5dip"
         android:scrollbars="vertical"
         app:layoutManager="LinearLayoutManager"/>
+    <Button
+        android:id="@+id/btn_clear_file"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="清除文件"/>
 </LinearLayout>
