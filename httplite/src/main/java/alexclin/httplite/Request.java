@@ -507,7 +507,7 @@ public final class Request implements Cloneable{
     }
 
     private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
-        DownloadHandler.DownloadParams params = DownloadHandler.createParams(path, fileName, autoResume, autoRename);
+        DownloadHandler.DownloadParams params = DownloadHandler.createParams(path, fileName, autoResume, autoRename,url);
         if(params==null){
             String info = String.format("call intoFile() with wrong params->path:%s,fileName:%s,resume:%b,rename:%b",path,fileName,autoResume,autoRename);
             throw new IllegalArgumentException(info);

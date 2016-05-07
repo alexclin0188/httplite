@@ -59,7 +59,7 @@ class DownloadHandler extends ResponseHandler<File>{
         return ranges != null && ranges.contains("bytes");
     }
 
-    static DownloadParams createParams(String path, String fileName, boolean autoResume, boolean autoRename) {
+    static DownloadParams createParams(String path, String fileName, boolean autoResume, boolean autoRename,String url) {
         if(TextUtils.isEmpty(path)){
             return null;
         }
@@ -80,8 +80,9 @@ class DownloadHandler extends ResponseHandler<File>{
                 }
             }
         }
-        if(TextUtils.isEmpty(fileName))
-            fileName = String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
+        if(TextUtils.isEmpty(fileName)){
+            fileName = createDefaultName(url);
+        }
         File targetFile = new File(parentDir,fileName);
         if(!parentDir.exists()){
             if(!parentDir.mkdirs()){
@@ -92,6 +93,14 @@ class DownloadHandler extends ResponseHandler<File>{
             return null;
         }
         return new DownloadParams(parentDir,targetFile,autoResume,autoRename);
+    }
+
+    private static String createDefaultName(String url) {
+        int index = url.lastIndexOf("/");
+        if(index>-1&&index<url.length()-1){
+            return url.substring(index+1);
+        }
+        return String.format(Locale.getDefault(),"lite%d.tmp", System.currentTimeMillis());
     }
 
     private static String getResponseFileName(Response response) {
