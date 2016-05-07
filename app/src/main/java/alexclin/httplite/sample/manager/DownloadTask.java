@@ -117,10 +117,12 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     }
 
     public String getPath() {
+        if(mCall!=null) return mCall.request().getDownloadParams().getTargetFile().getAbsolutePath();
         return path+name;
     }
 
     public String getName() {
+        if(mCall!=null) return mCall.request().getDownloadParams().getTargetFile().getName();
         return name;
     }
 

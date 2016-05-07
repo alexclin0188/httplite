@@ -49,7 +49,7 @@ public class DownloadFrag extends Fragment implements View.OnClickListener,Dialo
         list.add("http://dl.360safe.com/se/360se_setup.exe");
         int i = 1;
         for(String url:list){
-            mDownloadManager.addTask(url,downloadPath,"test"+i+".tmp");
+            mDownloadManager.addTask(url,downloadPath,null);
             i++;
         }
     }

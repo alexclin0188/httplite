@@ -347,6 +347,22 @@ class DownloadHandler extends ResponseHandler<File>{
             this.autoResume = autoResume;
             this.autoRename = autoRename;
         }
+
+        public File getParentDir() {
+            return parentDir;
+        }
+
+        public File getTargetFile() {
+            return targetFile;
+        }
+
+        public boolean isAutoResume() {
+            return autoResume;
+        }
+
+        public boolean isAutoRename() {
+            return autoRename;
+        }
     }
 
     private class ExecutableWrapper implements Executable{
