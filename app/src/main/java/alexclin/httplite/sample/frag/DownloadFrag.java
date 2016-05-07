@@ -50,10 +50,11 @@ public class DownloadFrag extends Fragment implements View.OnClickListener,Dialo
         if(file!=null) downloadPath = file.getAbsolutePath()+"/test/";
         List<String> list = new ArrayList<>();
         list.add("http://dl.360safe.com/se/360se_setup.exe");
-        int i = 1;
+        list.add("http://zhstatic.zhihu.com/pkg/store/zhihu/futureve-mobile-zhihu-release-3.3.1(310).apk");
+        list.add("http://wsdownload.hdslb.net/app/BiliPlayer3.apk");
+        list.add("http://desktop.youku.com/youkuclient/youkuclient_setup_6.8.8.4250_a.exe");
         for(String url:list){
             mDownloadManager.addTask(url,downloadPath,null);
-            i++;
         }
     }
 

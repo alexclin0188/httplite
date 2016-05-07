@@ -24,21 +24,21 @@
             android:id="@+id/btn_test1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test1"
+            android:text="局域网测1"
             android:layout_marginRight="5dip"
             />
         <Button
             android:id="@+id/btn_test2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test2"
+            android:text="知乎"
             android:layout_marginRight="5dip"
             />
         <Button
             android:id="@+id/btn_test3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test3"
+            android:text="局域网2"
             />
     </LinearLayout>
     <ScrollView
