@@ -10,6 +10,7 @@ import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.RetryListener;
+import alexclin.httplite.util.Util;
 
 /**
  * ResponseHandler
@@ -90,15 +91,19 @@ public class ResponseHandler<T> {
     }
 
     protected final void postSuccess(final T result, final Map<String, List<String>> headers) {
-        if (callOnMain)
+        if (callOnMain&&!(result instanceof Response))
             HttpLite.postOnMain(new Runnable() {
                 @Override
                 public void run() {
                     callback.onSuccess(call.request,headers,result);
                 }
             });
-        else
-            callback.onSuccess(call.request,headers,result);
+        else {
+            callback.onSuccess(call.request, headers, result);
+            if(result instanceof Response){
+                Util.closeQuietly(((Response) result).body());
+            }
+        }
     }
 
     protected final HttpLite getLite() {
