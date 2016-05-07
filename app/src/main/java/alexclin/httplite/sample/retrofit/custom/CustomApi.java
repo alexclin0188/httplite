@@ -5,6 +5,7 @@ import com.example.Result;
 import com.example.UserInfo;
 
 import alexclin.httplite.annotation.BaseURL;
+import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Tag;
@@ -18,6 +19,10 @@ import alexclin.httplite.listener.Callback;
 @BaseURL("https://192.168.99.238:10080/")
 public interface CustomApi {
     @GET("/login")
+    @FixHeaders({
+            "abcded:tests123",
+            "headerFix:headerValue"
+    })
     void login(
             @Query("username") String userName,
             @Query("password") String password,

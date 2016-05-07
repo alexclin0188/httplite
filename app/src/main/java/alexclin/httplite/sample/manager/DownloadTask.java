@@ -1,5 +1,7 @@
 package alexclin.httplite.sample.manager;
 
+import android.content.Context;
+
 import com.example.util.EncryptUtil;
 
 import java.io.File;
@@ -9,6 +11,7 @@ import java.util.Map;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
+import alexclin.httplite.sample.App;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -27,13 +30,15 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     private String hash;
     private String realHash;
     private String name;
+    private String url;
     private String path;
     private File file;
     private Map<String, List<String>> headers;
-    public DownloadTask(String name,String path,String hash) {
+    public DownloadTask(String url,String name,String path,String hash) {
         this.hash = hash;
         this.name = name;
         this.path = path;
+        this.url = url;
     }
 
     @Override
@@ -69,13 +74,22 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         LogUtil.e(String.format("onProgressUpdate:%d,%d",current,total));
     }
 
-    public void resume(){
+    public void resume(Context context){
         if(isFinished){
             return;
         }
         isCanceled = false;
         isFailed = false;
-        //TODO handle.resume();
+        start(context);
+    }
+
+    public void start(Context ctx){
+        if(!isFailed&&!isCanceled&&!isFinished){
+            return;
+        }
+        current = 0;
+        total = 0;
+        App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).download(this);
     }
 
     public long getTotal() {

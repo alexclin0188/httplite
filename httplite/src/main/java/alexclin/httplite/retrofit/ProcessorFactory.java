@@ -148,7 +148,7 @@ public final class ProcessorFactory {
                     }
                     String headerName = header.substring(0, colon);
                     String headerValue = header.substring(colon + 1).trim();
-                    request.addHeader(headerName, headerValue);
+                    request.header(headerName, headerValue);
                 }
             }
         }

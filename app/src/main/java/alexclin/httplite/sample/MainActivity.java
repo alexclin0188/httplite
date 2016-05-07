@@ -53,12 +53,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         list.add(new LeftMenuAdapter.MenuItem("Retrofit", RetrofitFrag.class));
         leftMenuAdapter = new LeftMenuAdapter(list,this);
         mRecyclerView.setAdapter(leftMenuAdapter);
-        onItemClick(leftMenuAdapter.getItem(4));
+        onItemClick(leftMenuAdapter.getItem(2));
         EventBus.getDefault().register(this);
 
-        TestRetrofit.testCustom(App.httpLite(this));
-        TestRetrofit.testFilter(App.httpLite(this));
-        TestRetrofit.testSampleApi(App.httpLite(this));
+//        TestRetrofit.testCustom(App.httpLite(this));
+//        TestRetrofit.testFilter(App.httpLite(this));
+//        TestRetrofit.testSampleApi(App.httpLite(this));
     }
 
     @Override

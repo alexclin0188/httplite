@@ -101,13 +101,6 @@ public final class Request implements Cloneable{
     }
 
     public Request header(String name, String value) {
-        ArrayList<String> list = new ArrayList<>();
-        list.add(value);
-        getHeaders().put(name, list);
-        return this;
-    }
-
-    public Request addHeader(String name, String value) {
         List<String> values = getHeaders().get(name);
         if(values==null){
             values = new ArrayList<>();

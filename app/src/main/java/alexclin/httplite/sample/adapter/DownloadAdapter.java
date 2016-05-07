@@ -14,15 +14,15 @@ import alexclin.httplite.sample.manager.DownloadManager;
 import alexclin.httplite.sample.manager.DownloadTask;
 
 /**
- * DownloadAdpater
+ * DownloadAdapter
  *
  * @author alexclin 16/1/10 16:22
  */
-public class DownloadAdpater extends RecyclerView.Adapter<DownloadAdpater.DownloadViewHolder> implements DownloadManager.DownloadListener {
+public class DownloadAdapter extends RecyclerView.Adapter<DownloadAdapter.DownloadViewHolder> implements DownloadManager.DownloadListener {
 
     private List<DownloadTask> mList;
 
-    public DownloadAdpater(List<DownloadTask> mList) {
+    public DownloadAdapter(List<DownloadTask> mList) {
         this.mList = mList;
     }
 

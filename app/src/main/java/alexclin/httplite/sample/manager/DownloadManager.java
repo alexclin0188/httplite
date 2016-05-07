@@ -2,18 +2,11 @@ package alexclin.httplite.sample.manager;
 
 import android.content.Context;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import alexclin.httplite.HttpLite;
-import alexclin.httplite.Request;
-import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.sample.App;
-import alexclin.httplite.sample.adapter.DownloadAdpater;
+import alexclin.httplite.sample.adapter.DownloadAdapter;
 
 /**
  * DownloadManager
@@ -26,7 +19,7 @@ public class DownloadManager {
 
     private static DownloadListener mDownloadListener;
 
-    private static DownloadAdpater mDownloadAdapter;
+    private static DownloadAdapter mDownloadAdapter;
 
     public static void setDownloadListener(DownloadListener listener){
         DownloadManager.mDownloadListener = listener;
@@ -35,44 +28,24 @@ public class DownloadManager {
     public static void download(Context ctx,String url,String dir,String name,String hash){
         init();
         if(!mTaskMap.containsKey(url)){
-            DownloadTask task = new DownloadTask(name,dir,hash);
-            App.httpLite(ctx).url(url).onProgress(task).intoFile(dir,name,true,true).download(task);
-            //TODO task.setHandle();
+            DownloadTask task = new DownloadTask(url,name,dir,hash);
+            task.start(ctx);
             mTaskMap.put(url, task);
             mTaskList.add(task);
             if(mDownloadListener!=null){
                 mDownloadListener.onTaskChanged(mTaskList);
             }
         }
-        HttpLite mHttpLite = App.httpLite(ctx);
-        mHttpLite.url(url).intoFile(dir,name,true,true)
-                .onProgress(new ProgressListener() {
-                    @Override
-                    public void onProgressUpdate(boolean out, long current, long total) {
-                        //TODO
-                    }
-                })
-                .download(new Callback<File>() {
-                    @Override
-                    public void onSuccess(Request req, Map<String, List<String>> headers, File result) {
-                        //TODO
-                    }
-
-                    @Override
-                    public void onFailed(Request req, Exception e) {
-                        //TODO
-                    }
-                });
     }
 
     private static void init(){
         if(mDownloadAdapter == null){
-            mDownloadAdapter = new DownloadAdpater(mTaskList);
+            mDownloadAdapter = new DownloadAdapter(mTaskList);
             mDownloadListener = mDownloadAdapter;
         }
     }
 
-    public static DownloadAdpater getDownloadAdapter(){
+    public static DownloadAdapter getDownloadAdapter(){
         init();
         return mDownloadAdapter;
     }
