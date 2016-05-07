@@ -103,11 +103,13 @@ public class TestRetrofit {
             @Override
             public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
                 //TODO
+                LogUtil.e("Result:"+result);
             }
 
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
+                LogUtil.e("onFailed",e);
             }
         });
         //调用异步方法
@@ -118,8 +120,10 @@ public class TestRetrofit {
                 try {
                     ZhihuData data = api.syncZhihu();
                     //TODO
+                    LogUtil.e("Result:"+data);
                 } catch (Exception e) {
                     //TODO
+                    LogUtil.e("onFailed",e);
                 }
             }
         }.start();
@@ -130,11 +134,13 @@ public class TestRetrofit {
             @Override
             public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
                 //TODO
+                LogUtil.e("Result:"+result);
             }
 
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
+                LogUtil.e("onFailed",e);
             }
         });
         //或者同步调用Call
@@ -145,8 +151,10 @@ public class TestRetrofit {
                 try {
                     ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
                     //TODO
+                    LogUtil.e("Result:"+data);
                 } catch (Exception e) {
                     //TODO
+                    LogUtil.e("onFailed",e);
                 }
             }
         }.start();
@@ -168,22 +176,26 @@ public class TestRetrofit {
             @Override
             public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
                 //TODO
+                LogUtil.e("Result:"+result);
             }
 
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
+                LogUtil.e("onFailed",e);
             }
         });
-        api.testPost("test1", "test2", new Callback<RequestInfo>() {
+        api.testPost("test1", "test2", new Callback<Result<RequestInfo>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, RequestInfo result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers, Result<RequestInfo> result) {
                 //TODO
+                LogUtil.e("Result:"+result);
             }
 
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
+                LogUtil.e("onFailed",e);
             }
         });
     }
@@ -192,14 +204,16 @@ public class TestRetrofit {
         RequestListener listener = new RequestListener() {
             @Override
             public void onRequest(HttpLite lite, Request request, Type resultType) {
-                LogUtil.e("RequestUrl:"+request.rawUrl());
+                LogUtil.e("RequestUrl:"+request);
                 //添加通用参数
                 request.param("commonParam","1234");
+                LogUtil.e("onRequest:"+request);
             }
         };
         MethodFilter filter = new MethodFilter() {
             @Override
             public Object onMethod(HttpLite lite, final MethodInvoker invoker, final Object[] args) throws Throwable {
+                LogUtil.e("methodFilter:"+invoker);
 //                String publicKey = ......
 //                if(TextUtils.isEmpty(publicKey)){
 //                    new Thread(){
@@ -216,5 +230,17 @@ public class TestRetrofit {
             }
         };
         SampleApi api = mHttplite.retrofit(SampleApi.class,listener,filter);
+
+        api.login("user", "pass", "test", new Callback<Result<UserInfo>>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
+                LogUtil.e("Result:"+result);
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                LogUtil.e("onFailed",e);
+            }
+        });
     }
 }

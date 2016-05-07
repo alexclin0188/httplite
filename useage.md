@@ -302,6 +302,58 @@ observable.subscribeOn(Schedulers.io())
 
 只需定义自己的注解，在HttpLite的Retrofit实例中添加对应注解的处理器即可
 
+定义注解和注解处理器,此处只列出GsonFieldProcesscor代码，详细参考Demo
+
+```
+public class GsonFieldProcesscor implements ParamMiscProcessor {
+    public static final String BODY_TYPE = "gson_json_body";
+
+    @Override
+    public void process(Request request, Annotation[][] annotations, List<Pair<Integer, Integer>> list, Object... args) {
+        //处理所有带有Gson注解的参数，list中存储的是所有Gson注解的位置
+        JsonObject object = new JsonObject();
+        for(Pair<Integer,Integer> pair:list){
+            int argPos = pair.first;
+            int annotationPos = pair.second;
+            if(args[argPos]==null) continue;
+            GsonField annotation = (GsonField) annotations[argPos][annotationPos];
+            String key = annotation.value();
+            if(args[argPos] instanceof String){
+                object.addProperty(key,(String)args[argPos]);
+            }else if(args[argPos] instanceof JsonElement){
+                object.add(key,(JsonElement)args[argPos]);
+            }else if(args[argPos] instanceof Boolean){
+                object.addProperty(key,(Boolean)args[argPos]);
+            }else if(args[argPos] instanceof Number){
+                object.addProperty(key,(Number)args[argPos]);
+            }
+        }
+        request.body(MediaType.APPLICATION_JSON,object.toString());
+    }
+
+    @Override
+    public boolean support(Annotation annotation) {
+        return annotation instanceof GsonField;
+    }
+
+    @Override
+    public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {
+        //在此函数中检查参数类型是否定义正确
+        if(!gsonSupportType(parameterType)){
+            throw Util.methodError(method,"Annotation @GsonField only support parameter type String/JsonElement/Boolean/Number/int/long/double/short");
+        }if(TextUtils.isEmpty(((GsonField)annotation).value())){
+            throw Util.methodError(method,"The annotation {@GsonField(value) value} must not be null");
+        }
+    }
+
+    private boolean gsonSupportType(Type type){
+        return type==String.class || Util.isSubType(type,JsonElement.class) || type == int.class || type == long.class || type == double.class
+                || type == short.class || Util.isSubType(type,Number.class) || type == boolean.class || type == Boolean.class;
+    }
+}
+```
+
+
 ```
 @BaseURL("http://192.168.99.238:10080/")
 public interface CustomApi {
@@ -317,7 +369,7 @@ public interface CustomApi {
     @POST("/test")
     void testPost(@GsonField("param1") String param1,
                   @GsonField("param1")String param2,
-                  Callback<RequestInfo> callback);
+                  Callback<Result<RequestInfo>> callback);
 }
 ```
 
@@ -348,17 +400,19 @@ Retrofit.basicAnnotationRule().registerBodyAnnotation(GsonField.class,
                 //TODO
             }
         });
-        api.testPost("test1", "test2", new Callback<RequestInfo>() {
-            @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, RequestInfo result) {
-                //TODO
-            }
+        api.testPost("test1", "test2", new Callback<Result<RequestInfo>>() {
+                    @Override
+                    public void onSuccess(Request req, Map<String, List<String>> headers, Result<RequestInfo> result) {
+                        //TODO
+                        LogUtil.e("Result:"+result);
+                    }
 
-            @Override
-            public void onFailed(Request req, Exception e) {
-                //TODO
-            }
-        });
+                    @Override
+                    public void onFailed(Request req, Exception e) {
+                        //TODO
+                        LogUtil.e("onFailed",e);
+                    }
+                });
     }
 ```
 

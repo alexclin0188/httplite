@@ -31,7 +31,8 @@ public class CookieJarImpl implements CookieJar {
     @Override
     public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
         try {
-            cookieHandler.put(url.uri(),cookiesToMap(cookies));
+            Map<String, List<String>> map = cookiesToMap(cookies);
+            if(!map.isEmpty())cookieHandler.put(url.uri(),map);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -44,32 +45,32 @@ public class CookieJarImpl implements CookieJar {
             return mapToCookies(map);
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return new ArrayList<>();
         }
     }
 
     private List<Cookie> mapToCookies(Map<String, List<String>> map) {
-        if(map==null||map.isEmpty()) return null;
         List<Cookie> cookieList = new ArrayList<>();
+        if(map==null||map.isEmpty()) return cookieList;
         for(List<String> list:map.values()){
             if(list.size()>0){
                 Cookie cookie = fromJson(list.get(0));
                 if(cookie!=null) cookieList.add(cookie);
             }
         }
-        return cookieList.isEmpty()?null:cookieList;
+        return cookieList;
     }
 
     private Map<String, List<String>> cookiesToMap(List<Cookie> cookies) {
-        if(cookies==null||cookies.isEmpty()) return null;
         Map<String, List<String>> map = new IdentityHashMap<>();
+        if(cookies==null||cookies.isEmpty()) return map;
         for(Cookie cookie:cookies){
             String json = toJson(cookie);
             if(json!=null){
                 map.put(cookie.name(), Collections.singletonList(json));
             }
         }
-        return map.isEmpty()?null:map;
+        return map;
     }
 
     private Cookie fromJson(String json){

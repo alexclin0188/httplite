@@ -39,7 +39,7 @@ public class SampleServer extends Dispatcher {
 
     public void run() throws IOException {
         MockWebServer server = new MockWebServer();
-//        server.useHttps(sslContext.getSocketFactory(), false);
+        server.useHttps(sslContext.getSocketFactory(), false);
         server.setDispatcher(this);
         InetAddress address = HttpUtil.getHostAddress();
         server.start(address,port);

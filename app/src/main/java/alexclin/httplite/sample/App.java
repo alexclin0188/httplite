@@ -3,14 +3,20 @@ package alexclin.httplite.sample;
 import android.app.Application;
 import android.content.Context;
 
-import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.SocketFactory;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
-import alexclin.httplite.mock.Mock;
-import alexclin.httplite.listener.MockHandler;
+import alexclin.httplite.Response;
+import alexclin.httplite.cookie.PersistentCookieStore;
+import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.ResponseListener;
+import alexclin.httplite.okhttp2.Ok2Lite;
+import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.json.GsonParser;
 import alexclin.httplite.url.URLite;
@@ -38,8 +44,11 @@ public class App extends Application {
         super.onCreate();
         LogUtil.setDebug(true);
 //        HttpLiteBuilder builder = Ok2Lite.create();
-//        HttpLiteBuilder builder = Ok3Lite.create();
-        HttpLiteBuilder builder = URLite.create();
+        HttpLiteBuilder builder = Ok3Lite.create();
+
+        TrustAllManager manager = new TrustAllManager();
+
+//        HttpLiteBuilder builder = URLite.create();
         builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
@@ -47,33 +56,49 @@ public class App extends Application {
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
                 .addResponseParser(new GsonParser())
-                .baseUrl("http://192.168.99.238:10080/")
+                .baseUrl("https://192.168.99.238:10080/")
 //                .setProxy(...)
 //                .setProxySelector(...)
-//                .setSocketFactory(...)
-//                .setSslSocketFactory(...)
-//                .setHostnameVerifier(..)
-//                .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
+                .setSocketFactory(SocketFactory.getDefault())
+                .setSslSocketFactory(manager.getSocketFactory())
+                .setHostnameVerifier(manager)
+                .useCookie(PersistentCookieStore.getInstance(this))  //设置CookieStore,设置则启用Cookie,不设置则不启用
                 .addCallAdapter(new RxCallAdapter());//添加Rx支持
-//        httpLite = builder.build();
-        httpLite = builder.mock(new MockHandler() {
-            @Override
-            public <T> void mock(Request request, Mock<T> mock) throws Exception {
-                  //模拟完整的http返回结果输入流
-//                mock.mock(int code,String msg,Map<String, List<String>> headers, final InputStream stream,MediaType mediaType);
-                  //直接模拟结果
-//                mock(T result, Map<String, List<String>> headers)；
-                  //模拟Json格式的结果
-//                mock.mockJson(....);
-                  //以文件内容作为Http返回结果输入流
-//                mock.mock(new File("...."))；
-            }
 
+        builder.requestListener(new RequestListener() {
             @Override
-            public boolean needMock(Request request) {
-                //TODO 判断该请求是否需要Mock
-                return true;
+            public void onRequest(HttpLite lite, Request request, Type resultType) {
+                request.header("handle", "misc");
+                LogUtil.e("Request:"+request);
             }
         });
+
+        builder.responseListener(new ResponseListener() {
+            @Override
+            public void onResponse(HttpLite lite, Request request, Response response) {
+
+            }
+        });
+
+        httpLite = builder.build();
+//        httpLite = builder.mock(new MockHandler() {
+//            @Override
+//            public <T> void mock(Request request, Mock<T> mock) throws Exception {
+//                  //模拟完整的http返回结果输入流
+////                mock.mock(int code,String msg,Map<String, List<String>> headers, final InputStream stream,MediaType mediaType);
+//                  //直接模拟结果
+////                mock(T result, Map<String, List<String>> headers)；
+//                  //模拟Json格式的结果
+////                mock.mockJson(....);
+//                  //以文件内容作为Http返回结果输入流
+////                mock.mock(new File("...."))；
+//            }
+//
+//            @Override
+//            public boolean needMock(Request request) {
+//                //TODO 判断该请求是否需要Mock
+//                return true;
+//            }
+//        });
     }
 }

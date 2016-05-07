@@ -24,7 +24,7 @@ android {
 }
 
 dependencies {
-    provided project(':thirdparty')
+    provided 'com.squareup.okhttp3:okhttp:3.2.0'
     provided project(':httplite')
 //    compile 'alexclin.httplite:httplite:1.1.0'
 }

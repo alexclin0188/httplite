@@ -15,7 +15,7 @@ import alexclin.httplite.listener.Callback;
  *
  * @author alexclin  16/5/6 19:19
  */
-@BaseURL("http://192.168.99.238:10080/")
+@BaseURL("https://192.168.99.238:10080/")
 public interface CustomApi {
     @GET("/login")
     void login(
@@ -28,6 +28,6 @@ public interface CustomApi {
 
     @POST("/test")
     void testPost(@GsonField("param1") String param1,
-                  @GsonField("param1")String param2,
-                  Callback<RequestInfo> callback);
+                  @GsonField("param2")String param2,
+                  Callback<Result<RequestInfo>> callback);
 }

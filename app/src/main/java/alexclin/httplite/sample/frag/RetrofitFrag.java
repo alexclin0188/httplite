@@ -222,7 +222,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .setCache(getActivity().getCacheDir(), 10 * 1024 * 1024)
 //                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
-                .requestFilter(new RequestListener() {
+                .requestListener(new RequestListener() {
                     @Override
                     public void onRequest(HttpLite lite, Request request, Type type) {
                         request.header("handle", "misc");

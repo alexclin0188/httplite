@@ -165,12 +165,12 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder requestFilter(RequestListener requestFilter){
+    public HttpLiteBuilder requestListener(RequestListener requestFilter){
         this.mRequestFilter = requestFilter;
         return this;
     }
 
-    public HttpLiteBuilder responseFilter(ResponseListener responseFilter){
+    public HttpLiteBuilder responseListener(ResponseListener responseFilter){
         this.mResponseFilter = responseFilter;
         return this;
     }

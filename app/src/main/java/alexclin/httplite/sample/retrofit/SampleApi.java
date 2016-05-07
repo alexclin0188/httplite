@@ -17,7 +17,6 @@ import alexclin.httplite.util.Clazz;
  *
  * @author alexclin  16/5/5 22:41
  */
-@BaseURL("/sample")
 public interface SampleApi {
     //异步请求方法
     @POST("/login")

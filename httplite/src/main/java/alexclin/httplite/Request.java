@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -359,8 +361,17 @@ public final class Request implements Cloneable{
         if(url==null){
             throw new NullPointerException("Url is null for this Request");
         }
-        if(!TextUtils.isEmpty(baseUrl)&&Util.isHttpPrefix(baseUrl)&&!Util.isHttpPrefix(url)){
-            url = Util.appendString(baseUrl, url);
+        if(!Util.isHttpPrefix(url)&&!TextUtils.isEmpty(lite.getBaseUrl())){
+            if(!TextUtils.isEmpty(baseUrl)){
+                if(Util.isHttpPrefix(baseUrl)){
+                    url = Util.appendString(baseUrl,url);
+                }else{
+                    baseUrl = Util.appendString(lite.getBaseUrl(),baseUrl);
+                    url = Util.appendString(baseUrl,url);
+                }
+            }else{
+                url = Util.appendString(lite.getBaseUrl(), url);
+            }
         }
         url = processPathHolders(url, pathHolders);
         StringBuilder sb = new StringBuilder(url);
@@ -419,11 +430,31 @@ public final class Request implements Cloneable{
                 break;
             }
         }
-        if(contentType!=null) headers.remove(contentType);
+        if(contentType!=null){
+            headers.remove(contentType);
+            final MediaType type = lite.parse(contentType);
+            final RequestBody tmp = body;
+            body = new RequestBody() {
+                @Override
+                public MediaType contentType() {
+                    return type;
+                }
+
+                @Override
+                public long contentLength() throws IOException {
+                    return tmp.contentLength();
+                }
+
+                @Override
+                public void writeTo(OutputStream sink) throws IOException {
+                    tmp.writeTo(sink);
+                }
+            };
+        }
     }
 
     public String getUrl() {
-        return buildUrlAndParams(TextUtils.isEmpty(baseUrl)?lite.getBaseUrl():baseUrl,url);
+        return buildUrlAndParams(baseUrl,url);
     }
 
     public String rawUrl() {
@@ -564,6 +595,27 @@ public final class Request implements Cloneable{
                 }
             });
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "baseUrl='" + baseUrl + '\'' +
+                ", url='" + url + '\'' +
+                ", method=" + method +
+                ", progressListener=" + progressListener +
+                ", retryListener=" + retryListener +
+                ", headers=" + headers +
+                ", params=" + params +
+                ", body=" + body +
+                ", tag=" + tag +
+                ", cacheExpiredTime=" + cacheExpiredTime +
+                ", formBuilder=" + formBuilder +
+                ", multipartBuilder=" + multipartBuilder +
+                ", pathHolders=" + pathHolders +
+                ", downloadParams=" + downloadParams +
+                ", mark=" + mark +
+                '}';
     }
 }
 

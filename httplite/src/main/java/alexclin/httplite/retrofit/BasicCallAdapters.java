@@ -26,7 +26,7 @@ class BasicCallAdapters {
     private static class SyncCallAdapter implements CallAdapter {
         @Override
         public Object adapt(Call call, final Type returnType, Object... args) throws Exception{
-            Clazz clazz = new Clazz() {
+            Clazz clazz = new Clazz<Object>() {
                 @Override
                 public Type type() {
                     return returnType;
