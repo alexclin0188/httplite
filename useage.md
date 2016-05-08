@@ -2,8 +2,6 @@
 
 Http请求是做Android应用开发工作几乎必须要用到的东西。做Android开发这几年，从最开始仿照网上代码自己使用apache的DefaultHttpClient封装网络请求工具类，到后面开始使用GitHub上面的一些http框架，Afinal,xUtils到Volley,AsyncHttpClient等，网上这些http框架大多都还比较易用，但是做实际业务中还是感觉到业务和界面代码与Http请求的代码还是耦合性过高，特别是在服务器接口比较多的时候。所以自己在以前的项目中也一直在尝试做一些封装解耦，但是一直感觉达不到自己想要的效果，直到看到Retrofit这个类库。
 
-在我的上一篇文章中，简单介绍了一下Retrofit的实现原理。
-
 在断断续续看了几个月的OkHttpClient和Retrofit源码，我终于决定尝试着封装一个自己的框架：[httplite](https://github.com/alexclin0188/httplite)
 
 # 类库主要特性介绍
