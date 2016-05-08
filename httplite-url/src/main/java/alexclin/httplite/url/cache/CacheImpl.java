@@ -5,15 +5,14 @@ import java.io.IOException;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.internal.ResponseImpl;
+import alexclin.httplite.impl.ResponseImpl;
 import alexclin.httplite.url.CacheDispatcher;
-import alexclin.httplite.url.URLCache;
 import alexclin.httplite.util.LogUtil;
 
 /**
  * URLCacheImpl
  */
-public class CacheImpl implements URLCache{
+public class CacheImpl{
 
     private static final int MAX_CONTENT_LENGTH = 5 * 1024 * 1024;
     private static final int APP_VERSION = 1;
@@ -21,24 +20,25 @@ public class CacheImpl implements URLCache{
 
     private DiskLruCache cache;
     private ByteArrayPool pool;
+    private CachePolicy cachePolicy;
 
-    public CacheImpl(File directory, long maxSize, ByteArrayPool pool) throws IOException{
+    public CacheImpl(File directory, long maxSize, ByteArrayPool pool,CachePolicy cachePolicy) throws IOException{
         cache = DiskLruCache.open(directory,APP_VERSION,2,maxSize,2048);
         this.pool = pool;
+        this.cachePolicy = cachePolicy;
     }
 
-    public CacheImpl(File directory, long maxSize) throws IOException{
-        this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE));
+    public CacheImpl(File directory, long maxSize,CachePolicy cachePolicy) throws IOException{
+        this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE),cachePolicy);
     }
 
-    @Override
     public Response get(Request request,boolean force) throws IOException {
-        String key = CacheDispatcher.getCacheKey(request);
+        String key = cachePolicy.createCacheKey(request);
         DiskLruCache.Snapshot snapshot = cache.get(key);
         if(snapshot==null){
             return null;
         }
-        CacheEntry entry = CacheEntryParser.newEntry(snapshot, pool, request);
+        CacheEntry entry = CacheParser.newEntry(snapshot, pool, request);
         if (force||request.getCacheExpiredTime() == Request.FORCE_CACHE) {
             return entry.getResponse();
         }
@@ -52,26 +52,24 @@ public class CacheImpl implements URLCache{
         return entry.getResponse();
     }
 
-    @Override
     public boolean remove(Request request) throws IOException {
-        String key = CacheDispatcher.getCacheKey(request);
+        String key = cachePolicy.createCacheKey(request);
         cache.remove(key);
         return true;
     }
 
-    @Override
     public Response put(Response response) throws IOException {
         if(response.body().contentLength()>MAX_CONTENT_LENGTH||response.body().contentLength()>cache.getMaxSize()/3){
             return response;
         }
         byte[] data = IOUtil.readAllBytes(response.body().stream());
-        Response returnResponse = new ResponseImpl(response,new CacheEntryParser.PoolingStream(data,pool),data.length);
+        Response returnResponse = new ResponseImpl(response,new CacheParser.PoolingStream(data,pool),data.length);
 
-        CacheEntry entry = CacheEntryParser.parseCacheEntry(response,new CacheEntryParser.PoolingStream(data,pool),data.length);
+        CacheEntry entry = CacheParser.parseCacheEntry(response,new CacheParser.PoolingStream(data,pool),data.length);
         if(entry==null){
             return returnResponse;
         }
-        String cacheKey = CacheDispatcher.getCacheKey(response.request());
+        String cacheKey = cachePolicy.createCacheKey(response.request());
         DiskLruCache.Snapshot snapshot = cache.get(cacheKey);
         DiskLruCache.Editor editor;
         if (snapshot == null){
@@ -84,7 +82,7 @@ public class CacheImpl implements URLCache{
             return returnResponse;
         }
         try {
-            CacheEntryParser.writeEntryTo(entry, editor);
+            CacheParser.writeEntryTo(entry, editor);
             editor.commit();
         } catch (Exception e){
             abortQuietly(editor);
@@ -96,11 +94,11 @@ public class CacheImpl implements URLCache{
     public void addCacheHeaders(Request request){
         CacheEntry entry = null;
         try {
-            DiskLruCache.Snapshot snapshot = cache.get(CacheDispatcher.getCacheKey(request));
+            DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request));
             if(snapshot==null){
                 return;
             }
-            entry = CacheEntryParser.newEntry(snapshot);
+            entry = CacheParser.newEntry(snapshot);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,10 +112,18 @@ public class CacheImpl implements URLCache{
         }
 
         if (entry.getLastModified() > 0) {
-            String lastModified = CacheEntryParser.formatDateAsEpoch(entry.getLastModified());
+            String lastModified = CacheParser.formatDateAsEpoch(entry.getLastModified());
             if(lastModified!=null)
                 request.header("If-Modified-Since", lastModified);
         }
+    }
+
+    public String createCacheKey(Request request){
+        return cachePolicy.createCacheKey(request);
+    }
+
+    public boolean canCache(Request request){
+        return cachePolicy.canCache(request);
     }
 
     private void abortQuietly(DiskLruCache.Editor editor) {

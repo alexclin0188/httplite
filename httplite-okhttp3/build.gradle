@@ -24,87 +24,9 @@ android {
 }
 
 dependencies {
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-//    compile project(':httplite')
-    compile 'alexclin.httplite:httplite:1.0.2'
+    provided 'com.squareup.okhttp3:okhttp:3.2.0'
+    provided project(':httplite')
+//    compile 'alexclin.httplite:httplite:1.1.0'
 }
 
-def mavenDesc = 'A android http library'
-def siteUrl = 'https://github.com/alexclin0188/httplite'
-def gitUrl = "${siteUrl}.git"
-def issueUrl = "${siteUrl}/issues"
-
-group = "alexclin.httplite"
-def libname = "httplite-okhttp3"
-version "1.0.2"
-
-install {
-    repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
-        pom {
-            project {
-                packaging 'jar'
-                // Add your description here
-                name libname    //项目描述
-                url siteUrl
-                // Set your license
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        id 'alexclin0118'        //填写的一些基本信息
-                        name 'Alexclin'
-                        email 'alexclin0118@gmail.com'
-                    }
-                }
-                scm {
-                    connection gitUrl
-                    developerConnection issueUrl
-                    url siteUrl
-                }
-            }
-        }
-    }
-}
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-artifacts {
-//    archives javadocJar
-    archives sourcesJar
-}
-
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-bintray {
-    user = properties.getProperty("bintrayUser")
-    key = properties.getProperty("bintrayApiKey")
-    configurations = ['archives']
-    pkg {
-        repo = "maven"
-        name = libname   //发布到JCenter上的项目名字
-        licenses = ["Apache-2.0"]
-        repo = "maven"
-        desc = mavenDesc
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        issueTrackerUrl = issueUrl
-        labels = ['android', 'http', 'library']
-        publish = true
-        publicDownloadNumbers = true
-        version = version
-    }
-}
+apply from: "${project.rootDir}/bintray.gradle"

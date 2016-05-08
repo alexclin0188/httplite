@@ -1,9 +1,10 @@
 package alexclin.httplite.sample.frag;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.R;
+import alexclin.httplite.sample.RecycleViewDivider;
 import alexclin.httplite.sample.adapter.FileAdapter;
 import alexclin.httplite.sample.event.ChangeFragEvent;
 import alexclin.httplite.sample.manager.DownloadManager;
@@ -53,7 +55,7 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
         mPathTv = (TextView) view.findViewById(R.id.tv_request_path);
         mAdapter = new FileAdapter(null,this);
         mRecyclerView.setAdapter(mAdapter);
-
+        mRecyclerView.addItemDecoration(new RecycleViewDivider(getContext(), LinearLayoutManager.HORIZONTAL));
         mBackUpBtn = (Button) view.findViewById(R.id.btn_back_up);
         mBackUpBtn.setOnClickListener(this);
         return view;
@@ -64,9 +66,21 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
         super.onResume();
         mHttpLite = App.httpLite(getActivity());
         mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
-                .header("double_header","header1").addHeader("double_header","head2")
+                .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().execute(this);
+                .get().async(new Callback<Result<List<FileInfo>>>() {
+            @Override
+            public void onSuccess(Request req, Map<String, List<String>> headers,Result<List<FileInfo>> result) {
+                //TODO
+                GetFrag.this.onSuccess(req,headers,result);
+            }
+
+            @Override
+            public void onFailed(Request req, Exception e) {
+                //TODO
+                GetFrag.this.onFailed(req,e);
+            }
+        });
     }
 
     @Override
@@ -75,21 +89,21 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
             url = info.filePath;
             requestPath(url);
         }else{
-            DownloadManager.download(getActivity(),info.filePath,
-                    getActivity().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(),info.fileName,info.hash);
-            EventBus.getDefault().post(new ChangeFragEvent(3));
+//            DownloadManager.download(getActivity(),info.filePath,
+//                    getActivity().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(),info.fileName,info.hash);
+//            EventBus.getDefault().post(new ChangeFragEvent(3));
         }
     }
 
     private void requestPath(String url) {
         mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
-                .header("double_header","header1").addHeader("double_header","head2")
+                .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().execute(this);
+                .get().async(this);
     }
 
     @Override
-    public void onSuccess(Result<List<FileInfo>> result,Map<String,List<String>> headers) {
+    public void onSuccess(Request req,Map<String,List<String>> headers,Result<List<FileInfo>> result) {
         LogUtil.e("Succuess:" + result);
         url = result.requestPath;
         mBackUpBtn.setVisibility((url.equals("")||url.equals("/"))?View.GONE:View.VISIBLE);

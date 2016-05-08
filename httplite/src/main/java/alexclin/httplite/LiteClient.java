@@ -6,6 +6,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.util.ClientSettings;
+
 
 /**
  * LiteClient
@@ -14,9 +16,11 @@ import java.util.Map;
  */
 public interface LiteClient {
 
-    Handle execute(Request request, ResultCallback callback,Runnable preWork);
+//    Handle execute(Request request, ResponseHandler callback,Runnable preWork);
+//
+//    Response executeSync(Request request) throws Exception;
 
-    Response executeSync(Request request) throws Exception;
+    Executable executable(Request request);
 
     void cancel(Object tag);
 

@@ -4,30 +4,45 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
     android:padding="5dip">
-    <TextView
-        android:id="@+id/tv_file_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:textColor="@color/black"
-        android:textSize="18sp"/>
 
-    <TextView
-        android:id="@+id/tv_file_path"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:textColor="@color/black"
-        android:textSize="14sp"/>
+        android:orientation="horizontal"
+        android:gravity="center">
+        <LinearLayout
+            android:layout_width="0dip"
+            android:layout_weight="1.0"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/tv_file_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:text="文件名"
+                android:textColor="@color/black"
+                android:textSize="18sp"/>
 
-    <TextView
-        android:id="@+id/tv_state_info"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:textSize="14sp"/>
+            <TextView
+                android:id="@+id/tv_file_path"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="middle"
+                android:text="文件路径"
+                android:textColor="@color/black"
+                android:textSize="16sp"/>
+        </LinearLayout>
+        <Button
+            android:id="@+id/tv_state_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="状态信息"
+            android:textColor="@color/black"
+            android:textSize="14sp"/>
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progress_download"

@@ -263,7 +263,7 @@ public final class Util {
                 + "\n    for method ->"
                 + method.getDeclaringClass().getSimpleName()
                 + "."
-                + method.getName()+"()");
+                + method.getName()+"("+method.getGenericParameterTypes().length+" param)");
         e.initCause(cause);
         return e;
     }

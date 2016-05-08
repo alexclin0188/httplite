@@ -5,17 +5,23 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
+import alexclin.httplite.impl.ProgressRequestBody;
+import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
+import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -23,7 +29,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/31 10:21
  */
-public final class Request {
+public final class Request implements Cloneable{
     public static final int NO_CACHE = 0;
     public static final int FORCE_CACHE = -1;
     public static final int UNSPECIFIED_CACHE = -100;
@@ -39,19 +45,18 @@ public final class Request {
         }
     };
 
-    String baseUrl;
-    String url;
-    Method method;
+    private String baseUrl;
+    private String url;
+    HttpMethod method;
+    ProgressListener progressListener;
+    RetryListener retryListener;
+    HttpLite lite;
     private Map<String,List<String>> headers;
     private List<Pair<String,Pair<String,Boolean>>> params;
     private RequestBody body;
+    private ProgressRequestBody progressBody;
     private Object tag;
-
-    ProgressListener progressListener;
-    RetryListener retryListener;
-
-    HttpLite lite;
-
+    private MainProgressListener progressWrapper;
     private int cacheExpiredTime = UNSPECIFIED_CACHE;
 
     private FormBuilder formBuilder;
@@ -59,11 +64,11 @@ public final class Request {
 
     private HashMap<String,Pair<String,Boolean>> pathHolders;
 
-    private DownloadCallback.DownloadParams downloadParams;
+    private DownloadHandler.DownloadParams downloadParams;
 
     private Object mark;
 
-    Request(HttpLite lite,String url) {
+    Request(HttpLite lite, String url) {
         this.lite = lite;
         this.url = url;
     }
@@ -80,13 +85,6 @@ public final class Request {
     }
 
     public Request header(String name, String value) {
-        ArrayList<String> list = new ArrayList<>();
-        list.add(value);
-        getHeaders().put(name, list);
-        return this;
-    }
-
-    public Request addHeader(String name, String value) {
         List<String> values = getHeaders().get(name);
         if(values==null){
             values = new ArrayList<>();
@@ -227,31 +225,31 @@ public final class Request {
     }
 
     public Call get() {
-        return method(Method.GET, null);
+        return method(HttpMethod.GET, null);
     }
 
     public Call head() {
-        return method(Method.HEAD, null);
+        return method(HttpMethod.HEAD, null);
     }
 
     public Call post(RequestBody body) {
-        return method(Method.POST, body);
+        return method(HttpMethod.POST, body);
     }
 
     public Call post(){
-        return method(Method.POST, null);
+        return method(HttpMethod.POST, null);
     }
 
     public Call post(String mediaType,String content){
-        return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), content));
+        return method(HttpMethod.POST, lite.createRequestBody(lite.parse(mediaType), content));
     }
 
     public Call post(String mediaType,File file){
-        return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), file));
+        return method(HttpMethod.POST, lite.createRequestBody(lite.parse(mediaType), file));
     }
 
     public Call delete(RequestBody body) {
-        return method(Method.DELETE, body);
+        return method(HttpMethod.DELETE, body);
     }
 
     public Call delete() {
@@ -259,29 +257,30 @@ public final class Request {
     }
 
     public Call put(RequestBody body) {
-        return method(Method.PUT, body);
+        return method(HttpMethod.PUT, body);
     }
 
     public Call patch(RequestBody body) {
-        return method(Method.PATCH, body);
+        return method(HttpMethod.PATCH, body);
     }
 
-    public Call method(Method method, RequestBody body) {
+    public Call method(HttpMethod method, RequestBody body) {
         preWorkForTask(body);
         boolean isBodyNull = body==null&&this.body==null;
         if (method == null) {
             throw new IllegalArgumentException("method == null");
         }
-        if (!isBodyNull && !permitsRequestBody(method)) {
+        if (!isBodyNull && !method.permitsRequestBody) {
             throw new IllegalArgumentException("method " + method + " must not have a call body.");
         }
-        if (isBodyNull && requiresRequestBody(method)) {
+        if (isBodyNull && method.requiresRequestBody) {
             throw new IllegalArgumentException("method " + method + " must have a call body.");
         }
         this.method = method;
         if(body!=null){
             this.body = body;
         }
+        checkContentType();
         return lite.makeCall(this);
     }
 
@@ -298,23 +297,6 @@ public final class Request {
     public Request onRetry(RetryListener listener){
         this.retryListener = listener;
         return this;
-    }
-
-    public static boolean permitsRequestBody(Method method) {
-        return requiresRequestBody(method)
-                || method.name().equals("OPTIONS")
-                || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
-                || method.name().equals("PROPFIND")  // (WebDAV) without body: call <allprop/>
-                || method.name().equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
-                || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
-    }
-
-    public static boolean requiresRequestBody(Method method) {
-        return method.name().equals("POST")
-                || method.name().equals("PUT")
-                || method.name().equals("PATCH")
-                || method.name().equals("PROPPATCH") // WebDAV
-                || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
     }
 
     private void initFormBuilder(){
@@ -352,12 +334,34 @@ public final class Request {
         }
     }
 
-    private String buildUrlAndParams(String baseUrl,String url) {
+    private void checkUrl(String baseUrl,String url){
         if(url==null){
             throw new NullPointerException("Url is null for this Request");
         }
-        if(!TextUtils.isEmpty(baseUrl)&&Util.isHttpPrefix(baseUrl)&&!Util.isHttpPrefix(url)){
-            url = Util.appendString(baseUrl, url);
+        if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)&&TextUtils.isEmpty(lite.getBaseUrl())){
+            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and baseUrl is empty",url));
+        }
+    }
+
+    private String buildUrlAndParams(String baseUrl,String url) {
+        checkUrl(baseUrl,url);
+        if(!Util.isHttpPrefix(url)){
+            if(!TextUtils.isEmpty(lite.getBaseUrl())){
+                if(!TextUtils.isEmpty(baseUrl)){
+                    if(Util.isHttpPrefix(baseUrl)){
+                        url = Util.appendString(baseUrl,url);
+                    }else{
+                        baseUrl = Util.appendString(lite.getBaseUrl(),baseUrl);
+                        url = Util.appendString(baseUrl,url);
+                    }
+                }else{
+                    url = Util.appendString(lite.getBaseUrl(), url);
+                }
+            }else{
+                if(!TextUtils.isEmpty(baseUrl)){
+                    url = Util.appendString(baseUrl,url);
+                }
+            }
         }
         url = processPathHolders(url, pathHolders);
         StringBuilder sb = new StringBuilder(url);
@@ -407,15 +411,47 @@ public final class Request {
         return pathHolders;
     }
 
+    private void checkContentType() {
+        if(headers==null||body==null) return;
+        String contentType = null;
+        for(String key:headers.keySet()){
+            if("Content-Type".equalsIgnoreCase(key)){
+                contentType = key;
+                break;
+            }
+        }
+        if(contentType!=null){
+            headers.remove(contentType);
+            final MediaType type = lite.parse(contentType);
+            final RequestBody tmp = body;
+            body = new RequestBody() {
+                @Override
+                public MediaType contentType() {
+                    return type;
+                }
+
+                @Override
+                public long contentLength() throws IOException {
+                    return tmp.contentLength();
+                }
+
+                @Override
+                public void writeTo(OutputStream sink) throws IOException {
+                    tmp.writeTo(sink);
+                }
+            };
+        }
+    }
+
     public String getUrl() {
-        return buildUrlAndParams(TextUtils.isEmpty(baseUrl)?lite.getBaseUrl():baseUrl,url);
+        return buildUrlAndParams(baseUrl,url);
     }
 
     public String rawUrl() {
         return url;
     }
 
-    public Method getMethod() {
+    public HttpMethod getMethod() {
         return method;
     }
 
@@ -424,7 +460,39 @@ public final class Request {
     }
 
     public RequestBody getBody() {
+        if(progressListener!=null&&body!=null){
+            if(progressBody==null||!progressBody.isWrappBody(body)){
+                progressBody = new ProgressRequestBody(body,getMainProgressListener());
+            }
+            return progressBody;
+        }
         return body;
+    }
+
+    Response handleResponse(Response response){
+        if(progressListener!=null&&getDownloadParams()==null){
+            return new ProgressResponse(response,getMainProgressListener());
+        }
+        return response;
+    }
+
+    void setUrl(String url){
+        checkUrl(baseUrl,url);
+        this.url = url;
+    }
+
+    void setBaseUrl(String baseUrl){
+        if(TextUtils.isEmpty(lite.getBaseUrl())&&!Util.isHttpPrefix(baseUrl)){
+            throw new IllegalArgumentException("Global BaseUrl is empty, you must set a baseUrl(@BaseURL) with http/https prefix for this request");
+        }
+        this.baseUrl = baseUrl;
+    }
+
+    private ProgressListener getMainProgressListener(){
+        if(progressWrapper ==null){
+            progressWrapper = new MainProgressListener(progressListener);
+        }
+        return progressWrapper;
     }
 
     public Object getTag() {
@@ -454,16 +522,16 @@ public final class Request {
     }
 
     public Request intoFile(String path,String fileName,boolean autoResume,boolean autoRename){
-        this.downloadParams = checkAndCreateDownload(path,null,autoResume,autoRename);
+        this.downloadParams = checkAndCreateDownload(path,fileName,autoResume,autoRename);
         return this;
     }
 
-    public DownloadHandle download(Callback<File> callback){
-        return get().download(callback);
+    public Handle download(Callback<File> callback){
+        return get().async(callback);
     }
 
-    private DownloadCallback.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
-        DownloadCallback.DownloadParams params = DownloadCallback.createParams(path,fileName,autoResume,autoRename);
+    private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
+        DownloadHandler.DownloadParams params = DownloadHandler.createParams(path, fileName, autoResume, autoRename,url);
         if(params==null){
             String info = String.format("call intoFile() with wrong params->path:%s,fileName:%s,resume:%b,rename:%b",path,fileName,autoResume,autoRename);
             throw new IllegalArgumentException(info);
@@ -471,12 +539,8 @@ public final class Request {
         return params;
     }
 
-    public DownloadCallback.DownloadParams getDownloadParams() {
+    public DownloadHandler.DownloadParams getDownloadParams() {
         return downloadParams;
-    }
-
-    public boolean canCache(){
-        return method==Method.GET && cacheExpiredTime!=NO_CACHE;
     }
 
     public Request mark(Object mark){
@@ -486,6 +550,73 @@ public final class Request {
 
     public Object getMark(){
         return mark;
+    }
+
+    @Override
+    public Request clone() throws CloneNotSupportedException {
+        Request request = (Request) super.clone();
+        if(this.headers!=null){
+            request.headers = new HashMap<>();
+            for(Map.Entry<String,List<String>> entry:this.headers.entrySet()){
+                request.headers.put(entry.getKey(),new ArrayList<>(entry.getValue()));
+            }
+        }
+        request.params = this.params!=null?new ArrayList<>(this.params):null;
+        request.pathHolders = this.pathHolders!=null?new HashMap<>(this.pathHolders):null;
+//        request.lite = this.lite;
+//        request.url = this.url;
+//        request.baseUrl = this.baseUrl;
+//        request.method = this.method;
+//        request.progressListener = this.progressListener;
+//        request.retryListener = this.retryListener;
+//        request.body = this.body;
+//        request.progressBody = this.progressBody;
+//        request.tag = this.tag;
+//        request.progressWrapper = this.progressWrapper;
+//        request.cacheExpiredTime = this.cacheExpiredTime;
+//        request.formBuilder = this.formBuilder;
+//        request.multipartBuilder = this.multipartBuilder;
+//        request.downloadParams = this.downloadParams;
+//        request.mark = this.mark;
+        return request;
+    }
+
+    public static class MainProgressListener implements ProgressListener{
+        private ProgressListener listener;
+
+        public MainProgressListener(ProgressListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void onProgressUpdate(final boolean out,final long current,final long total) {
+            HttpLite.postOnMain(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onProgressUpdate(out,current,total);
+                }
+            });
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                " url='" + getUrl() + '\'' +
+                ", method=" + method +
+                ", progressListener=" + progressListener +
+                ", retryListener=" + retryListener +
+                ", headers=" + headers +
+                ", params=" + params +
+                ", body=" + body +
+                ", tag=" + tag +
+                ", cacheExpiredTime=" + cacheExpiredTime +
+                ", formBuilder=" + formBuilder +
+                ", multipartBuilder=" + multipartBuilder +
+                ", pathHolders=" + pathHolders +
+                ", downloadParams=" + downloadParams +
+                ", mark=" + mark +
+                '}';
     }
 }
 

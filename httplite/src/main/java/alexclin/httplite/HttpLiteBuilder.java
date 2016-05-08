@@ -6,7 +6,9 @@ import java.net.CookiePolicy;
 import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,10 +18,13 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
-import alexclin.httplite.internal.MockCall;
-import alexclin.httplite.listener.RequestFilter;
-import alexclin.httplite.listener.ResponseFilter;
+import alexclin.httplite.listener.ResponseListener;
+import alexclin.httplite.mock.MockCall;
+import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseParser;
+import alexclin.httplite.retrofit.CallAdapter;
+import alexclin.httplite.util.ClientSettings;
+import alexclin.httplite.util.Util;
 
 /**
  * HttpLiteBuilder
@@ -29,9 +34,10 @@ import alexclin.httplite.listener.ResponseParser;
 public abstract class HttpLiteBuilder{
     private String baseUrl;
     private boolean isRelease;
-    private RequestFilter mRequestFilter;
-    private ResponseFilter mResponseFilter;
+    private RequestListener mRequestFilter;
+    private ResponseListener mResponseFilter;
     private Executor downloadExecutor;
+    private List<CallAdapter> invokers;
 
     private ClientSettings settings = new ClientSettings();
 
@@ -42,18 +48,21 @@ public abstract class HttpLiteBuilder{
     public final HttpLite build(){
         LiteClient client = initLiteClient();
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.maxRetryCount,new HttpCall.Factory(), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap);
+        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(),new HttpCall.Factory(), isRelease,
+                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
     }
 
     public final HttpLite mock(MockHandler mockHandler){
         LiteClient client = initLiteClient();
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.maxRetryCount,new MockCall.MockFactory(mockHandler), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap);
+        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(),new MockCall.MockFactory(mockHandler), isRelease,
+                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
+        if(!Util.isHttpPrefix(baseUrl)){
+            throw new IllegalArgumentException("You must set a baseUrl start with http/https prefix for global BaseUrl");
+        }
         this.baseUrl = baseUrl;
         return this;
     }
@@ -64,7 +73,7 @@ public abstract class HttpLiteBuilder{
         long millis = unit.toMillis(timeout);
         if (millis > Integer.MAX_VALUE) throw new IllegalArgumentException("Timeout too large.");
         if (millis == 0 && timeout > 0) throw new IllegalArgumentException("Timeout too small.");
-        settings.connectTimeout = (int) millis;
+        settings.setConnectTimeout((int) millis);
         return this;
     }
 
@@ -74,7 +83,7 @@ public abstract class HttpLiteBuilder{
         long millis = unit.toMillis(timeout);
         if (millis > Integer.MAX_VALUE) throw new IllegalArgumentException("Timeout too large.");
         if (millis == 0 && timeout > 0) throw new IllegalArgumentException("Timeout too small.");
-        settings.readTimeout = (int) millis;
+        settings.setReadTimeout((int) millis);
         return this;
     }
 
@@ -84,58 +93,58 @@ public abstract class HttpLiteBuilder{
         long millis = unit.toMillis(timeout);
         if (millis > Integer.MAX_VALUE) throw new IllegalArgumentException("Timeout too large.");
         if (millis == 0 && timeout > 0) throw new IllegalArgumentException("Timeout too small.");
-        settings.writeTimeout = (int) millis;
+        settings.setWriteTimeout((int) millis);
         return this;
     }
 
     public HttpLiteBuilder setProxy(Proxy proxy) {
-        settings.proxy = proxy;
+        settings.setProxy(proxy);
         return this;
     }
 
     public HttpLiteBuilder setProxySelector(ProxySelector proxySelector) {
-        settings.proxySelector = proxySelector;
+        settings.setProxySelector(proxySelector);
         return this;
     }
 
     public HttpLiteBuilder setSocketFactory(SocketFactory socketFactory) {
-        settings.socketFactory = socketFactory;
+        settings.setSocketFactory(socketFactory);
         return this;
     }
 
 
     public HttpLiteBuilder setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
-        settings.sslSocketFactory = sslSocketFactory;
+        settings.setSslSocketFactory(sslSocketFactory);
         return this;
     }
 
     public HttpLiteBuilder setHostnameVerifier(HostnameVerifier hostnameVerifier) {
-        settings.hostnameVerifier = hostnameVerifier;
+        settings.setHostnameVerifier(hostnameVerifier);
         return this;
     }
 
     public HttpLiteBuilder setFollowSslRedirects(boolean followProtocolRedirects) {
-        settings.followSslRedirects = followProtocolRedirects;
+        settings.setFollowSslRedirects(followProtocolRedirects);
         return this;
     }
 
     public HttpLiteBuilder setFollowRedirects(boolean followRedirects) {
-        settings.followRedirects = followRedirects;
+        settings.setFollowRedirects(followRedirects);
         return this;
     }
 
     public HttpLiteBuilder setMaxRetryCount(int maxRetryCount) {
-        settings.maxRetryCount = maxRetryCount<1?1:maxRetryCount;
+        settings.setMaxRetryCount(maxRetryCount<1?1:maxRetryCount);
         return this;
     }
 
     public HttpLiteBuilder useCookie(CookieStore cookieStore){
-        settings.cookieHandler = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
+        settings.setCookieHandler(new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL));
         return this;
     }
 
     public HttpLiteBuilder useCookie(CookieStore cookieStore,CookiePolicy policy){
-        settings.cookieHandler = new CookieManager(cookieStore, policy);
+        settings.setCookieHandler(new CookieManager(cookieStore, policy));
         return this;
     }
 
@@ -145,8 +154,8 @@ public abstract class HttpLiteBuilder{
     }
 
     public HttpLiteBuilder setCache(File dir,long maxCacheSize){
-        settings.cacheDir = dir;
-        settings.cacheMaxSize = maxCacheSize;
+        settings.setCacheDir(dir);
+        settings.setCacheMaxSize(maxCacheSize);
         return this;
     }
 
@@ -160,18 +169,26 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder requestFilter(RequestFilter requestFilter){
+    public HttpLiteBuilder requestListener(RequestListener requestFilter){
         this.mRequestFilter = requestFilter;
         return this;
     }
 
-    public HttpLiteBuilder responseFilter(ResponseFilter responseFilter){
+    public HttpLiteBuilder responseListener(ResponseListener responseFilter){
         this.mResponseFilter = responseFilter;
         return this;
     }
 
     public HttpLiteBuilder customDownloadExecutor(ExecutorService executor){
         this.downloadExecutor = executor;
+        return this;
+    }
+
+    public HttpLiteBuilder addCallAdapter(CallAdapter invoker){
+        if(invokers==null) invokers = new ArrayList<>();
+        if(invoker!=null&&!invokers.contains(invoker)){
+            this.invokers.add(invoker);
+        }
         return this;
     }
 }

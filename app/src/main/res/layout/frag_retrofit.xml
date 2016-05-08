@@ -43,7 +43,7 @@
         android:id="@+id/btn_retrofit6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="RetrofitTest6"
+        android:text="RetrofitTest61"
         />
 
     <Button
@@ -57,6 +57,6 @@
         android:id="@+id/btn_retrofit8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="RetrofitTest8"
+        android:text="RetrofitTest81"
         />
 </LinearLayout>

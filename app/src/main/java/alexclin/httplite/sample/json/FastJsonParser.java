@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 
 import java.lang.reflect.Type;
 
-import alexclin.httplite.StringParser;
+import alexclin.httplite.impl.StringParser;
 
 /**
  * FastJsonParser

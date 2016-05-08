@@ -5,18 +5,21 @@ import android.os.Looper;
 import android.util.Pair;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import alexclin.httplite.listener.RequestFilter;
-import alexclin.httplite.listener.ResponseFilter;
+import alexclin.httplite.impl.ObjectParser;
+import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.internal.MockCall;
+import alexclin.httplite.mock.MockCall;
+import alexclin.httplite.retrofit.CallAdapter;
+import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
+import alexclin.httplite.util.HttpMethod;
 
 /**
  * HttpLite
@@ -25,23 +28,21 @@ import alexclin.httplite.Call.CallFactory;
  */
 public class HttpLite {
     private static Handler sHandler = new Handler(Looper.getMainLooper());
-
+    private final boolean isRelease;
     private LiteClient client;
-    private HashMap<String,ResponseParser> parserMap;
     private String baseUrl;
     private int maxRetryCount;
-    private RequestFilter mRequestFilter;
-    private ResponseFilter mResponseFilter;
+    private RequestListener mRequestFilter;
+    private ResponseListener mResponseFilter;
     private Executor customDownloadExecutor;
     private CallFactory callFactory;
-
     private Retrofit retrofit;
-    private final boolean isRelease;
+    private ObjectParser mObjectParser;
 
-    HttpLite(LiteClient client, String baseUrl,int maxRetryCount,CallFactory factory,boolean release,
-             RequestFilter requestFilter,ResponseFilter responseFilter,Executor downloadExecutor,HashMap<String,ResponseParser> parserMap) {
+    HttpLite(LiteClient client, String baseUrl, int maxRetryCount, CallFactory factory, boolean release,
+             RequestListener requestFilter, ResponseListener responseFilter, Executor downloadExecutor, HashMap<String,ResponseParser> parserMap, List<CallAdapter> invokers) {
         this.client = client;
-        this.parserMap = parserMap;
+        this.mObjectParser = new ObjectParser(parserMap.values());
         this.baseUrl = baseUrl;
         this.maxRetryCount = maxRetryCount;
         this.isRelease = release;
@@ -49,15 +50,28 @@ public class HttpLite {
         this.mRequestFilter = requestFilter;
         this.mResponseFilter = responseFilter;
         this.customDownloadExecutor = downloadExecutor;
+        this.retrofit = new RetrofitImpl(invokers);
+    }
+
+    public static void postOnMain(Runnable runnable){
+        if(Thread.currentThread()==Looper.getMainLooper().getThread()){
+            runnable.run();
+        }else{
+            sHandler.post(runnable);
+        }
+    }
+
+    public static Handler mainHandler(){
+        return sHandler;
+    }
+
+    public String getBaseUrl(){
+        return baseUrl;
     }
 
     public HttpLite setBaseUrl(String baseUrl){
         this.baseUrl = baseUrl;
         return this;
-    }
-
-    public String getBaseUrl(){
-        return baseUrl;
     }
 
     public int getMaxRetryCount() {
@@ -97,16 +111,8 @@ public class HttpLite {
         }
     }
 
-    public static void runOnMainThread(Runnable runnable){
-        if(Thread.currentThread()==Looper.getMainLooper().getThread()){
-            runnable.run();
-        }else{
-            sHandler.post(runnable);
-        }
-    }
-
-    Collection<ResponseParser> getParsers(){
-        return parserMap.values();
+    ObjectParser getObjectParser(){
+        return mObjectParser;
     }
 
     public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String,List<String>>,RequestBody>> headBodyList,
@@ -141,26 +147,30 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz){
-        return retrofit(clazz, null);
+        return retrofit.create(clazz,null,null);
     }
 
-    public <T> T retrofit(Class<T> clazz,RequestFilter filter){
-        if(retrofit==null)
-            synchronized (this){
-                if(retrofit==null) retrofit = new RetrofitImpl();
-            }
-        return retrofit.create(clazz,filter);
+    public <T> T retrofit(Class<T> clazz,RequestListener filter){
+        return retrofit.create(clazz,filter,null);
+    }
+
+    public <T> T retrofit(Class<T> clazz, RequestListener filter, MethodFilter methodFilter){
+        return retrofit.create(clazz,filter,methodFilter);
+    }
+
+    public <T> T retrofit(Class<T> clazz,MethodFilter methodFilter){
+        return retrofit.create(clazz,null,methodFilter);
     }
 
     public Retrofit getRetrofit() {
         return retrofit;
     }
 
-    RequestFilter getRequestFilter() {
+    RequestListener getRequestFilter() {
         return mRequestFilter;
     }
 
-    ResponseFilter getResponseFilter() {
+    ResponseListener getResponseFilter() {
         return mResponseFilter;
     }
 
@@ -174,22 +184,26 @@ public class HttpLite {
 
     class RetrofitImpl extends Retrofit{
 
+        public RetrofitImpl(List<CallAdapter> invokers) {
+            super(invokers);
+        }
+
         @Override
         public Request makeRequest(String baseUrl) {
             Request request = new Request(HttpLite.this);
-            request.baseUrl = baseUrl;
+            request.setBaseUrl(baseUrl);
             return request;
         }
 
         @Override
-        public Request setMethod(Request request, Method method) {
+        public Request setMethod(Request request, HttpMethod method) {
             request.method = method;
             return request;
         }
 
         @Override
         public Request setUrl(Request request, String url) {
-            request.url = url;
+            request.setUrl(url);
             return request;
         }
 

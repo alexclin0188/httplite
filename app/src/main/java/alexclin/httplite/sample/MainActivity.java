@@ -3,6 +3,7 @@ package alexclin.httplite.sample;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -13,11 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import alexclin.httplite.sample.event.ChangeFragEvent;
-import alexclin.httplite.sample.frag.CustomFrag;
+import alexclin.httplite.sample.frag.RequestFrag;
 import alexclin.httplite.sample.frag.DownloadFrag;
 import alexclin.httplite.sample.frag.GetFrag;
 import alexclin.httplite.sample.frag.PostFrag;
 import alexclin.httplite.sample.frag.RetrofitFrag;
+import alexclin.httplite.sample.retrofit.TestRetrofit;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import de.greenrobot.event.EventBus;
@@ -40,20 +42,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
+        mToolbar.setSubtitle("点击左侧机器人切换");
 
         mToolbar.setNavigationIcon(R.mipmap.ic_launcher);
         mToolbar.setNavigationOnClickListener(this);
 
         List<LeftMenuAdapter.MenuItem> list = new ArrayList<>();
-        list.add(new LeftMenuAdapter.MenuItem("Get请求", GetFrag.class));
-        list.add(new LeftMenuAdapter.MenuItem("Post请求", PostFrag.class));
-        list.add(new LeftMenuAdapter.MenuItem("自定义请求", CustomFrag.class));
+        list.add(new LeftMenuAdapter.MenuItem("自定义请求", RequestFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("下载上传管理", DownloadFrag.class));
         list.add(new LeftMenuAdapter.MenuItem("Retrofit", RetrofitFrag.class));
+        list.add(new LeftMenuAdapter.MenuItem("获取文件列表", GetFrag.class));
+        list.add(new LeftMenuAdapter.MenuItem("列表选择上传", PostFrag.class));
         leftMenuAdapter = new LeftMenuAdapter(list,this);
+        mRecyclerView.addItemDecoration(new RecycleViewDivider(this,LinearLayoutManager.HORIZONTAL));
         mRecyclerView.setAdapter(leftMenuAdapter);
-        onItemClick(leftMenuAdapter.getItem(4));
         EventBus.getDefault().register(this);
+        onItemClick(list.get(0));
+//        TestRetrofit.testCustom(App.httpLite(this));
+//        TestRetrofit.testFilter(App.httpLite(this));
+//        TestRetrofit.testSampleApi(App.httpLite(this));
     }
 
     @Override
@@ -101,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
         }
-        getFragmentManager().beginTransaction().replace(R.id.content_layout,item.frag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.content_layout,item.frag).commit();
         mToolbar.setTitle(item.name);
         mDrawerLayout.closeDrawer(mRecyclerView);
     }

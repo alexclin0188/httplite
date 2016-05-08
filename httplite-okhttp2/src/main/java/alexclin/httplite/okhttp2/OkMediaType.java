@@ -33,7 +33,7 @@ public class OkMediaType implements alexclin.httplite.MediaType {
 
     @Override
     public Charset charset(Charset defaultValue) {
-        return mediaType.charset();
+        return mediaType.charset(defaultValue);
     }
 
     public MediaType raw() {

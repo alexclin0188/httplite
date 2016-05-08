@@ -7,41 +7,35 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import alexclin.httplite.Handle;
+import alexclin.httplite.Executable;
 import alexclin.httplite.Request;
 import alexclin.httplite.Response;
-import alexclin.httplite.ResultCallback;
+import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.internal.Dispatcher;
+import alexclin.httplite.Dispatcher;
 
 /**
  * URLTask
  *
  * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Dispatcher.Task<Response>>{
+public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.Task<Response>>,Executable{
 
     private URLite lite;
     private Request request;
     private int retryCount;
 
-    private ResultCallback callback;
-    private Runnable preWork;
+    private ResponseHandler callback;
 
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLite lite,Request request,ResultCallback callback,Runnable runnable) {
-        this.request = request;
+    public URLTask(URLite lite, Request request) {
         this.lite = lite;
-        this.callback = callback;
-        this.preWork = runnable;
+        this.request = request;
     }
 
-    public void executeAsync() {
-        if(preWork!=null){
-            preWork.run();
-        }
+    public void enqueueTask() {
         Response response = null;
         int maxRetry = lite.settings.getMaxRetryCount();
         while (retryCount<= maxRetry&& !isCanceled()){
@@ -69,7 +63,7 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         }
     }
 
-    public Response execute() throws Exception {
+    public Response executeTask() throws Exception {
         if(lite.isCacheAble(this)) lite.addCacheHeaders(request);
         String urlStr = request.getUrl();
         URL url = new URL(urlStr);
@@ -83,7 +77,6 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         connection.setReadTimeout(lite.settings.getReadTimeout());
         connection.setConnectTimeout(lite.settings.getConnectTimeout());
         connection.setInstanceFollowRedirects(lite.settings.isFollowRedirects());
-
         if (connection instanceof HttpsURLConnection) {
             HttpsURLConnection httpsURLConnection = (HttpsURLConnection) connection;
             httpsURLConnection.setSSLSocketFactory(lite.settings.getSslSocketFactory());
@@ -105,7 +98,9 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
             }
         }
         connection.setRequestMethod(request.getMethod().name());
-        if(Request.permitsRequestBody(request.getMethod())&&request.getBody()!=null){
+
+        connection.setDoInput(true);
+        if(request.getMethod().permitsRequestBody&&request.getBody()!=null){
             connection.setRequestProperty("Content-Type", request.getBody().contentType().toString());
             long contentLength = request.getBody().contentLength();
             if (contentLength < 0) {
@@ -123,6 +118,7 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
             connection.setDoOutput(true);
             request.getBody().writeTo(connection.getOutputStream());
         }
+
         Response response = URLite.createResponse(connection, request);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
@@ -131,6 +127,17 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
         }else{
             return lite.createCacheResponse(response);
         }
+    }
+
+    @Override
+    public Response execute() throws Exception {
+        return lite.dispatchTaskSync(this);
+    }
+
+    @Override
+    public void enqueue(ResponseHandler responseHandler) {
+        this.callback = responseHandler;
+        lite.dispatchTask(this);
     }
 
     private void assertCanceled() throws Exception{
@@ -156,7 +163,6 @@ public class URLTask implements Dispatcher.Task<Response>,Handle,Comparable<Disp
     public boolean isCanceled() {
         return isCanceled;
     }
-
 
     public boolean isExecuted() {
         return isExecuted;

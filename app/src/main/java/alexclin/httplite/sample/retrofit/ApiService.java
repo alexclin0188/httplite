@@ -6,9 +6,9 @@ import com.example.UserInfo;
 
 import java.io.File;
 
-import alexclin.httplite.Clazz;
-import alexclin.httplite.DownloadHandle;
-import alexclin.httplite.Method;
+import alexclin.httplite.annotation.FixHeaders;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
@@ -25,13 +25,14 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.sample.model.ZhihuData;
+import rx.Observable;
 
 /**
  * ApiService
  *
  * @author alexclin 16/1/30 18:59
  */
-@BaseURL("http://192.168.99.238:10080/")
+@BaseURL("https://192.168.99.238:10080/")
 public interface ApiService {
     @POST("/login")
     void login(
@@ -49,7 +50,8 @@ public interface ApiService {
     void testZhihu(Callback<ZhihuData> callback);
 
     @GET("/download/{test_holder}")
-    DownloadHandle downdloadFile(
+    @FixHeaders({"handle:GET"})
+    void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
@@ -62,7 +64,7 @@ public interface ApiService {
     @GET( "http://news-at.zhihu.com/api/4/news/latest")
     ZhihuData syncZhihu(Clazz<ZhihuData> clazz) throws Exception;
 
-    @HTTP(method = Method.POST,path = "/dosomething/{some_path}")
+    @HTTP(method = HttpMethod.POST,path = "/dosomething/{some_path}")
     void doSomething(
             @Path("some_path") String holder,
             @Param("param1") String param1,
@@ -72,7 +74,7 @@ public interface ApiService {
             Callback<Result<RequestInfo>> callback
     );
 
-    @HTTP(method = Method.POST,path = "/dosomething/{some_path}")
+    @HTTP(method = HttpMethod.POST,path = "/dosomething/{some_path}")
     Result<RequestInfo> doSomethingSync(
             @Path("some_path") String holder,
             @Param("param1") String param1,
@@ -82,7 +84,7 @@ public interface ApiService {
             Clazz<Result<RequestInfo>> clazz
     ) throws Exception;
 
-    @HTTP(method = Method.PUT,path = "put/{holde_test}")
+    @HTTP(method = HttpMethod.PUT,path = "put/{holde_test}")
     void putJsonBody(
             @Path("holde_test") String holder,
             @JsonField("field1") String field1,
@@ -93,7 +95,7 @@ public interface ApiService {
     );
 
     @GET("/download/{test_holder}")
-    DownloadHandle downdloadFile(
+    void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
@@ -101,14 +103,9 @@ public interface ApiService {
             @Progress @Retry MergeCallback<File> callback
     );
 
-//    @HTTP(path = "test2",method = Method.POST)
-//    void test2(
-//            @Progress @Retry @Cancel @Tag MergeListener listener,
-//            @Param("123") TestModel[] array,
-//            @Header("test1") List<String> list,
-//            @Headers Map<String,String> map,
-//            @IntoFile String str,
-//            @Multipart MultiPart multiPart,
-//            Clazz<TestModel> clazz
-//    );
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<ZhihuData> testZhihu();
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
 }

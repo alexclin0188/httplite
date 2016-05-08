@@ -1,11 +1,12 @@
 package alexclin.httplite.sample;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.List;
@@ -35,6 +36,8 @@ public class LeftMenuAdapter extends RecyclerView.Adapter<LeftMenuAdapter.MenuVi
         textView.setTextColor(parent.getResources().getColor(R.color.black));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
         textView.setGravity(Gravity.CENTER);
+        textView.setMinWidth(parent.getWidth());
+        textView.setMinHeight(parent.getHeight()/10);
         textView.setPadding(0,10,0,10);
         final MenuViewHolder holder = new MenuViewHolder(textView);
         textView.setOnClickListener(new View.OnClickListener() {

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java.lang.reflect.Type;
 
-import alexclin.httplite.StringParser;
+import alexclin.httplite.impl.StringParser;
 
 /**
  * JacksonParser

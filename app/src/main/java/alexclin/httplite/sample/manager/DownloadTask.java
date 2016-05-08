@@ -1,15 +1,20 @@
 package alexclin.httplite.sample.manager;
 
+import android.content.Context;
+
 import com.example.util.EncryptUtil;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import alexclin.httplite.DownloadHandle;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
+import alexclin.httplite.sample.App;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -18,76 +23,78 @@ import alexclin.httplite.util.LogUtil;
  * @author alexclin 16/1/10 15:48
  */
 public class DownloadTask implements Callback<File>,ProgressListener {
-    public interface TaskStateListener {
-        void onProgressUpdate(long current,long total);
-        void onStateChanged(DownloadTask task);
+
+    public enum State{
+        IDLE(true),Downloading(false),Failed(true),Canceled(true),Finished(false);
+
+        public final boolean startAble;
+
+        State(boolean startAble) {
+            this.startAble = startAble;
+        }
     }
 
     private TaskStateListener stateListener;
 
-    private DownloadHandle handle;
-
+    private State mState;
     private long total;
     private long current;
-    private boolean isFinished;
-    private boolean isCanceled;
-    private boolean isFailed;
-
     private String hash;
     private String realHash;
-
     private String name;
+    private String url;
     private String path;
-
     private File file;
-    private Map<String, List<String>> headers;
+    private Handle mRequestHandle;
 
-    public DownloadTask(String name,String path,String hash) {
+    public DownloadTask(String url,String name,String path,String hash) {
         this.hash = hash;
         this.name = name;
         this.path = path;
+        this.url = url;
+        this.mState = State.IDLE;
+    }
+
+    public DownloadTask(String url,String name,String path) {
+        this(url,name,path,null);
     }
 
     @Override
-    public void onSuccess(File result, Map<String, List<String>> headers) {
-        isFinished = true;
-        this.headers = headers;
+    public void onSuccess(Request req,Map<String, List<String>> headers,File result) {
         this.file = result;
         realHash = EncryptUtil.hash(result);
-        if(stateListener!=null){
-            stateListener.onStateChanged(this);
-        }
-        LogUtil.e("OnSuccess:"+result);
-        LogUtil.e("OnSuccess hash:"+isValidHash());
+        updateState(State.Finished);
     }
 
     @Override
     public void onFailed(Request req, Exception e) {
-        isFailed = true;
-        if(stateListener!=null){
-            stateListener.onStateChanged(this);
-        }
-        LogUtil.e("onFailed:"+e);
-        e.printStackTrace();
+        State state = (e instanceof CanceledException)?State.Canceled:State.Failed;
+        updateState(state);
+        LogUtil.e("onFailed:",e);
     }
 
     @Override
-    public void onProgressUpdate(long current, long total) {
-        this.total = total;
-        this.current = current;
-        if(stateListener!=null){
-            stateListener.onProgressUpdate(current, total);
-        }
-        LogUtil.e(String.format("onProgressUpdate:%d,%d",current,total));
+    public void onProgressUpdate(boolean out,long current, long total) {
+        current = current/1024;
+        total = total/1024;
+        updateProgress(current, total);
     }
 
-    public void resume(){
-        if(isFinished){
+    public void resume(Context context){
+        if(!mState.startAble){
             return;
         }
-        isCanceled = false;
-        isFailed = false;
-        handle.resume();
+        start(context);
+    }
+
+    public void start(Context ctx){
+        if(!mState.startAble){
+            return;
+        }
+        current = 0;
+        total = 0;
+        mRequestHandle = App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).download(this);
+        updateState(State.Downloading);
     }
 
     public long getTotal() {
@@ -98,43 +105,45 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         return current;
     }
 
-    public boolean isFinished() {
-        return isFinished;
-    }
-
-    public boolean isCanceled() {
-        return isCanceled;
-    }
-
-    public boolean isFailed() {
-        return isFailed;
-    }
-
     public File getFile() {
         return file;
     }
 
-    public Map<String, List<String>> getHeaders() {
-        return headers;
-    }
-
-    public void setHandle(DownloadHandle handle) {
-        this.handle = handle;
-    }
-
-    public boolean isValidHash(){
-        return isFinished&&(hash.equals(realHash));
+    public String hashInfo(){
+        return String.format(Locale.getDefault(),"realHash:%s,serverHash:%s",realHash,hash);
     }
 
     public String getPath() {
-        return path;
+        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getAbsolutePath();
+        return path+name;
     }
 
     public String getName() {
+        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getName();
         return name;
+    }
+
+    public State getState() {
+        return mState;
+    }
+
+    private void updateState(State state){
+        mState = state;
+        if(stateListener!=null) stateListener.onStateChanged(this);
+    }
+
+    private void updateProgress(long current,long total){
+        this.total = total;
+        this.current = current;
+        if(mState!=State.Downloading) updateState(State.Downloading);
+        if(stateListener!=null) stateListener.onProgressUpdate(current,total);
     }
 
     public void setStateListener(TaskStateListener stateListener) {
         this.stateListener = stateListener;
+    }
+
+    public void cancel() {
+        if(mRequestHandle !=null) mRequestHandle.cancel();
     }
 }

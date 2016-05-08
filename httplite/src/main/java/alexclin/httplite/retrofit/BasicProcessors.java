@@ -41,12 +41,12 @@ class BasicProcessors {
     static class FormProcessor extends ProcessorFactory.ObjectsProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, Object value) {
+        protected void performProcess(Annotation annotation, Request request, Object value) {
             request.form(((Form)annotation).value(),value.toString(),((Form)annotation).encoded());
         }
 
         @Override
-        String value(Annotation annotation) {
+        protected String value(Annotation annotation) {
             return ((Form)annotation).value();
         }
 
@@ -72,12 +72,12 @@ class BasicProcessors {
     static class HeaderProcessor extends ProcessorFactory.ObjectsProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, Object value) {
+        protected void performProcess(Annotation annotation, Request request, Object value) {
             request.header(((Header)annotation).value(),value.toString());
         }
 
         @Override
-        String value(Annotation annotation) {
+        protected String value(Annotation annotation) {
             return ((Header)annotation).value();
         }
 
@@ -103,12 +103,12 @@ class BasicProcessors {
     static class ParamProcessor extends ProcessorFactory.ObjectsProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, Object value) {
+        protected void performProcess(Annotation annotation, Request request, Object value) {
             request.param(((Param)annotation).value(),value.toString(),((Param)annotation).encoded());
         }
 
         @Override
-        String value(Annotation annotation) {
+        protected String value(Annotation annotation) {
             return ((Param)annotation).value();
         }
 
@@ -274,7 +274,7 @@ class BasicProcessors {
         @Override
         public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {
             if(!jsonSupportType(parameterType)){
-                throw Util.methodError(method,"Annoation @JsonField only support parameter type String");
+                throw Util.methodError(method,"Annotation @JsonField only support parameter type String/JSONObject/JSONArray/Boolean/Number/int/long/double/short");
             }if(TextUtils.isEmpty(((JsonField)annotation).value())){
                 throw Util.methodError(method,"The annotation {@JsonField(value) value} must not be null");
             }

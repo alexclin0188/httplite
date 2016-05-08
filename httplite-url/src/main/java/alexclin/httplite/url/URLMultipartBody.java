@@ -23,7 +23,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/2 20:00
  */
-public class URLMultipartBody implements RequestBody {
+public class URLMultipartBody extends URLRequestBody {
 
     @Override
     public void writeTo(OutputStream sink) throws IOException {
@@ -98,9 +98,9 @@ public class URLMultipartBody implements RequestBody {
         try {
             BufferedWriter byteCountBuffer = null;
             BufferedWriter writer;
-            ByteArrayOutputStream bos = null;
+            CountOutputStream bos = null;
             if (countBytes) {
-                bos = new ByteArrayOutputStream();
+                bos = new CountOutputStream();
                 writer = byteCountBuffer = new BufferedWriter(new OutputStreamWriter(bos,Util.UTF_8));
                 sink = bos;
             }else{
@@ -182,8 +182,9 @@ public class URLMultipartBody implements RequestBody {
             sink.write(DASHDASH);
             sink.write(CRLF);
 
+            sink.flush();
             if (countBytes) {
-                byteCount += bos.size();
+                byteCount += bos.countBytes();
                 Util.closeQuietly(byteCountBuffer);
             }
         } catch (IOException e) {

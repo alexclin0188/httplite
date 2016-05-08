@@ -80,4 +80,18 @@ public abstract class URLRequestBody implements RequestBody{
             }
         };
     }
+
+    protected static class CountOutputStream extends OutputStream{
+
+        private long mSize = 0;
+
+        @Override
+        public void write(int oneByte) throws IOException {
+            mSize++;
+        }
+
+        public long countBytes(){
+            return mSize;
+        }
+    }
 }

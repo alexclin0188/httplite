@@ -5,6 +5,8 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Result;
 import alexclin.httplite.util.Util;
 
 /**
@@ -12,61 +14,77 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin at 16/1/26 22:12
  */
-public class HttpCall implements Call{
-    protected Request request;
+public class HttpCall extends Call{
 
     protected HttpCall(Request request) {
-        this.request = request;
+        super(request);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> Handle execute(Callback<T> callback){
+    @Override @SuppressWarnings("unchecked")
+    public <T> Handle async(boolean callOnMain, Callback<T> callback) {
         Type type = Util.type(Callback.class, callback);
+        ResponseHandler rcb;
         if(type==File.class){
-            return download((Callback<File>)callback);
+            rcb = createDownloadCallback((Callback<File>) callback,callOnMain);
         }else{
-            ResultCallback rcb = createHttpCallback(callback, type);
-            return executeSelf(rcb);
+            rcb = createHttpCallback(callback, type,callOnMain);
         }
+        executeSelf(rcb);
+        return this;
     }
 
-    public Response executeSync() throws Exception{
-        return executeSyncInner(null);
-    }
-
-    public <T> T executeSync(Clazz<T> clazz) throws Exception{
-        ResultCallback<T> callback = createResultCallback(clazz);
+    @Override
+    public <T> T sync(Clazz<T> clazz) throws Exception{
+        ResponseHandler<T> callback = createResultCallback(clazz,true);
         Response response = executeSyncInner(callback);
         return parseResult(response, callback);
     }
 
+    @Override
+    public <T> Result<T> syncResult(Clazz<T> clazz){
+        ResponseHandler<T> callback = createResultCallback(clazz, true);
+        Response response;
+        try {
+            response = executeSyncInner(callback);
+        } catch (Exception e) {
+            return new Result<T>(null,null,e);
+        }
+        T r = null;
+        try {
+            r = parseResult(response, callback);
+            return new Result<T>(r,response.headers());
+        } catch (Exception e) {
+            return new Result<T>(r,response.headers(),e);
+        }
+    }
+
+    @Override
+    public Request request() {
+        return request;
+    }
+
+    /***************************************/
+
     @SuppressWarnings("unchecked")
-    protected  <T> ResultCallback<T> createResultCallback(Clazz<T> clazz) {
+    protected  <T> ResponseHandler<T> createResultCallback(Clazz<T> clazz,boolean callOnMain) {
         Type type = clazz.type();
-        ResultCallback<T> callback;
+        ResponseHandler<T> callback;
         if(type==File.class) {
-            callback = (ResultCallback<T>)(this.<File>createDownloadCallback(null));
+            callback = (ResponseHandler<T>)(this.<File>createDownloadCallback(null,callOnMain));
         }else{
-            callback = this.<T>createHttpCallback(null, type);
+            callback = this.<T>createHttpCallback(null, type,callOnMain);
         }
         return callback;
     }
 
-    @Override
-    public DownloadHandle download(Callback<File> callback) {
-        final DownloadCallback rcb = createDownloadCallback(callback);
-        executeSelf(rcb);
-        return rcb;
-    }
-
-    protected  <T> ResultCallback createHttpCallback(Callback<T> callback, Type type) {
+    protected  <T> ResponseHandler createHttpCallback(Callback<T> callback, Type type,boolean callOnMain) {
         HttpLite lite = request.lite;
-        ResultCallback<T> rcb = new HttpCallback<>(callback,this,type);
+        ResponseHandler<T> rcb = new ResponseHandler<>(callback,this,type,callOnMain);
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
         return rcb;
     }
 
-    protected <T> T parseResult(Response response, ResultCallback<T> callback) throws Exception{
+    protected <T> T parseResult(Response response, ResponseHandler<T> callback) throws Exception{
         return callback.parseResponse(response);
     }
 
@@ -74,31 +92,31 @@ public class HttpCall implements Call{
         return request.lite.parse(mediaType);
     }
 
-    protected DownloadCallback createDownloadCallback(Callback<File> callback) {
-        DownloadCallback.DownloadParams params = request.getDownloadParams();
+    protected DownloadHandler createDownloadCallback(Callback<File> callback,boolean callOnMain) {
+        DownloadHandler.DownloadParams params = request.getDownloadParams();
         if(params==null){
             throw new IllegalArgumentException("to execute Callback<File>, you must call intoFile() on Request before execute");
         }
-        return new DownloadCallback(callback,this,params);
+        return new DownloadHandler(callback,this,params,callOnMain);
     }
 
-    private Response executeSyncInner(ResultCallback callback) throws Exception{
-        Runnable preWork = null;
-        if(callback instanceof DownloadCallback){
-            preWork = (DownloadCallback)callback;
-        }
+    private Response executeSyncInner(ResponseHandler callback) throws Exception{
         HttpLite lite = request.lite;
+        if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request,callback.resultType());
-        if(preWork!=null) preWork.run();
-        Response response = lite.getClient().executeSync(request);
+        Executable executable = lite.getClient().executable(request);
+        if(callback instanceof DownloadHandler) executable = ((DownloadHandler) callback).wrap(executable);
+        setExecutable(executable);
+        Response response = executable().execute();
         if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
+        response = request.handleResponse(response);
         return response;
     }
 
-    <T> Handle executeSelf(final ResultCallback<T> callback){
+    <T> void executeSelf(final ResponseHandler<T> callback){
         HttpLite lite = request.lite;
-        boolean isDownload = callback instanceof DownloadCallback;
-        final Runnable preWork = isDownload?(DownloadCallback)callback:null;
+        boolean isDownload = callback instanceof DownloadHandler;
+        if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         final Executor executor = lite.getCustomDownloadExecutor();
         if(isDownload&&executor!=null){
             executor.execute(new Runnable() {
@@ -111,10 +129,13 @@ public class HttpCall implements Call{
                     }
                 }
             });
-            return (DownloadCallback)callback;
         }else{
-            Handle handle = lite.getClient().execute(request,callback,preWork);
-            return isDownload?((DownloadCallback)callback).wrap(handle):handle;
+            Executable executable = lite.getClient().executable(request);
+            if(isDownload){
+                executable = ((DownloadHandler)callback).wrap(executable);
+            }
+            setExecutable(executable);
+            executable().enqueue(callback);
         }
     }
 

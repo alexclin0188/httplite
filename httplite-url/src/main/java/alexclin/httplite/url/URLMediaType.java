@@ -1,5 +1,7 @@
 package alexclin.httplite.url;
 
+import android.text.TextUtils;
+
 import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -81,7 +83,7 @@ public class URLMediaType implements alexclin.httplite.MediaType {
      * Returns the charset of this media type, or null if this media type doesn't specify a charset.
      */
     public Charset charset() {
-        return charset != null ? Charset.forName(charset) : null;
+        return TextUtils.isEmpty(charset) ?null:Charset.forName(charset);
     }
 
     /**
@@ -89,7 +91,8 @@ public class URLMediaType implements alexclin.httplite.MediaType {
      * specify a charset.
      */
     public Charset charset(Charset defaultValue) {
-        return charset != null ? Charset.forName(charset) : defaultValue;
+        Charset charset = charset();
+        return charset==null ? defaultValue:charset;
     }
 
     /**
