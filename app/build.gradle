@@ -33,14 +33,21 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.3.1'
     compile 'com.google.code.gson:gson:2.5'
     compile project(':mockdata')
-    compile project(':httplite-okhttp2')
-    compile project(':httplite-okhttp3')
-    compile project(':httplite-url')
-    compile project(':retrofit-rx')
-    compile project(':httplite')
-    //    compile 'alexclin.httplite:retrofit-rx:1.0.2'
+//    compile project(':httplite-okhttp2')
+//    compile project(':httplite-okhttp3')
+//    compile project(':httplite-url')
+//    compile project(':retrofit-rx')
+//    compile project(':httplite')
+
+    //使用okhttp3的httplite实现
+    compile 'alexclin.httplite:httplite-okhttp3:1.1.1'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    //使用okhttp2的httplite实现
+    compile 'alexclin.httplite:httplite-okhttp2:1.1.1'
     compile 'com.squareup.okhttp:okhttp:2.7.5'
+    //使用URLConnection的httplite实现
+    compile 'alexclin.httplite:httplite-url:1.1.1'
+    //httplite的Rx扩展插件
+    compile 'alexclin.httplite:retrofit-rx:1.1.1'
     compile 'io.reactivex:rxjava:1.1.1'
-//    compile 'alexclin.httplite:httplite:1.1.0'
 }

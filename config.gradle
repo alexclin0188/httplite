@@ -1,7 +1,7 @@
 project.ext{
-    httpLiteVersion = '1.1.0'
-    httpLiteOkhttp2Version = '1.1.0'
-    httpLiteOkhttp3Version = '1.1.0'
-    httpLiteURLVersion = '1.1.0'
-    retrofitRxVersion = '1.0.2'
+    httpLiteVersion = '1.1.1'
+    httpLiteOkhttp2Version = '1.1.1'
+    httpLiteOkhttp3Version = '1.1.1'
+    httpLiteURLVersion = '1.1.1'
+    retrofitRxVersion = '1.1.1'
 }
