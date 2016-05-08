@@ -232,7 +232,8 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .requestListener(new RequestListener() {
                     @Override
                     public void onRequest(HttpLite lite, Request request, Type type) {
-                        request.header("handle", "misc");
+                        if(!request.getHeaders().containsKey("handle"))
+                            request.header("handle", "misc");
                         request.cacheExpire(Request.NO_CACHE);
                         request.onProgress(new ProgressListener() {
                             @Override

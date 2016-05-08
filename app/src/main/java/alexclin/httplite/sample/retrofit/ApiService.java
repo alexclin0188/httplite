@@ -6,6 +6,7 @@ import com.example.UserInfo;
 
 import java.io.File;
 
+import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.annotation.BaseURL;
@@ -49,6 +50,7 @@ public interface ApiService {
     void testZhihu(Callback<ZhihuData> callback);
 
     @GET("/download/{test_holder}")
+    @FixHeaders({"handle:GET"})
     void downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
