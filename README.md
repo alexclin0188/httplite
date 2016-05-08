@@ -182,9 +182,9 @@ builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 });
 ```
 
-详细使用指南请移步[《Android网络框架HttpLite使用指南》]()
+详细使用指南请移步[《Android网络框架HttpLite使用指南》](http://www.jianshu.com/p/db66b49ec974)
 
-或者文档[使用指南](./useage.md)
+或者[文档使用指南](./useage.md)
 
 
 
