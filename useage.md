@@ -18,34 +18,40 @@ Http请求是做Android应用开发工作几乎必须要用到的东西。做And
 
 # 类库使用指南
 ## 一、添加依赖
+
 * Gradle
 
 使用okhttp 2.7.5作为http实现
 
 ```
-    compile 'alexclin.httplite:httplite-okhttp2:1.1.0'
+    compile 'alexclin.httplite:httplite-okhttp2:1.1.1'
+    compile 'com.squareup.okhttp:okhttp:2.7.5'
 ```
 
 使用okhttp 3.2.0作为http实现
 ```
-    compile 'alexclin.httplite:httplite-okhttp3:1.1.0'
+    compile 'alexclin.httplite:httplite-okhttp3:1.1.1'
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
 ```
 
 使用系统URLConnection作为http实现
 ```
-    compile 'alexclin.httplite:httplite-url:1.1.0'
+    compile 'alexclin.httplite:httplite-url:1.1.1'
 ```
 
 如需Rx扩展则还需要
 ```
-    compile 'alexclin.httplite:httplite-rx:1.0.0'
+    compile 'alexclin.httplite:retrofit-rx:1.1.1'
+    compile 'io.reactivex:rxjava:1.1.1'
 ```
 
 或者直接使用releaselib中的jar包
 
-* 1 okhttp2: httplite1.1.0.jar+httplite-ok2lite1.0.1.jar+okhttp 2.x.x版本jar包
-* 2 okhttp3: httplite1.1.0.jar+httplite-ok3lite1.0.1.jar+okhttp 3.x.x版本jar包
-* 3 url: httplite1.1.0.jar+httplite-urlite1.1.0.jar
+* 1 okhttp2: httplite1.1.1.jar+httplite-ok2lite1.1.1.jar+okhttp 2.x.x版本jar包
+* 2 okhttp3: httplite1.1.1.jar+httplite-ok3lite1.1.1.jar+okhttp 3.x.x版本jar包
+* 3 url: httplite1.1.1.jar+httplite-urlite1.1.1.jar
+
+* 4 使用rx扩展：httplite-retrofit-rx1.1.1.jar+rx1.x.x版本jar包
 
 ## 二、类库初始化
 或者也可以直接使用jar包

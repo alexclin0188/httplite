@@ -37,7 +37,7 @@ def httplite_rx_version = project.ext.retrofitRxVersion;
 def libDir = 'build/libs'
 
 task makeHttplite(type: Jar, dependsOn: ':httplite:build') {
-    archiveName = 'httplite' +httplite_version+'.jar'
+    archiveName = 'httplite'+httplite_version+'.jar'
     from('httplite/build/intermediates/classes/release/')
     destinationDir = file(libDir)
     exclude('**/BuildConfig.class')
@@ -81,7 +81,7 @@ task makeHttpUrl(type: Jar,dependsOn: ':httplite-url:build') {
 }
 
 task makeHttpRx(type: Jar,dependsOn: ':retrofit-rx:build') {
-    archiveName = 'httplite-rx' +httplite_rx_version+'.jar'
+    archiveName = 'httplite-retrofit-rx' +httplite_rx_version+'.jar'
     from('retrofit-rx/build/intermediates/classes/release/')
     destinationDir = file(libDir)
     exclude('**/BuildConfig.class')
