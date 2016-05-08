@@ -24,6 +24,7 @@ import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.util.ClientSettings;
+import alexclin.httplite.util.Util;
 
 /**
  * HttpLiteBuilder
@@ -59,6 +60,9 @@ public abstract class HttpLiteBuilder{
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
+        if(!Util.isHttpPrefix(baseUrl)){
+            throw new IllegalArgumentException("You must set a baseUrl start with http/https prefix for global BaseUrl");
+        }
         this.baseUrl = baseUrl;
         return this;
     }

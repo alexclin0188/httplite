@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import alexclin.httplite.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.listener.ProgressListener;
+import alexclin.httplite.util.LogUtil;
 
 /**
  * ProgressRequestBody
@@ -41,21 +42,22 @@ public class ProgressRequestBody implements RequestBody {
     @Override
     public void writeTo(OutputStream sink) throws IOException {
         if(contentLength>0){
-            ProgressOutputStream outputStream = new ProgressOutputStream(sink,progressListener,contentLength);
-            outputStream.startProgress();
+            ProgressOutputStream progressOs = new ProgressOutputStream(sink,progressListener,contentLength);
+            progressOs.startProgress();
             try {
-                requestBody.writeTo(outputStream);
+                requestBody.writeTo(progressOs);
             } finally {
-                outputStream.stopProgress();
+                progressOs.stopProgress();
             }
         }else{
             requestBody.writeTo(sink);
         }
+        contentLength = 0;
     }
 
     private class ProgressOutputStream extends OutputStream implements ProgressRunnable.ProgressSource{
         private OutputStream outputStream;
-        private long total = 0;
+        private long value = 0;
         private ProgressListener progressListener;
         private ProgressRunnable runnable;
 
@@ -67,13 +69,13 @@ public class ProgressRequestBody implements RequestBody {
 
         @Override
         public void write(int oneByte) throws IOException {
+            value++;
             outputStream.write(oneByte);
-            total++;
         }
 
         @Override
         public long progress() {
-            return total;
+            return value;
         }
 
         @Override
@@ -87,7 +89,6 @@ public class ProgressRequestBody implements RequestBody {
 
         public void stopProgress(){
             runnable.end();
-            ProgressRequestBody.this.contentLength = 0;
         }
     }
 }

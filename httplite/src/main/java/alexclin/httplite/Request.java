@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
@@ -44,8 +45,8 @@ public final class Request implements Cloneable{
         }
     };
 
-    String baseUrl;
-    String url;
+    private String baseUrl;
+    private String url;
     HttpMethod method;
     ProgressListener progressListener;
     RetryListener retryListener;
@@ -333,20 +334,33 @@ public final class Request implements Cloneable{
         }
     }
 
-    private String buildUrlAndParams(String baseUrl,String url) {
+    private void checkUrl(String baseUrl,String url){
         if(url==null){
             throw new NullPointerException("Url is null for this Request");
         }
-        if(!Util.isHttpPrefix(url)&&!TextUtils.isEmpty(lite.getBaseUrl())){
-            if(!TextUtils.isEmpty(baseUrl)){
-                if(Util.isHttpPrefix(baseUrl)){
-                    url = Util.appendString(baseUrl,url);
+        if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)&&TextUtils.isEmpty(lite.getBaseUrl())){
+            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and baseUrl is empty",url));
+        }
+    }
+
+    private String buildUrlAndParams(String baseUrl,String url) {
+        checkUrl(baseUrl,url);
+        if(!Util.isHttpPrefix(url)){
+            if(!TextUtils.isEmpty(lite.getBaseUrl())){
+                if(!TextUtils.isEmpty(baseUrl)){
+                    if(Util.isHttpPrefix(baseUrl)){
+                        url = Util.appendString(baseUrl,url);
+                    }else{
+                        baseUrl = Util.appendString(lite.getBaseUrl(),baseUrl);
+                        url = Util.appendString(baseUrl,url);
+                    }
                 }else{
-                    baseUrl = Util.appendString(lite.getBaseUrl(),baseUrl);
-                    url = Util.appendString(baseUrl,url);
+                    url = Util.appendString(lite.getBaseUrl(), url);
                 }
             }else{
-                url = Util.appendString(lite.getBaseUrl(), url);
+                if(!TextUtils.isEmpty(baseUrl)){
+                    url = Util.appendString(baseUrl,url);
+                }
             }
         }
         url = processPathHolders(url, pathHolders);
@@ -460,6 +474,18 @@ public final class Request implements Cloneable{
             return new ProgressResponse(response,getMainProgressListener());
         }
         return response;
+    }
+
+    void setUrl(String url){
+        checkUrl(baseUrl,url);
+        this.url = url;
+    }
+
+    void setBaseUrl(String baseUrl){
+        if(TextUtils.isEmpty(lite.getBaseUrl())&&!Util.isHttpPrefix(baseUrl)){
+            throw new IllegalArgumentException("Global BaseUrl is empty, you must set a baseUrl(@BaseURL) with http/https prefix for this request");
+        }
+        this.baseUrl = baseUrl;
     }
 
     private ProgressListener getMainProgressListener(){

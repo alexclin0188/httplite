@@ -103,9 +103,10 @@ public class MethodHandler<T> {
         for(int i=0;i<length;i++){
             ParameterProcessor[] processors = parameterProcessors[i];
             Annotation[] parameterAnnotations = methodParameterAnnotationArrays[i];
+            Object arg = args[i];
             for(int j=0;j<parameterAnnotations.length;j++){
                 ParameterProcessor processor = processors[j];
-                if(processor!=null) processor.process(parameterAnnotations[j],request,args[i]);
+                if(processor!=null) processor.process(parameterAnnotations[j],request,arg);
             }
         }
         if(!paramMiscProcessors.isEmpty()){

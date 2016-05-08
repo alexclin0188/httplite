@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.okhttp2.Ok2Lite;
+import alexclin.httplite.sample.TrustAllManager;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
@@ -147,6 +148,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 
                     @Override
                     public void onSuccess(Request req, Map<String, List<String>> headers,File result) {
+                        LogUtil.e("Req:"+req);
                         LogUtil.e("Result:" + result);
                         for(String key:headers.keySet()){
                             for(String head:headers.get(key)){
@@ -157,6 +159,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 
                     @Override
                     public void onFailed(Request req, Exception e) {
+                        LogUtil.e("Req:"+req);
                         LogUtil.e("OnFailed", e);
                     }
                 });
@@ -170,6 +173,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 
                     @Override
                     public void onFailed(Request req, Exception e) {
+                        LogUtil.e("Req:"+req);
                         LogUtil.e("OnFailed", e);
                     }
                 });
@@ -213,6 +217,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
         if(this.httpLite!=null) return this.httpLite;
 //        String baseUrl = "http://192.168.99.238:10080/";
         HttpLiteBuilder builder = Ok2Lite.create();//URLite.create();
+        TrustAllManager manager = new TrustAllManager();
         HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
@@ -220,6 +225,8 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
                 .setCache(getActivity().getCacheDir(), 10 * 1024 * 1024)
+                .setSslSocketFactory(manager.getSocketFactory())
+                .setHostnameVerifier(manager)
 //                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
                 .requestListener(new RequestListener() {

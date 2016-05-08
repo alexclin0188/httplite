@@ -191,7 +191,7 @@ public class HttpLite {
         @Override
         public Request makeRequest(String baseUrl) {
             Request request = new Request(HttpLite.this);
-            request.baseUrl = baseUrl;
+            request.setBaseUrl(baseUrl);
             return request;
         }
 
@@ -203,7 +203,7 @@ public class HttpLite {
 
         @Override
         public Request setUrl(Request request, String url) {
-            request.url = url;
+            request.setUrl(url);
             return request;
         }
 

@@ -34,7 +34,9 @@ public class OkRequestBody implements alexclin.httplite.RequestBody {
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        requestBody.writeTo(Okio.buffer(Okio.sink(os)));
+        BufferedSink sink = Okio.buffer(Okio.sink(os));
+        requestBody.writeTo(sink);
+        sink.flush();
     }
 
     public RequestBody raw(){
