@@ -17,5 +17,5 @@ public abstract class StringParser implements ResponseParser{
         return parseResponse(ObjectParser.decodeToString(response), type);
     }
 
-    public abstract <T> T parseResponse(String content, Type type) throws Exception;
+    protected abstract <T> T parseResponse(String content, Type type) throws Exception;
 }
