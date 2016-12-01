@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +23,7 @@ import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -286,7 +286,7 @@ class DownloadHandler extends ResponseHandler<File>{
         HttpLite.postOnMain(new Runnable() {
             @Override
             public void run() {
-                ProgressListener listener = call.request.progressListener;
+                ProgressListener listener = call.request.build().getProgressListener();
                 if (listener != null) {
                     listener.onProgressUpdate(false,current, total);
                 }
@@ -327,7 +327,7 @@ class DownloadHandler extends ResponseHandler<File>{
     }
 
     public void doResumeWork(){
-        processHeaders(call.request.getHeaders());
+        processHeaders(call.request.build().getHeaders());
     }
 
     public boolean isCanceled() {

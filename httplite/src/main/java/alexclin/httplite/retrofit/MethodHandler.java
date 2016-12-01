@@ -10,10 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.Call;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.BaseURL;
-import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.util.Util;
 
 /**
@@ -21,13 +19,13 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/28 19:20
  */
-public class MethodHandler<T> {
+public class MethodHandler{
     private ParameterProcessor[][] parameterProcessors;
     private Type returnType;
     private Annotation[][] methodParameterAnnotationArrays;
     private Map<ParamMiscProcessor,List<Pair<Integer,Integer>>> paramMiscProcessors;
     private CallAdapter invoker;
-    private Request originRequest;
+    private Request.Builder originBuilder;
 
     public MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
         if(!retrofit.isReleaseMode()){
@@ -40,7 +38,7 @@ public class MethodHandler<T> {
         this.invoker = invoker;
         Class<?> dc = method.getDeclaringClass();
         BaseURL baseURL = dc.getAnnotation(BaseURL.class);
-        this.originRequest = retrofit.makeRequest(baseURL!=null?baseURL.value():null);
+        this.originBuilder = retrofit.makeRequest(baseURL!=null?baseURL.value():null);
 
         Annotation[] methodAnnotations = method.getAnnotations();
         int methodAnnoCount = methodAnnotations.length;
@@ -51,7 +49,7 @@ public class MethodHandler<T> {
         int maCount = methodProcessors.length;
         for(int i=0;i<maCount;i++){
             MethodProcessor processor = methodProcessors[i];
-            if(processor!=null) processor.process(method,methodAnnotations[i],retrofit,originRequest);
+            if(processor!=null) processor.process(method,methodAnnotations[i],retrofit, originBuilder);
         }
 
         returnType = method.getGenericReturnType();
@@ -97,8 +95,12 @@ public class MethodHandler<T> {
         list.add(new Pair<>(i,j));
     }
 
-    public Object invoke(Retrofit retrofit, RequestListener filter, Object... args) throws Exception{
-        Request request = originRequest.clone();
+    public Object invoke(Retrofit retrofit,Object... args) throws Exception{
+        return invoker.adapt(retrofit.lite(),this,returnType,args);
+    }
+
+    public Request.Builder createRequest(Object... args) throws Exception{
+        Request.Builder builder = (Request.Builder) originBuilder.clone();
         int length = args==null?0:args.length;
         for(int i=0;i<length;i++){
             ParameterProcessor[] processors = parameterProcessors[i];
@@ -106,16 +108,14 @@ public class MethodHandler<T> {
             Object arg = args[i];
             for(int j=0;j<parameterAnnotations.length;j++){
                 ParameterProcessor processor = processors[j];
-                if(processor!=null) processor.process(parameterAnnotations[j],request,arg);
+                if(processor!=null) processor.process(parameterAnnotations[j],builder,arg);
             }
         }
         if(!paramMiscProcessors.isEmpty()){
             for(ParamMiscProcessor processor:paramMiscProcessors.keySet()){
-                processor.process(request,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
+                processor.process(builder,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
             }
         }
-        Call call = retrofit.makeCall(request);
-        call = new RetrofitCall(call,filter,retrofit);
-        return invoker.adapt(call,returnType,args);
+        return builder;
     }
 }

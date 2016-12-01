@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.ResponseBody;
+import alexclin.httplite.listener.ResponseBody;
 import okhttp3.Response;
 
 /**
@@ -12,7 +12,7 @@ import okhttp3.Response;
  *
  * @author alexclin 16/1/1 15:02
  */
-public class OkResponse implements alexclin.httplite.Response {
+public class OkResponse implements alexclin.httplite.listener.Response {
     private Response realResponse;
     private Request request;
 

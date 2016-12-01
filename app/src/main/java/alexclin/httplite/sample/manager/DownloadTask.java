@@ -93,7 +93,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         }
         current = 0;
         total = 0;
-        mRequestHandle = App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).download(this);
+        mRequestHandle = App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).get().build().call().async(this);
         updateState(State.Downloading);
     }
 

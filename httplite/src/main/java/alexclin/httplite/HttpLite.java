@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import alexclin.httplite.impl.ObjectParser;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.ResponseParser;
@@ -19,7 +20,6 @@ import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.Call.CallFactory;
-import alexclin.httplite.util.HttpMethod;
 
 /**
  * HttpLite
@@ -78,9 +78,9 @@ public class HttpLite {
         return maxRetryCount;
     }
 
-    public Request url(String url){
+    public Request.Builder url(String url){
         if(url==null) return null;
-        return new Request(this,url);
+        return new Request.Builder(this).setUrl(url);
     }
 
     public LiteClient getClient(){
@@ -116,7 +116,7 @@ public class HttpLite {
     }
 
     public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String,List<String>>,RequestBody>> headBodyList,
-                                    List<Pair<String,String>> paramList, List<Pair<String,Pair<String,RequestBody>>> fileList){
+                                           List<Pair<String,String>> paramList, List<Pair<String,Pair<String,RequestBody>>> fileList){
         return client.createMultipartBody(boundary, type, bodyList, headBodyList, paramList, fileList);
     }
 
@@ -178,7 +178,7 @@ public class HttpLite {
         return customDownloadExecutor;
     }
 
-    Call makeCall(Request request) {
+    Call makeCall(Request.Builder request) {
         return callFactory.newCall(request);
     }
 
@@ -189,27 +189,28 @@ public class HttpLite {
         }
 
         @Override
-        public Request makeRequest(String baseUrl) {
-            Request request = new Request(HttpLite.this);
+        public Request.Builder makeRequest(String baseUrl) {
+            Request.Builder request = new Request.Builder(HttpLite.this);
             request.setBaseUrl(baseUrl);
             return request;
         }
 
         @Override
-        public Request setMethod(Request request, HttpMethod method) {
+        public Request.Builder setMethod(Request.Builder request, Request.Method method) {
             request.method = method;
             return request;
         }
 
         @Override
-        public Request setUrl(Request request, String url) {
+        public Request.Builder setUrl(Request.Builder request, String url) {
             request.setUrl(url);
             return request;
         }
 
         @Override
-        public Call makeCall(Request request) {
-            return request.method(request.method,null);
+        public Call makeCall(Request.Builder request) {
+            Request real = request.method(request.method,null).build();
+            return request.lite.makeCall(real.mBuilder);
         }
 
         @Override

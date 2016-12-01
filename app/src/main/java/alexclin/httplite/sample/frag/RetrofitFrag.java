@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.listener.ProgressListener;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.sample.TrustAllManager;
 import alexclin.httplite.util.Clazz;
@@ -230,17 +231,15 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 //                .baseUrl(baseUrl)
                 .addResponseParser(new JacksonParser())
                 .requestListener(new RequestListener() {
+
                     @Override
-                    public void onRequest(HttpLite lite, Request request, Type type) {
-                        if(!request.getHeaders().containsKey("handle"))
-                            request.header("handle", "misc");
-                        request.cacheExpire(Request.NO_CACHE);
-                        request.onProgress(new ProgressListener() {
-                            @Override
-                            public void onProgressUpdate(boolean out, long current, long total) {
-                                LogUtil.e(String.format(Locale.ENGLISH,"Out:%b,cur:%d,total:%d",out,current,total));
-                            }
-                        });
+                    public void onRequestStart(Request request, Type resultType) {
+
+                    }
+
+                    @Override
+                    public void onRequestEnd(Request request, Type resultType, Response response) {
+
                     }
                 })
                 .addCallAdapter(new RxCallAdapter())

@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 import alexclin.httplite.HttpLite;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 
 /**
  * Junk drawer of utility methods.

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import alexclin.httplite.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.annotation.GET;
@@ -24,7 +23,6 @@ import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.RetryListener;
-import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -113,12 +111,12 @@ public final class ProcessorFactory {
     public static class HttpMethodProcessor implements MethodProcessor {
 
         @Override
-        public void process(Method method,Annotation annotation, Retrofit retrofit, Request request) {
+        public void process(Method method,Annotation annotation, Retrofit retrofit, Request.Builder request) {
             if (annotation instanceof GET) {
-                retrofit.setMethod(request, HttpMethod.GET);
+                retrofit.setMethod(request, Request.Method.GET);
                 retrofit.setUrl(request, ((GET) annotation).value());
             } else if (annotation instanceof POST) {
-                retrofit.setMethod(request, HttpMethod.POST);
+                retrofit.setMethod(request, Request.Method.POST);
                 retrofit.setUrl(request, ((POST) annotation).value());
             } else if (annotation instanceof HTTP) {
                 retrofit.setMethod(request, ((HTTP) annotation).method());
@@ -135,7 +133,7 @@ public final class ProcessorFactory {
     public static class MarkAndHeadersProcessor implements MethodProcessor {
 
         @Override
-        public void process(Method method,Annotation annotation, Retrofit retrofit, Request request) {
+        public void process(Method method,Annotation annotation, Retrofit retrofit, Request.Builder request) {
             if (annotation instanceof Mark)
                 request.mark(((Mark) annotation).value());
             else if(annotation instanceof FixHeaders){
@@ -165,7 +163,7 @@ public final class ProcessorFactory {
     public static class ListenerParamProcessor implements ParameterProcessor {
 
         @Override
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if (annotation instanceof Progress) {
                 request.onProgress((ProgressListener) value);
             } else if (annotation instanceof Retry) {
@@ -192,7 +190,7 @@ public final class ProcessorFactory {
 
     public abstract static class ObjectsProcessor implements ParameterProcessor {
         @Override
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if (value == null) return;
             Class clazz = value.getClass();
             if (Util.isSubType(clazz, Collection.class)) {
@@ -219,7 +217,7 @@ public final class ProcessorFactory {
             }
         }
 
-        protected abstract void performProcess(Annotation annotation, Request request, Object value);
+        protected abstract void performProcess(Annotation annotation, Request.Builder request, Object value);
 
         protected abstract String value(Annotation annotation);
     }
@@ -228,7 +226,7 @@ public final class ProcessorFactory {
 
         @Override
         @SuppressWarnings("unchecked")
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if (value == null) return;
             Map<String, ?> map = (Map<String, ?>) value;
             for (String key : map.keySet()) {
@@ -238,7 +236,7 @@ public final class ProcessorFactory {
             }
         }
 
-        abstract void performProcess(Annotation annotation, Request request, String key, Object value);
+        abstract void performProcess(Annotation annotation, Request.Builder request, String key, Object value);
 
         @Override
         public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {

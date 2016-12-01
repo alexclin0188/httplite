@@ -5,8 +5,9 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.MediaType;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.util.Result;
 import alexclin.httplite.util.Util;
 
 /**
@@ -16,7 +17,7 @@ import alexclin.httplite.util.Util;
  */
 public class HttpCall extends Call{
 
-    protected HttpCall(Request request) {
+    protected HttpCall(Request.Builder request) {
         super(request);
     }
 
@@ -60,7 +61,7 @@ public class HttpCall extends Call{
 
     @Override
     public Request request() {
-        return request;
+        return request.build();
     }
 
     /***************************************/
@@ -78,9 +79,9 @@ public class HttpCall extends Call{
     }
 
     protected  <T> ResponseHandler createHttpCallback(Callback<T> callback, Type type,boolean callOnMain) {
-        HttpLite lite = request.lite;
+        HttpLite lite = request.build().lite();
         ResponseHandler<T> rcb = new ResponseHandler<>(callback,this,type,callOnMain);
-        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request, type);
+        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequestStart(request.build(), type);
         return rcb;
     }
 
@@ -89,11 +90,11 @@ public class HttpCall extends Call{
     }
 
     protected MediaType mediaType(String mediaType){
-        return request.lite.parse(mediaType);
+        return request.build().lite().parse(mediaType);
     }
 
     protected DownloadHandler createDownloadCallback(Callback<File> callback,boolean callOnMain) {
-        DownloadHandler.DownloadParams params = request.getDownloadParams();
+        DownloadHandler.DownloadParams params = request.build().getDownloadParams();
         if(params==null){
             throw new IllegalArgumentException("to execute Callback<File>, you must call intoFile() on Request before execute");
         }
@@ -101,20 +102,20 @@ public class HttpCall extends Call{
     }
 
     private Response executeSyncInner(ResponseHandler callback) throws Exception{
-        HttpLite lite = request.lite;
+        HttpLite lite = request.build().lite();
         if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
-        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequest(lite,request,callback.resultType());
+        if(lite.getRequestFilter()!=null) lite.getRequestFilter().onRequestStart(request.build(),callback.resultType());
         Executable executable = lite.getClient().executable(request);
         if(callback instanceof DownloadHandler) executable = ((DownloadHandler) callback).wrap(executable);
         setExecutable(executable);
         Response response = executable().execute();
-        if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request, response);
-        response = request.handleResponse(response);
+        if(lite.getResponseFilter()!=null) lite.getResponseFilter().onResponse(lite,request.build(), response);
+        response = request.build().handleResponse(response);
         return response;
     }
 
     <T> void executeSelf(final ResponseHandler<T> callback){
-        HttpLite lite = request.lite;
+        HttpLite lite = request.build().lite();
         boolean isDownload = callback instanceof DownloadHandler;
         if(callback instanceof DownloadHandler) ((DownloadHandler) callback).doResumeWork();
         final Executor executor = lite.getCustomDownloadExecutor();
@@ -142,7 +143,7 @@ public class HttpCall extends Call{
     public static class Factory implements CallFactory{
 
         @Override
-        public Call newCall(Request request) {
+        public Call newCall(Request.Builder request) {
             return new HttpCall(request);
         }
     }

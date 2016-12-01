@@ -15,7 +15,6 @@ import alexclin.httplite.Call;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -112,13 +111,13 @@ public abstract class Retrofit {
         return handler;
     }
 
-    public abstract Request makeRequest(String baseUrl);
+    public abstract Request.Builder makeRequest(String baseUrl);
 
-    public abstract Request setMethod(Request request, HttpMethod method);
+    public abstract Request.Builder setMethod(Request.Builder builder, Request.Method method);
 
-    public abstract Request setUrl(Request request, String url);
+    public abstract Request.Builder setUrl(Request.Builder builder, String url);
 
-    public abstract Call makeCall(Request request);
+    public abstract Call makeCall(Request.Builder request);
 
     public abstract boolean isReleaseMode();
 
@@ -159,7 +158,7 @@ public abstract class Retrofit {
             if (isDefaultMethod(method)) {
                 return invokeDefaultMethod(method, service, proxy, args);
             }
-            MethodHandler<?> handler = loadMethodHandler(method);
+            MethodHandler handler = loadMethodHandler(method);
             if(invokerMap==null){
                 return handler.invoke(Retrofit.this,filter,args);
             }else{

@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.util.Util;
 

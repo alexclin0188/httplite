@@ -12,14 +12,13 @@ import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.Dispatcher;
 import alexclin.httplite.impl.TaskDispatcher;
 import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.LogUtil;
-import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.util.Util;
 
 /**
@@ -190,7 +189,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
     }
 
-    public void addCacheHeaders(Request request){
+    public void addCacheHeaders(Request.Builder request){
         cache.addCacheHeaders(request);
     }
 
@@ -247,12 +246,12 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
         @Override
         public String createCacheKey(Request request) {
-            return Util.md5Hex(request.rawUrl());
+            return Util.md5Hex(request.getUrl());
         }
 
         @Override
         public boolean canCache(Request request) {
-            return request.getMethod()== HttpMethod.GET;
+            return request.getMethod()== Request.Method.GET;
         }
     }
 }

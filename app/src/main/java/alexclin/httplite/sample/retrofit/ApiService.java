@@ -6,9 +6,9 @@ import com.example.UserInfo;
 
 import java.io.File;
 
+import alexclin.httplite.Request;
 import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
@@ -64,7 +64,7 @@ public interface ApiService {
     @GET( "http://news-at.zhihu.com/api/4/news/latest")
     ZhihuData syncZhihu(Clazz<ZhihuData> clazz) throws Exception;
 
-    @HTTP(method = HttpMethod.POST,path = "/dosomething/{some_path}")
+    @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
     void doSomething(
             @Path("some_path") String holder,
             @Param("param1") String param1,
@@ -74,7 +74,7 @@ public interface ApiService {
             Callback<Result<RequestInfo>> callback
     );
 
-    @HTTP(method = HttpMethod.POST,path = "/dosomething/{some_path}")
+    @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
     Result<RequestInfo> doSomethingSync(
             @Path("some_path") String holder,
             @Param("param1") String param1,
@@ -84,7 +84,7 @@ public interface ApiService {
             Clazz<Result<RequestInfo>> clazz
     ) throws Exception;
 
-    @HTTP(method = HttpMethod.PUT,path = "put/{holde_test}")
+    @HTTP(method = Request.Method.PUT,path = "put/{holde_test}")
     void putJsonBody(
             @Path("holde_test") String holder,
             @JsonField("field1") String field1,
@@ -107,5 +107,5 @@ public interface ApiService {
     Observable<ZhihuData> testZhihu();
 
     @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }

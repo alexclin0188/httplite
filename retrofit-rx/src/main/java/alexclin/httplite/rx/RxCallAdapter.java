@@ -6,9 +6,11 @@ import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import alexclin.httplite.Call;
+import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.retrofit.MethodHandler;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.util.Result;
+import alexclin.httplite.Result;
 import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.util.Util;
 import rx.Observable;
@@ -34,19 +36,20 @@ public class RxCallAdapter implements CallAdapter {
     public RxCallAdapter() {
     }
 
+    @SuppressWarnings("unchecked")
+    private <T> Observable<T> invokeInner(Call call,Type returnType){
+        final Type observableType = Util.getTypeParameter(returnType);
+        return Observable.create(new CallOnSubscribe<T>(call,observableType));
+    }
+
     @Override
-    public Object adapt(Call call, Type returnType, Object... args) throws Exception {
+    public Object adapt(HttpLite lite, MethodHandler handler, Type returnType, Object... args) throws Exception {
+        Call call = handler.createRequest(args).build().call();
         Observable<?> observable = invokeInner(call,returnType);
         if(invokeFilter!=null){
             observable = invokeFilter.call(call.request(),Util.getTypeParameter(returnType),observable);
         }
         return observable;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> Observable<T> invokeInner(Call call,Type returnType){
-        final Type observableType = Util.getTypeParameter(returnType);
-        return Observable.create(new CallOnSubscribe<T>(call,observableType));
     }
 
     @Override

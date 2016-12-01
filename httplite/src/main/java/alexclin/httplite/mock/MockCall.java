@@ -6,9 +6,9 @@ import alexclin.httplite.Handle;
 import alexclin.httplite.impl.TaskDispatcher;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpCall;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.MockHandler;
 
@@ -20,7 +20,7 @@ import alexclin.httplite.listener.MockHandler;
 public class MockCall extends HttpCall{
     MockFactory factory;
 
-    public MockCall(Request request, MockFactory mock) {
+    public MockCall(Request.Builder request, MockFactory mock) {
         super(request);
         this.factory = mock;
     }
@@ -67,8 +67,8 @@ public class MockCall extends HttpCall{
         }
 
         @Override
-        public Call newCall(Request request) {
-            if(mockHandler.needMock(request)) {
+        public Call newCall(Request.Builder request) {
+            if(mockHandler.needMock(request.build())) {
                 return new MockCall(request, this);
             }else{
                 return super.newCall(request);

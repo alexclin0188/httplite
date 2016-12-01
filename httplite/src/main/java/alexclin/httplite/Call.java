@@ -1,8 +1,8 @@
 package alexclin.httplite;
 
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.util.Result;
 import alexclin.httplite.util.Util;
 
 /**
@@ -11,10 +11,10 @@ import alexclin.httplite.util.Util;
  * @author alexclin at 16/1/29 21:15
  */
 public abstract class Call implements Handle{
-    protected Request request;
+    protected Request.Builder request;
     private Executable executable;
 
-    public Call(Request request) {
+    public Call(Request.Builder request) {
         this.request = request;
     }
 
@@ -34,7 +34,7 @@ public abstract class Call implements Handle{
     public abstract <T> Result<T> syncResult(Clazz<T> clazz);
 
     public Request request(){
-        return request;
+        return request.build();
     }
 
     public void cancel(){
@@ -59,6 +59,6 @@ public abstract class Call implements Handle{
     }
 
     interface CallFactory {
-        Call newCall(Request request);
+        Call newCall(Request.Builder request);
     }
 }

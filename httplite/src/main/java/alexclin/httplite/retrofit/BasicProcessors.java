@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.annotation.Body;
@@ -41,7 +41,7 @@ class BasicProcessors {
     static class FormProcessor extends ProcessorFactory.ObjectsProcessor{
 
         @Override
-        protected void performProcess(Annotation annotation, Request request, Object value) {
+        protected void performProcess(Annotation annotation, Request.Builder request, Object value) {
             request.form(((Form)annotation).value(),value.toString(),((Form)annotation).encoded());
         }
 
@@ -59,7 +59,7 @@ class BasicProcessors {
     static class FormsProcessor extends ProcessorFactory.MapProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, String key, Object value) {
+        void performProcess(Annotation annotation, Request.Builder request, String key, Object value) {
             request.form(key, value.toString(), ((Forms) annotation).encoded());
         }
 
@@ -72,7 +72,7 @@ class BasicProcessors {
     static class HeaderProcessor extends ProcessorFactory.ObjectsProcessor{
 
         @Override
-        protected void performProcess(Annotation annotation, Request request, Object value) {
+        protected void performProcess(Annotation annotation, Request.Builder request, Object value) {
             request.header(((Header)annotation).value(),value.toString());
         }
 
@@ -90,7 +90,7 @@ class BasicProcessors {
     static class HeadersProcessor extends ProcessorFactory.MapProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, String key, Object value) {
+        void performProcess(Annotation annotation, Request.Builder request, String key, Object value) {
             request.header(key,value.toString());
         }
 
@@ -103,7 +103,7 @@ class BasicProcessors {
     static class ParamProcessor extends ProcessorFactory.ObjectsProcessor{
 
         @Override
-        protected void performProcess(Annotation annotation, Request request, Object value) {
+        protected void performProcess(Annotation annotation, Request.Builder request, Object value) {
             request.param(((Param)annotation).value(),value.toString(),((Param)annotation).encoded());
         }
 
@@ -121,7 +121,7 @@ class BasicProcessors {
     static class ParamsProcessor extends ProcessorFactory.MapProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, String key, Object value) {
+        void performProcess(Annotation annotation, Request.Builder request, String key, Object value) {
             request.param(key,value.toString(),((Params)annotation).encoded());
         }
 
@@ -134,7 +134,7 @@ class BasicProcessors {
     static class PathProcessor implements ParameterProcessor{
 
         @Override
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if(value==null) return;
             request.pathHolder(((Path)annotation).value(),value.toString(),((Path)annotation).encoded());
         }
@@ -157,7 +157,7 @@ class BasicProcessors {
     static class PathsProcessor extends ProcessorFactory.MapProcessor{
 
         @Override
-        void performProcess(Annotation annotation, Request request, String key, Object value) {
+        void performProcess(Annotation annotation, Request.Builder request, String key, Object value) {
             request.pathHolder(key,value.toString(),((Paths)annotation).encoded());
         }
 
@@ -170,7 +170,7 @@ class BasicProcessors {
     static class MultipartProcessor implements ParameterProcessor{
 
         @Override
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if(value==null) return;
             if(value instanceof String){
                 request.multipart(((Multipart) annotation).value(),value.toString());
@@ -198,7 +198,7 @@ class BasicProcessors {
     static class IntoFileProcessor implements ParameterProcessor{
 
         @Override
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if(value==null) return;
             request.intoFile((String)value,((IntoFile) annotation).resume(),((IntoFile) annotation).rename());
         }
@@ -219,7 +219,7 @@ class BasicProcessors {
 
     static class BodyProcessor implements ParameterProcessor{
         @Override
-        public void process(Annotation annotation, Request request, Object value) {
+        public void process(Annotation annotation, Request.Builder request, Object value) {
             if(value==null) return;
             String mediaType = ((Body) annotation).value();
             if(value instanceof String){
@@ -249,7 +249,7 @@ class BasicProcessors {
     static class JsonFieldProcessor implements ParamMiscProcessor{
 
         @Override
-        public void process(Request request, Annotation[][] annotations,List<Pair<Integer,Integer>> list, Object... args) {
+        public void process(Request.Builder request, Annotation[][] annotations,List<Pair<Integer,Integer>> list, Object... args) {
             try {
                 JSONObject object = new JSONObject();
                 for(Pair<Integer,Integer> pair:list){

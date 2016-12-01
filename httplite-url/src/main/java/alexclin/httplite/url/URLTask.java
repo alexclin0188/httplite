@@ -9,7 +9,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import alexclin.httplite.Executable;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.Dispatcher;
@@ -22,7 +22,7 @@ import alexclin.httplite.Dispatcher;
 public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.Task<Response>>,Executable{
 
     private URLite lite;
-    private Request request;
+    private Request.Builder request;
     private int retryCount;
 
     private ResponseHandler callback;
@@ -30,7 +30,7 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLite lite, Request request) {
+    public URLTask(URLite lite, Request.Builder request) {
         this.lite = lite;
         this.request = request;
     }
@@ -40,9 +40,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
         int maxRetry = lite.settings.getMaxRetryCount();
         while (retryCount<= maxRetry&& !isCanceled()){
             try {
-                if(retryCount>0){
-                    callback.onRetry(retryCount,maxRetry);
-                }
                 retryCount++;
                 response = execute();
                 if(response!=null){
@@ -65,7 +62,8 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
 
     public Response executeTask() throws Exception {
         if(lite.isCacheAble(this)) lite.addCacheHeaders(request);
-        String urlStr = request.getUrl();
+        Request real = request.build();
+        String urlStr = real.getUrl();
         URL url = new URL(urlStr);
         HttpURLConnection connection;
         if (lite.settings.getProxy() != null) {
@@ -82,12 +80,12 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
             httpsURLConnection.setSSLSocketFactory(lite.settings.getSslSocketFactory());
             httpsURLConnection.setHostnameVerifier(lite.settings.getHostnameVerifier());
         }
-        lite.processCookie(urlStr,request.getHeaders());
-        if (request.getHeaders()!=null&&!request.getHeaders().isEmpty()) {
+        lite.processCookie(urlStr,real.getHeaders());
+        if (real.getHeaders()!=null&&!real.getHeaders().isEmpty()) {
             boolean first;
-            for (String name : request.getHeaders().keySet()) {
+            for (String name : real.getHeaders().keySet()) {
                 first = true;
-                for (String value : request.getHeaders().get(name)) {
+                for (String value : real.getHeaders().get(name)) {
                     if (first) {
                         connection.setRequestProperty(name, value);
                         first = false;
@@ -97,12 +95,12 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
                 }
             }
         }
-        connection.setRequestMethod(request.getMethod().name());
+        connection.setRequestMethod(real.getMethod().name());
 
         connection.setDoInput(true);
-        if(request.getMethod().permitsRequestBody&&request.getBody()!=null){
-            connection.setRequestProperty("Content-Type", request.getBody().contentType().toString());
-            long contentLength = request.getBody().contentLength();
+        if(real.getMethod().permitsRequestBody&&real.getBody()!=null){
+            connection.setRequestProperty("Content-Type", real.getBody().contentType().toString());
+            long contentLength = real.getBody().contentLength();
             if (contentLength < 0) {
                 connection.setChunkedStreamingMode(256 * 1024);
             } else {
@@ -116,10 +114,10 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
             }
             connection.setRequestProperty("Content-Length", String.valueOf(contentLength));
             connection.setDoOutput(true);
-            request.getBody().writeTo(connection.getOutputStream());
+            real.getBody().writeTo(connection.getOutputStream());
         }
 
-        Response response = URLite.createResponse(connection, request);
+        Response response = URLite.createResponse(connection, real);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
         if(!lite.isCacheAble(this)){
@@ -147,12 +145,12 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
     }
 
     public Object tag(){
-        return request.getTag();
+        return request.build().getTag();
     }
 
     @Override
     public Request request() {
-        return request;
+        return request.build();
     }
 
     public void cancel(){

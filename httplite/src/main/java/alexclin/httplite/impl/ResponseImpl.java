@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
-import alexclin.httplite.ResponseBody;
+import alexclin.httplite.listener.Response;
+import alexclin.httplite.listener.ResponseBody;
 
 /**
  * ResponseImpl

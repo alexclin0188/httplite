@@ -2,7 +2,6 @@ package alexclin.httplite.listener;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
 
 /**
  * ResponseListener

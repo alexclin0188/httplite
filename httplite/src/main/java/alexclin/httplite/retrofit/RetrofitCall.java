@@ -5,7 +5,7 @@ import alexclin.httplite.Handle;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
-import alexclin.httplite.util.Result;
+import alexclin.httplite.Result;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.util.Util;
@@ -21,7 +21,8 @@ public class RetrofitCall extends Call {
     private Retrofit retrofit;
 
     public RetrofitCall(Call realCall, RequestListener filter, Retrofit retrofit) {
-        super(realCall.request());
+        //TODO 错误待修改
+        super(null);
         this.realCall = realCall;
         this.filter = filter;
         this.retrofit = retrofit;
@@ -29,7 +30,7 @@ public class RetrofitCall extends Call {
 
     @Override
     public <T> Handle async(boolean callOnMain, Callback<T> callback) {
-        if(filter!=null) filter.onRequest(retrofit.lite(),request(), Util.type(Callback.class, callback));
+        if(filter!=null) filter.onRequestStart(request(), Util.type(Callback.class, callback));
         return realCall.async(callOnMain,callback);
     }
 
@@ -38,7 +39,7 @@ public class RetrofitCall extends Call {
         if(filter!=null) HttpLite.postOnMain(new Runnable() {
             @Override
             public void run() {
-                filter.onRequest(retrofit.lite(), realCall.request(), clazz.type());
+                filter.onRequestStart(realCall.request(), clazz.type());
             }
         });
         return realCall.sync(clazz);

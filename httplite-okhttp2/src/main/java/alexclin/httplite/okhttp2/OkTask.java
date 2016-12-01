@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.Executable;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
 
@@ -25,15 +25,16 @@ import alexclin.httplite.exception.CanceledException;
 public class OkTask implements Executable {
     private Call realCall;
     private volatile boolean isCanceled = false;
-    private Request request;
+    private Request.Builder request;
     private OkHttpClient mClient;
 
-    public OkTask(final Request request, OkHttpClient client) {
+    public OkTask(final Request.Builder request, OkHttpClient client) {
         this.request = request;
         this.mClient = client;
     }
 
-    static com.squareup.okhttp.Request.Builder createRequestBuilder(alexclin.httplite.Request request) {
+    static com.squareup.okhttp.Request.Builder createRequestBuilder(alexclin.httplite.Request.Builder builder) {
+        Request request = builder.build();
         com.squareup.okhttp.Request.Builder rb = new com.squareup.okhttp.Request.Builder().url(request.getUrl()).tag(request.getTag());
         Headers headers = createHeader(request.getHeaders());
         if(headers!=null){
@@ -91,7 +92,7 @@ public class OkTask implements Executable {
     public Response execute() throws IOException {
         com.squareup.okhttp.Request req = createRequestBuilder(request).build();
         realCall = mClient.newCall(req);
-        return new OkResponse(realCall.execute(),request);
+        return new OkResponse(realCall.execute(),request.build());
     }
 
     @Override
@@ -125,7 +126,7 @@ public class OkTask implements Executable {
         this.realCall = realCall;
     }
 
-    private Call enqueueInternal(final Request request, final ResponseHandler handler){
+    private Call enqueueInternal(final Request.Builder request, final ResponseHandler handler){
         com.squareup.okhttp.Request.Builder rb = createRequestBuilder(request);
         Call realCall = mClient.newCall(rb.build());
         realCall.enqueue(new Callback() {
@@ -140,7 +141,7 @@ public class OkTask implements Executable {
 
             @Override
             public void onResponse(com.squareup.okhttp.Response response) throws IOException {
-                handler.onResponse(new OkResponse(response, request));
+                handler.onResponse(new OkResponse(response, request.build()));
             }
         });
         return realCall;

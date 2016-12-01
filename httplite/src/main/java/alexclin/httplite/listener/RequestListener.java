@@ -11,5 +11,6 @@ import alexclin.httplite.Request;
  * @author alexclin 16/1/18 21:37
  */
 public interface RequestListener {
-    void onRequest(HttpLite lite,Request request, Type resultType);
+    void onRequestStart(Request request,Type resultType);
+    void onRequestEnd(Request request,Type resultType,Response response);
 }

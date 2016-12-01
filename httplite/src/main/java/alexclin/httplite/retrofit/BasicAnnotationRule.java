@@ -16,8 +16,6 @@ import alexclin.httplite.annotation.IntoFile;
 import alexclin.httplite.annotation.JsonField;
 import alexclin.httplite.annotation.Multipart;
 import alexclin.httplite.annotation.POST;
-import alexclin.httplite.util.HttpMethod;
-import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -40,15 +38,15 @@ public class BasicAnnotationRule implements AnnotationRule {
         registerBodyAnnotation(JsonField.class,JSON_BODY,true);
     }
 
-    static HttpMethod checkHttpMethod(Method interfaceMethod){
-        HttpMethod method = null;
+    static Request.Method checkHttpMethod(Method interfaceMethod){
+        Request.Method method = null;
         GET get = interfaceMethod.getAnnotation(GET.class);
         if(get!=null){
-            method = HttpMethod.GET;
+            method = Request.Method.GET;
         }
         if(method==null){
             POST post = interfaceMethod.getAnnotation(POST.class);
-            if(post!=null) method = HttpMethod.POST;
+            if(post!=null) method = Request.Method.POST;
         }
         if(method==null){
             HTTP http = interfaceMethod.getAnnotation(HTTP.class);
@@ -69,7 +67,7 @@ public class BasicAnnotationRule implements AnnotationRule {
     @Override
     public void checkMethod(Method interfaceMethod,CallAdapter.ResultType resultType) throws RuntimeException {
         Annotation[][] methodParameterAnnotationArrays = interfaceMethod.getParameterAnnotations();
-        HttpMethod method = checkHttpMethod(interfaceMethod);
+        Request.Method method = checkHttpMethod(interfaceMethod);
 
         boolean allowBody = method.permitsRequestBody;
         boolean requireBody = method.requiresRequestBody;

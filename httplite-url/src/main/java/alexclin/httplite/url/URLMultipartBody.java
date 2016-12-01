@@ -3,7 +3,6 @@ package alexclin.httplite.url;
 import android.net.Uri;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.util.Util;
 

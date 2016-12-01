@@ -1,6 +1,6 @@
 package alexclin.httplite;
 
-import java.io.IOException;
+import alexclin.httplite.listener.Response;
 
 /**
  * Executable

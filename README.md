@@ -122,7 +122,7 @@ public interface ApiService {
     Observable<ZhihuData> testZhihu();
 
     @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }
 ```
 

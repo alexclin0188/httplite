@@ -11,12 +11,10 @@ import javax.net.SocketFactory;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.cookie.PersistentCookieStore;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseListener;
-import alexclin.httplite.okhttp2.Ok2Lite;
-import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.json.GsonParser;
 import alexclin.httplite.url.URLite;
@@ -67,9 +65,13 @@ public class App extends Application {
 
         builder.requestListener(new RequestListener() {
             @Override
-            public void onRequest(HttpLite lite, Request request, Type resultType) {
-                request.header("handle", "misc");
+            public void onRequestStart(Request request, Type resultType) {
                 LogUtil.e("Request:"+request);
+            }
+
+            @Override
+            public void onRequestEnd(Request request, Type resultType, Response response) {
+
             }
         });
 

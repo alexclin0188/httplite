@@ -68,7 +68,7 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
         mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
                 .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().async(new Callback<Result<List<FileInfo>>>() {
+                .get().build().call().async(new Callback<Result<List<FileInfo>>>() {
             @Override
             public void onSuccess(Request req, Map<String, List<String>> headers,Result<List<FileInfo>> result) {
                 //TODO
@@ -99,7 +99,7 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
         mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
                 .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().async(this);
+                .get().build().call().async(this);
     }
 
     @Override

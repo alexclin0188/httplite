@@ -7,13 +7,15 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import alexclin.httplite.listener.MediaType;
+
 /**
  * URLMediaType
  *
  * shamelessly stolen from okhttp
  * @author alexclin 16/1/2 19:32
  */
-public class URLMediaType implements alexclin.httplite.MediaType {
+public class URLMediaType implements MediaType {
 
     private static final String TOKEN = "([a-zA-Z0-9-!#$%&'*+.^_`{|}~]+)";
     private static final String QUOTED = "\"([^\"]*)\"";

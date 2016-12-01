@@ -5,10 +5,10 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
-import alexclin.httplite.ResponseBody;
+import alexclin.httplite.listener.Response;
+import alexclin.httplite.listener.ResponseBody;
 import alexclin.httplite.listener.ProgressListener;
 
 /**

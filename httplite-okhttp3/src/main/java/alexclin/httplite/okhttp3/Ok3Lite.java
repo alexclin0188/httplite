@@ -12,7 +12,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.util.Util;
 import okhttp3.Cache;
@@ -50,7 +50,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
         return this;
     }
 
-    public Executable executable(Request request){
+    public Executable executable(Request.Builder request){
         return new OkTask(request,mClient);
     }
 

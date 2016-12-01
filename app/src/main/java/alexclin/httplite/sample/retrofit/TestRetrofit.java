@@ -16,6 +16,7 @@ import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.MethodInvoker;
 import alexclin.httplite.retrofit.Retrofit;
@@ -202,12 +203,15 @@ public class TestRetrofit {
 
     public static void testFilter(HttpLite mHttplite){
         RequestListener listener = new RequestListener() {
+
             @Override
-            public void onRequest(HttpLite lite, Request request, Type resultType) {
-                LogUtil.e("RequestUrl:"+request);
-                //添加通用参数
-                request.param("commonParam","1234");
-                LogUtil.e("onRequest:"+request);
+            public void onRequestStart(Request request, Type resultType) {
+
+            }
+
+            @Override
+            public void onRequestEnd(Request request, Type resultType, Response response) {
+
             }
         };
         MethodFilter filter = new MethodFilter() {

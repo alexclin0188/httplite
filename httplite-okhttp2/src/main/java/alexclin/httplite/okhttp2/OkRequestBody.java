@@ -5,7 +5,7 @@ import com.squareup.okhttp.RequestBody;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import okio.BufferedSink;
 import okio.Okio;
 

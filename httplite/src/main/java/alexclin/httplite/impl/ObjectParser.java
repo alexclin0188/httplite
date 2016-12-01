@@ -11,10 +11,9 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.HashMap;
 
-import alexclin.httplite.MediaType;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.MediaType;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.exception.DecodeException;
 import alexclin.httplite.exception.HttpException;

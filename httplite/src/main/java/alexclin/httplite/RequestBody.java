@@ -3,6 +3,8 @@ package alexclin.httplite;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import alexclin.httplite.listener.MediaType;
+
 /**
  * RequestBody
  *

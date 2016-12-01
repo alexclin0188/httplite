@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.util.ClientSettings;
 
 
@@ -20,7 +21,7 @@ public interface LiteClient {
 //
 //    Response executeSync(Request request) throws Exception;
 
-    Executable executable(Request request);
+    Executable executable(Request.Builder request);
 
     void cancel(Object tag);
 

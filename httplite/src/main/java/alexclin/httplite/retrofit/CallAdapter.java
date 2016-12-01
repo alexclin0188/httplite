@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import alexclin.httplite.Call;
+import alexclin.httplite.HttpLite;
 
 /**
  * CallAdapter
@@ -12,7 +13,7 @@ import alexclin.httplite.Call;
  */
 public interface CallAdapter {
     enum ResultType{File,NotFile,Any}
-    Object adapt(Call call, Type returnType, Object... args) throws Exception;
+    Object adapt(HttpLite lite,MethodHandler handler, Type returnType, Object... args) throws Exception;
     boolean support(Method method);
 
     /**

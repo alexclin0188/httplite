@@ -2,8 +2,6 @@ package alexclin.httplite.listener;
 
 import java.lang.reflect.Type;
 
-import alexclin.httplite.Response;
-
 /**
  * ResponseParser
  *

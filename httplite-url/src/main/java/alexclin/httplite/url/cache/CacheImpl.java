@@ -4,9 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.impl.ResponseImpl;
-import alexclin.httplite.url.CacheDispatcher;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -91,10 +90,10 @@ public class CacheImpl{
         return returnResponse;
     }
 
-    public void addCacheHeaders(Request request){
+    public void addCacheHeaders(Request.Builder request){
         CacheEntry entry = null;
         try {
-            DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request));
+            DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request.build()));
             if(snapshot==null){
                 return;
             }

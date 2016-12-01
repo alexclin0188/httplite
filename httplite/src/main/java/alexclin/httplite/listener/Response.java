@@ -1,7 +1,9 @@
-package alexclin.httplite;
+package alexclin.httplite.listener;
 
 import java.util.List;
 import java.util.Map;
+
+import alexclin.httplite.Request;
 
 /**
  * Response

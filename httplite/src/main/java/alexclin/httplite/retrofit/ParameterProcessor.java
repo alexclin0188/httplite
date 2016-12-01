@@ -10,5 +10,5 @@ import alexclin.httplite.Request;
  * @author alexclin 16/1/27 22:04
  */
 public interface ParameterProcessor extends AbsParamProcessor{
-    void process(Annotation annotation,Request request,Object value);
+    void process(Annotation annotation,Request.Builder request,Object value);
 }

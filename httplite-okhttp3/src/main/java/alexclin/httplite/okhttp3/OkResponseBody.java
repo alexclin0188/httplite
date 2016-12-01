@@ -3,7 +3,7 @@ package alexclin.httplite.okhttp3;
 import java.io.IOException;
 import java.io.InputStream;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import okhttp3.ResponseBody;
 
 /**
@@ -11,7 +11,7 @@ import okhttp3.ResponseBody;
  *
  * @author alexclin 16/1/1 15:00
  */
-public class OkResponseBody implements alexclin.httplite.ResponseBody {
+public class OkResponseBody implements alexclin.httplite.listener.ResponseBody {
     private ResponseBody realBody;
     private MediaType type;
     public OkResponseBody(ResponseBody realBody) {

@@ -8,6 +8,7 @@ import java.util.Map;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.Util;
@@ -44,8 +45,8 @@ public class ResponseHandler<T> {
             return;
         }
         ResponseListener filter = getLite().getResponseFilter();
-        if (filter != null) filter.onResponse(getLite(), call.request, response);
-        response = call.request.handleResponse(response);
+        if (filter != null) filter.onResponse(getLite(), call.request.build(), response);
+        response = call.request.build().handleResponse(response);
         try {
             T result = parseResponse(response);
             postSuccess(result, response.headers());
@@ -62,18 +63,6 @@ public class ResponseHandler<T> {
         postFailed(e);
     }
 
-    public final void onRetry(final int tryCount, final int maxCount) {
-        HttpLite.postOnMain(new Runnable() {
-            @Override
-            public void run() {
-                RetryListener listener = call.request.retryListener;
-                if (listener != null) {
-                    listener.onRetry(tryCount, maxCount);
-                }
-            }
-        });
-    }
-
     public final void onCancel() {
         isCanceled = true;
     }
@@ -83,11 +72,11 @@ public class ResponseHandler<T> {
             HttpLite.postOnMain(new Runnable() {
                 @Override
                 public void run() {
-                    callback.onFailed(call.request, e);
+                    callback.onFailed(call.request.build(), e);
                 }
             });
         else
-            callback.onFailed(call.request, e);
+            callback.onFailed(call.request.build(), e);
     }
 
     protected final void postSuccess(final T result, final Map<String, List<String>> headers) {
@@ -95,11 +84,11 @@ public class ResponseHandler<T> {
             HttpLite.postOnMain(new Runnable() {
                 @Override
                 public void run() {
-                    callback.onSuccess(call.request,headers,result);
+                    callback.onSuccess(call.request.build(),headers,result);
                 }
             });
         else {
-            callback.onSuccess(call.request, headers, result);
+            callback.onSuccess(call.request.build(), headers, result);
             if(result instanceof Response){
                 Util.closeQuietly(((Response) result).body());
             }
@@ -107,11 +96,11 @@ public class ResponseHandler<T> {
     }
 
     protected final HttpLite getLite() {
-        return call.request.lite;
+        return call.request.build().lite();
     }
 
     T parseResponse(Response response) throws Exception{
-        return call.request.lite.getObjectParser().parseObject(response,resultType(),cancelable);
+        return getLite().getObjectParser().parseObject(response,resultType(),cancelable);
     }
 
     public void callCancelAndFailed(CanceledException e) {

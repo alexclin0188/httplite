@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import alexclin.httplite.Executable;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.util.ClientSettings;
@@ -56,7 +56,7 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     }
 
 
-    public Executable executable(Request request){
+    public Executable executable(Request.Builder request){
         return new OkTask(request,mClient);
     }
 

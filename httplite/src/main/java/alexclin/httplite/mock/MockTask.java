@@ -3,9 +3,9 @@ package alexclin.httplite.mock;
 import alexclin.httplite.Dispatcher;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpLite;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.Callback;
 
 /**

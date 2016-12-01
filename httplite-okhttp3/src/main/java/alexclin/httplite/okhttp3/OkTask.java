@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.Executable;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.ResponseHandler;
 import alexclin.httplite.exception.CanceledException;
 import okhttp3.CacheControl;
@@ -24,10 +24,10 @@ import okhttp3.OkHttpClient;
 public class OkTask implements Executable {
     private Call realCall;
     private volatile boolean isCanceled = false;
-    private Request request;
+    private Request.Builder request;
     private OkHttpClient mClient;
 
-    public OkTask(final Request request, OkHttpClient client) {
+    public OkTask(final Request.Builder request, OkHttpClient client) {
         this.request = request;
         this.mClient = client;
     }
@@ -50,7 +50,7 @@ public class OkTask implements Executable {
     public Response execute() throws IOException {
         okhttp3.Request req = createRequestBuilder(request).build();
         realCall = mClient.newCall(req);
-        return new OkResponse(realCall.execute(),request);
+        return new OkResponse(realCall.execute(),request.build());
     }
 
     @Override
@@ -87,7 +87,7 @@ public class OkTask implements Executable {
         this.realCall = realCall;
     }
 
-    private Call executeInternal(final alexclin.httplite.Request request, final ResponseHandler callback){
+    private Call executeInternal(final alexclin.httplite.Request.Builder request, final ResponseHandler callback){
         okhttp3.Request.Builder rb = createRequestBuilder(request);
         Call call = mClient.newCall(rb.build());
         call.enqueue(new Callback() {
@@ -102,47 +102,48 @@ public class OkTask implements Executable {
 
             @Override
             public void onResponse(Call call, okhttp3.Response response) throws IOException {
-                callback.onResponse(new OkResponse(response, request));
+                callback.onResponse(new OkResponse(response, request.build()));
             }
         });
         return call;
     }
 
-    private okhttp3.Request.Builder createRequestBuilder(alexclin.httplite.Request request) {
-        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(request.getUrl()).tag(request.getTag());
-        Headers okheader = createHeader(request.getHeaders());
+    private okhttp3.Request.Builder createRequestBuilder(alexclin.httplite.Request.Builder request) {
+        Request real = request.build();
+        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(real.getUrl()).tag(real.getTag());
+        Headers okheader = createHeader(real.getHeaders());
         if(okheader!=null){
             rb.headers(okheader);
         }
-        switch (request.getMethod()){
+        switch (real.getMethod()){
             case GET:
                 rb = rb.get();
                 break;
             case POST:
-                rb = rb.post(OkRequestBody.wrapperLite(request.getBody()));
+                rb = rb.post(OkRequestBody.wrapperLite(real.getBody()));
                 break;
             case PUT:
-                rb = rb.put(OkRequestBody.wrapperLite(request.getBody()));
+                rb = rb.put(OkRequestBody.wrapperLite(real.getBody()));
                 break;
             case PATCH:
-                rb = rb.patch(OkRequestBody.wrapperLite(request.getBody()));
+                rb = rb.patch(OkRequestBody.wrapperLite(real.getBody()));
                 break;
             case HEAD:
                 rb = rb.head();
                 break;
             case DELETE:
-                if(request.getBody()==null){
+                if(request.build().getBody()==null){
                     rb = rb.delete();
                 }else{
-                    rb = rb.delete(OkRequestBody.wrapperLite(request.getBody()));
+                    rb = rb.delete(OkRequestBody.wrapperLite(real.getBody()));
                 }
                 break;
         }
-        if(request.getCacheExpiredTime()>0){
-            rb.cacheControl(new CacheControl.Builder().maxAge(request.getCacheExpiredTime(), TimeUnit.SECONDS).build());
-        }else if(request.getCacheExpiredTime()== alexclin.httplite.Request.FORCE_CACHE){
+        if(real.getCacheExpiredTime()>0){
+            rb.cacheControl(new CacheControl.Builder().maxAge(real.getCacheExpiredTime(), TimeUnit.SECONDS).build());
+        }else if(real.getCacheExpiredTime()== alexclin.httplite.Request.FORCE_CACHE){
             rb.cacheControl(CacheControl.FORCE_CACHE);
-        }else if(request.getCacheExpiredTime()== alexclin.httplite.Request.NO_CACHE){
+        }else if(real.getCacheExpiredTime()== alexclin.httplite.Request.NO_CACHE){
             rb.cacheControl(CacheControl.FORCE_NETWORK);
         }
         return rb;

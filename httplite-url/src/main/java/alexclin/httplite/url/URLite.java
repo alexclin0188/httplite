@@ -19,11 +19,11 @@ import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
-import alexclin.httplite.Response;
-import alexclin.httplite.ResponseBody;
+import alexclin.httplite.listener.Response;
+import alexclin.httplite.listener.ResponseBody;
 import alexclin.httplite.Dispatcher;
 import alexclin.httplite.impl.ResponseBodyImpl;
 import alexclin.httplite.impl.ResponseImpl;
@@ -102,7 +102,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public Executable executable(Request request) {
+    public Executable executable(Request.Builder request) {
         return new URLTask(this,request);
     }
 
@@ -263,7 +263,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         }
     }
 
-    public void addCacheHeaders(Request request) {
+    public void addCacheHeaders(Request.Builder request) {
         if (mCacheDispatcher != null) mCacheDispatcher.addCacheHeaders(request);
     }
 

@@ -3,10 +3,9 @@ package alexclin.httplite.impl;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.util.LogUtil;
 
 /**
  * ProgressRequestBody

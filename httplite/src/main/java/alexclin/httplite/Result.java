@@ -1,4 +1,4 @@
-package alexclin.httplite.util;
+package alexclin.httplite;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,7 @@ public class Result<T> {
         return headers;
     }
 
-    public Throwable getError() {
+    public Throwable error() {
         return throwable;
     }
 }
