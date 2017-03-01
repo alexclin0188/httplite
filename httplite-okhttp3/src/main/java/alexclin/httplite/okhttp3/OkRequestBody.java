@@ -1,5 +1,7 @@
 package alexclin.httplite.okhttp3;
 
+import android.text.TextUtils;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -13,7 +15,7 @@ import okio.Okio;
  *
  * @author alexclin 16/1/1 14:22
  */
-public class OkRequestBody implements alexclin.httplite.RequestBody {
+public class OkRequestBody extends alexclin.httplite.RequestBody {
     private RequestBody requestBody;
     private MediaType type;
 
@@ -60,5 +62,23 @@ public class OkRequestBody implements alexclin.httplite.RequestBody {
                 }
             };
         }
+    }
+
+    public static RequestBody wrapperLite(final alexclin.httplite.RequestBody requestBody, final String mediaType){
+        return new RequestBody() {
+            @Override
+            public okhttp3.MediaType contentType() {
+                if(TextUtils.isEmpty(mediaType)){
+                    return OkMediaType.wrapperLite(requestBody.contentType());
+                }else{
+                    return okhttp3.MediaType.parse(mediaType);
+                }
+            }
+
+            @Override
+            public void writeTo(BufferedSink sink) throws IOException {
+                requestBody.writeTo(sink.outputStream());
+            }
+        };
     }
 }

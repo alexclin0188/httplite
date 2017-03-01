@@ -2,24 +2,24 @@ package alexclin.httplite;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Pair;
 
-import java.io.File;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 import alexclin.httplite.impl.ObjectParser;
-import alexclin.httplite.listener.MediaType;
+import alexclin.httplite.impl.ProgressResponse;
+import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.mock.MockCall;
+import alexclin.httplite.mock.MockLite;
 import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
-import alexclin.httplite.Call.CallFactory;
+import alexclin.httplite.util.Clazz;
 
 /**
  * HttpLite
@@ -29,31 +29,31 @@ import alexclin.httplite.Call.CallFactory;
 public class HttpLite {
     private static Handler sHandler = new Handler(Looper.getMainLooper());
     private final boolean isRelease;
-    private LiteClient client;
+    private ILite client;
     private String baseUrl;
     private int maxRetryCount;
     private RequestListener mRequestFilter;
     private ResponseListener mResponseFilter;
     private Executor customDownloadExecutor;
-    private CallFactory callFactory;
     private Retrofit retrofit;
     private ObjectParser mObjectParser;
 
-    HttpLite(LiteClient client, String baseUrl, int maxRetryCount, CallFactory factory, boolean release,
+    private MockLite mocker;
+
+    HttpLite(ILite client, String baseUrl, int maxRetryCount, boolean release,
              RequestListener requestFilter, ResponseListener responseFilter, Executor downloadExecutor, HashMap<String,ResponseParser> parserMap, List<CallAdapter> invokers) {
         this.client = client;
         this.mObjectParser = new ObjectParser(parserMap.values());
         this.baseUrl = baseUrl;
         this.maxRetryCount = maxRetryCount;
         this.isRelease = release;
-        this.callFactory = factory;
         this.mRequestFilter = requestFilter;
         this.mResponseFilter = responseFilter;
         this.customDownloadExecutor = downloadExecutor;
         this.retrofit = new RetrofitImpl(invokers);
     }
 
-    public static void postOnMain(Runnable runnable){
+    public static void runOnMain(Runnable runnable){
         if(Thread.currentThread()==Looper.getMainLooper().getThread()){
             runnable.run();
         }else{
@@ -78,72 +78,28 @@ public class HttpLite {
         return maxRetryCount;
     }
 
-    public Request.Builder url(String url){
-        if(url==null) return null;
-        return new Request.Builder(this).setUrl(url);
-    }
 
-    public LiteClient getClient(){
+    public ILite getClient(){
         return client;
     }
 
     public void cancel(Object tag){
-        if(callFactory instanceof MockCall.MockFactory){
-            ((MockCall.MockFactory)callFactory).cancel(tag);
-        }else{
-            this.client.cancel(tag);
-        }
+        this.mocker.cancel(tag);
+        this.client.cancel(tag);
     }
 
     public void cancelAll(){
-        if(callFactory instanceof MockCall.MockFactory){
-            ((MockCall.MockFactory)callFactory).cancelAll();
-        }else{
-            this.client.cancelAll();
-        }
+        this.mocker.cancelAll();
+        this.client.cancelAll();
     }
 
     public void shutDown(){
-        if(callFactory instanceof MockCall.MockFactory){
-            ((MockCall.MockFactory)callFactory).shutDown();
-        }else{
-            this.client.shutDown();
-        }
+        this.mocker.shutDown();
+        this.client.shutDown();
     }
 
     ObjectParser getObjectParser(){
         return mObjectParser;
-    }
-
-    public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String,List<String>>,RequestBody>> headBodyList,
-                                           List<Pair<String,String>> paramList, List<Pair<String,Pair<String,RequestBody>>> fileList){
-        return client.createMultipartBody(boundary, type, bodyList, headBodyList, paramList, fileList);
-    }
-
-    public RequestBody createFormBody(List<Pair<String,String>> paramList, List<Pair<String,String>> encodedParamList){
-        return client.createFormBody(paramList, encodedParamList);
-    }
-
-
-    public RequestBody createRequestBody(MediaType contentType, String content){
-        return client.createRequestBody(contentType, content);
-    }
-
-    public RequestBody createRequestBody(final MediaType contentType, final byte[] content){
-        return client.createRequestBody(contentType, content);
-    }
-
-    public RequestBody createRequestBody(final MediaType contentType, final byte[] content,
-                                  final int offset, final int byteCount){
-        return client.createRequestBody(contentType, content, offset, byteCount);
-    }
-
-    public RequestBody createRequestBody(final MediaType contentType, final File file){
-        return client.createRequestBody(contentType, file);
-    }
-
-    public MediaType parse(String type){
-        return client.parse(type);
     }
 
     public <T> T retrofit(Class<T> clazz){
@@ -174,15 +130,36 @@ public class HttpLite {
         return mResponseFilter;
     }
 
-    Executor getCustomDownloadExecutor() {
-        return customDownloadExecutor;
+    public <T> Result<T> execute(Request request, Clazz<T> clazz) {
+        return execute(request,clazz.type());
     }
 
-    Call makeCall(Request.Builder request) {
-        return callFactory.newCall(request);
+    public <T> Result<T> execute(Request request, Type type) {
+        request.setBaseUrl(baseUrl);
+        if(mocker!=null&&mocker.needMock(request)){
+            return mocker.mockExecute(request,type);
+        }
+        try {
+            Response response = client.execute(request);
+            if(request.getProgressListener()!=null){
+                response = new ProgressResponse(response,request.getWrapListener());
+            }
+            T result = getObjectParser().parseObject(response,type);
+            return new Result<T>(result,response.headers());
+        } catch (Throwable e) {
+            return new Result<T>(e);
+        }
     }
 
-    class RetrofitImpl extends Retrofit{
+    public <T> void enqueue(Request request, Callback<T> callback) {
+        request.setBaseUrl(baseUrl);
+        if(mocker!=null&&mocker.needMock(request)){
+            mocker.mockEnqueue(request,callback);
+        }
+        client.enqueue(request,new ResponseCallback<T>(callback,getObjectParser()));
+    }
+
+    private class RetrofitImpl extends Retrofit{
 
         public RetrofitImpl(List<CallAdapter> invokers) {
             super(invokers);
@@ -190,14 +167,12 @@ public class HttpLite {
 
         @Override
         public Request.Builder makeRequest(String baseUrl) {
-            Request.Builder request = new Request.Builder(HttpLite.this);
-            request.setBaseUrl(baseUrl);
-            return request;
+            return new Request.Builder();
         }
 
         @Override
         public Request.Builder setMethod(Request.Builder request, Request.Method method) {
-            request.method = method;
+            request.setMethod(method);
             return request;
         }
 
@@ -205,12 +180,6 @@ public class HttpLite {
         public Request.Builder setUrl(Request.Builder request, String url) {
             request.setUrl(url);
             return request;
-        }
-
-        @Override
-        public Call makeCall(Request.Builder request) {
-            Request real = request.method(request.method,null).build();
-            return request.lite.makeCall(real.mBuilder);
         }
 
         @Override

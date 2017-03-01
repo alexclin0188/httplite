@@ -22,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.Response;
-import alexclin.httplite.okhttp2.Ok2Lite;
+//import alexclin.httplite.okhttp2.Ok2Lite;
+import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.sample.TrustAllManager;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpLite;
@@ -30,8 +31,8 @@ import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
-import alexclin.httplite.rx.AndroidSchedulers;
-import alexclin.httplite.rx.RxCallAdapter;
+//import alexclin.httplite.rx.AndroidSchedulers;
+//import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.json.JacksonParser;
 import alexclin.httplite.sample.model.ZhihuData;
@@ -39,9 +40,9 @@ import alexclin.httplite.sample.retrofit.ApiService;
 import alexclin.httplite.sample.retrofit.ExRequestInfo;
 import alexclin.httplite.sample.retrofit.MergeListener;
 import alexclin.httplite.util.LogUtil;
-import rx.Observable;
-import rx.Subscriber;
-import rx.schedulers.Schedulers;
+//import rx.Observable;
+//import rx.Subscriber;
+//import rx.schedulers.Schedulers;
 
 /**
  * RetrofitFrag
@@ -145,7 +146,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit6:
                 String saveDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
                 MergeListener mergeListener = new MergeListener();
-                apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
+                apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,new Callback<File>(){
 
                     @Override
                     public void onSuccess(Request req, Map<String, List<String>> headers,File result) {
@@ -190,26 +191,26 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 //                        handle1.cancel();
 //                    }
 //                },2);
-                Observable<ZhihuData> observable = apiService.testZhihu();
-                observable.subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Subscriber<ZhihuData>() {
-                    @Override
-                    public void onCompleted() {
-                        LogUtil.e("onCompleted");
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        LogUtil.e("Onfailed", e);
-                    }
-
-                    @Override
-                    public void onNext(ZhihuData zhihuData) {
-                        LogUtil.e("Result:" + zhihuData);
-                        LogUtil.e("Result:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
-                    }
-                });
+//                Observable<ZhihuData> observable = apiService.testZhihu();
+//                observable.subscribeOn(Schedulers.io())
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe(new Subscriber<ZhihuData>() {
+//                    @Override
+//                    public void onCompleted() {
+//                        LogUtil.e("onCompleted");
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        LogUtil.e("Onfailed", e);
+//                    }
+//
+//                    @Override
+//                    public void onNext(ZhihuData zhihuData) {
+//                        LogUtil.e("Result:" + zhihuData);
+//                        LogUtil.e("Result:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
+//                    }
+//                });
                 break;
         }
     }
@@ -217,7 +218,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private HttpLite initHttpLite(){
         if(this.httpLite!=null) return this.httpLite;
 //        String baseUrl = "http://192.168.99.238:10080/";
-        HttpLiteBuilder builder = Ok2Lite.create();//URLite.create();
+        HttpLiteBuilder builder = Ok3Lite.create();//URLite.create();
         TrustAllManager manager = new TrustAllManager();
         HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
@@ -242,7 +243,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
 
                     }
                 })
-                .addCallAdapter(new RxCallAdapter())
+//                .addCallAdapter(new RxCallAdapter())
                 .build();
         return lite;
     }

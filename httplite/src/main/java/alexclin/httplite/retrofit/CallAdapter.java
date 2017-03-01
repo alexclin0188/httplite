@@ -3,7 +3,6 @@ package alexclin.httplite.retrofit;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import alexclin.httplite.Call;
 import alexclin.httplite.HttpLite;
 
 /**

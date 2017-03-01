@@ -18,6 +18,7 @@ import com.example.Result;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.sample.App;
@@ -51,11 +52,12 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
     }
 
     public void onClick(View view){
+        HttpLite lite = App.httpLite(getActivity());
         switch (view.getId()){
             case R.id.btn_test1:
-                App.httpLite(getActivity()).url("https://192.168.99.238:10080/test").header("header","not chinese").header("test_header","2016-01-06")
+                new Request.Builder("https://192.168.99.238:10080/test").header("header","not chinese").header("test_header","2016-01-06")
                         .header("double_header","header1").header("double_header","head2")
-                        .param("param1","I'm god").param("param2","You dog").param("param3","中文").get().build().call().async(new Callback<String>() {
+                        .param("param1","I'm god").param("param2","You dog").param("param3","中文").get().build().enqueue(lite,new Callback<String>() {
                     @Override
                     public void onSuccess(Request req,Map<String,List<String>> headers,String result) {
                         mRequestInfo.setText(req.toString());
@@ -70,7 +72,7 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_test2:
-                App.httpLite(getActivity()).url("http://news-at.zhihu.com/api/4/news/latest").get().build().call().async(new Callback<ZhihuData>() {
+                new Request.Builder("http://news-at.zhihu.com/api/4/news/latest").get().build().enqueue(lite,new Callback<ZhihuData>() {
                     @Override
                     public void onSuccess(Request req,Map<String,List<String>> headers,ZhihuData result) {
                         mRequestInfo.setText(req.toString());
@@ -87,9 +89,9 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_test3:
-                App.httpLite(getActivity()).url("http://192.168.99.238:10080/abcde").header("header","not chinese").header("test_header","2016-01-06")
+                new Request.Builder("http://192.168.99.238:10080/abcde").header("header","not chinese").header("test_header","2016-01-06")
                         .header("double_header","header1").header("double_header","head2")
-                        .param("type","json").param("param2","You dog").param("param3", "中文").get().build().call().async(new Callback<Result<RequestInfo>>() {
+                        .param("type","json").param("param2","You dog").param("param3", "中文").get().build().enqueue(lite,new Callback<Result<RequestInfo>>() {
                     @Override
                     public void onSuccess(Request req,Map<String,List<String>> headers,Result<RequestInfo> result) {
                         mRequestInfo.setText(req.toString());
@@ -108,7 +110,7 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
                 if(TextUtils.isEmpty(keyword)){
                     Toast.makeText(view.getContext(),"关键字不能为空",Toast.LENGTH_SHORT).show();
                 }else{
-                    App.httpLite(view.getContext()).url("http://www.baidu.com/s?pn=0&rn=10&tn=json").param("wd",keyword,false).get().build().call().async(new Callback<String>() {
+                    new Request.Builder("http://www.baidu.com/s?pn=0&rn=10&tn=json").param("wd",keyword,false).get().build().enqueue(lite,new Callback<String>() {
                         @Override
                         public void onSuccess(Request req, Map<String, List<String>> headers, String result) {
                             mRequestInfo.setText(req.toString());

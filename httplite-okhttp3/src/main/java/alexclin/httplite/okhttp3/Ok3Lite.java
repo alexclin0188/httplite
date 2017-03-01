@@ -1,24 +1,22 @@
 package alexclin.httplite.okhttp3;
 
-import android.util.Pair;
-
-import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.Executable;
-import alexclin.httplite.Request;
-import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.HttpLiteBuilder;
-import alexclin.httplite.LiteClient;
-import alexclin.httplite.listener.MediaType;
-import alexclin.httplite.RequestBody;
+import alexclin.httplite.ILite;
+import alexclin.httplite.Request;
+import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.Response;
+import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.util.Util;
 import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.Call;
-import okhttp3.FormBody;
-import okhttp3.MultipartBody;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 
 /**
@@ -26,10 +24,10 @@ import okhttp3.OkHttpClient;
  *
  * @author alexclin 16/2/16 20:15
  */
-public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
+public class Ok3Lite extends HttpLiteBuilder implements ILite {
     private OkHttpClient mClient;
 
-    Ok3Lite(OkHttpClient client){
+    private Ok3Lite(OkHttpClient client){
         if(client==null){
             mClient = new OkHttpClient();
         }else{
@@ -46,12 +44,39 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
     }
 
     @Override
-    protected LiteClient initLiteClient() {
+    protected ILite initLiteClient() {
         return this;
     }
 
-    public Executable executable(Request.Builder request){
-        return new OkTask(request,mClient);
+    @Override
+    public Response execute(Request request) throws Throwable {
+        Call call = mClient.newCall(makeRequest(request));
+        //TODO
+        return new OkResponse(call.execute(),request);
+    }
+
+    @Override
+    public void enqueue(final Request request,final Callback<Response> callback) {
+        okhttp3.Callback okCallback = new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Exception throwable;
+                if("Canceled".equals(e.getMessage())){
+                    throwable = new CanceledException(e);
+                }else{
+                    throwable = e;
+                }
+                callback.onFailed(request,throwable);
+            }
+
+            @Override
+            public void onResponse(Call call, okhttp3.Response response) throws IOException {
+                callback.onSuccess(request,response.headers().toMultimap(),new OkResponse(response,request));
+            }
+        };
+        Call call = mClient.newCall(makeRequest(request));
+        //TODO
+        call.enqueue(okCallback);
     }
 
     @Override
@@ -73,53 +98,6 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
     @Override
     public void cancelAll() {
         mClient.dispatcher().cancelAll();
-    }
-
-    @Override
-    public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String,List<String>>,RequestBody>> headBodyList,
-                                           List<Pair<String,String>> paramList, List<Pair<String,Pair<String,RequestBody>>> fileList){
-        MultipartBody.Builder builder;
-        if(boundary==null){
-            builder = new MultipartBody.Builder().setType(OkMediaType.wrapperLite(type));
-        }else {
-            builder = new MultipartBody.Builder(boundary).setType(OkMediaType.wrapperLite(type));
-        }
-        if(bodyList!=null){
-            for(RequestBody body:bodyList){
-                builder.addPart(OkRequestBody.wrapperLite(body));
-            }
-        }
-        if(headBodyList!=null){
-            for(Pair<Map<String,List<String>>,RequestBody> bodyPair:headBodyList){
-                builder.addPart(OkTask.createHeader(bodyPair.first), OkRequestBody.wrapperLite(bodyPair.second));
-            }
-        }
-        if(paramList!=null){
-            for(Pair<String,String> pair:paramList){
-                builder.addFormDataPart(pair.first, pair.second);
-            }
-        }
-        if(fileList!=null){
-            for(Pair<String,Pair<String,RequestBody>> pair:fileList){
-                builder.addFormDataPart(pair.first, pair.second.first, OkRequestBody.wrapperLite(pair.second.second));
-            }
-        }
-        return new OkRequestBody(builder.build());
-    }
-
-    public RequestBody createFormBody(List<Pair<String,String>> paramList, List<Pair<String,String>> encodedParamList){
-        FormBody.Builder builder = new FormBody.Builder();
-        if(paramList!=null){
-            for(Pair<String,String> param:paramList){
-                builder.add(param.first,param.second);
-            }
-        }
-        if(encodedParamList!=null){
-            for(Pair<String,String> param:encodedParamList){
-                builder.addEncoded(param.first,param.second);
-            }
-        }
-        return new OkRequestBody(builder.build());
     }
 
     @Override
@@ -149,32 +127,58 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient{
         mClient.dispatcher().executorService().shutdown();
     }
 
-    public RequestBody createRequestBody(MediaType contentType, String content) {
-        okhttp3.RequestBody requestBody =
-                okhttp3.RequestBody.create(OkMediaType.wrapperLite(contentType),content);
-        return new OkRequestBody(requestBody);
+    private static okhttp3.Request makeRequest(Request real){
+        //TODO
+        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(real.getUrl()).tag(real.getTag());
+        Headers okheader = createHeader(real.getHeaders());
+        if(okheader!=null){
+            rb.headers(okheader);
+        }
+        switch (real.getMethod()){
+            case GET:
+                rb = rb.get();
+                break;
+            case POST:
+                rb = rb.post(OkRequestBody.wrapperLite(real.getRequestBody()));
+                break;
+            case PUT:
+                rb = rb.put(OkRequestBody.wrapperLite(real.getRequestBody()));
+                break;
+            case PATCH:
+                rb = rb.patch(OkRequestBody.wrapperLite(real.getRequestBody()));
+                break;
+            case HEAD:
+                rb = rb.head();
+                break;
+            case DELETE:
+                if(real.getRequestBody()==null){
+                    rb = rb.delete();
+                }else{
+                    rb = rb.delete(OkRequestBody.wrapperLite(real.getRequestBody()));
+                }
+                break;
+        }
+        if(real.getCacheExpiredTime()>0){
+            rb.cacheControl(new CacheControl.Builder().maxAge(real.getCacheExpiredTime(), TimeUnit.SECONDS).build());
+        }else if(real.getCacheExpiredTime()== alexclin.httplite.Request.FORCE_CACHE){
+            rb.cacheControl(CacheControl.FORCE_CACHE);
+        }else if(real.getCacheExpiredTime()== alexclin.httplite.Request.NO_CACHE){
+            rb.cacheControl(CacheControl.FORCE_NETWORK);
+        }
+        return rb.build();
     }
 
-    public RequestBody createRequestBody(final MediaType contentType, final byte[] content) {
-        return createRequestBody(contentType, content, 0, content.length);
-    }
-
-    public RequestBody createRequestBody(final MediaType contentType, final byte[] content,
-                                         final int offset, final int byteCount) {
-        okhttp3.RequestBody requestBody =
-                okhttp3.RequestBody.create(OkMediaType.wrapperLite(contentType),content,offset,byteCount);
-        return new OkRequestBody(requestBody);
-    }
-
-    public RequestBody createRequestBody(final MediaType contentType, final File file) {
-        okhttp3.RequestBody requestBody =
-                okhttp3.RequestBody.create(OkMediaType.wrapperLite(contentType),file);
-        return new OkRequestBody(requestBody);
-    }
-
-    @Override
-    public MediaType parse(String type) {
-        okhttp3.MediaType oktype = okhttp3.MediaType.parse(type);
-        return new OkMediaType(oktype);
+    private static Headers createHeader(Map<String, List<String>> headers){
+        if(headers!=null&&!headers.isEmpty()){
+            Headers.Builder hb = new Headers.Builder();
+            for(String key:headers.keySet()){
+                List<String> values = headers.get(key);
+                for(String value:values){
+                    hb.add(key,value);
+                }
+            }
+            return hb.build();
+        }
+        return null;
     }
 }

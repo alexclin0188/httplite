@@ -9,13 +9,16 @@ import java.util.Map;
  * @author alexclin  16/3/18 22:57
  */
 public class Result<T> {
-    private T result;
-    private Map<String,List<String>> headers;
-    private Throwable throwable;
+    private final T result;
+    private final Map<String,List<String>> headers;
+    private final Throwable throwable;
+
+    public Result(Throwable throwable) {
+        this(null,null,throwable);
+    }
 
     public Result(T result, Map<String, List<String>> headers) {
-        this.result = result;
-        this.headers = headers;
+        this(result,headers,null);
     }
 
     public Result(T result, Map<String, List<String>> headers, Throwable throwable) {

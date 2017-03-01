@@ -11,7 +11,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.Call;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
@@ -128,37 +127,37 @@ public class TestRetrofit {
                 }
             }
         }.start();
-        //生成Call
-        final Call call = api.zhihuCall();
-        //异步调用Call
-        call.async(new Callback<ZhihuData>() {
-            @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
-                //TODO
-                LogUtil.e("Result:"+result);
-            }
-
-            @Override
-            public void onFailed(Request req, Exception e) {
-                //TODO
-                LogUtil.e("onFailed",e);
-            }
-        });
-        //或者同步调用Call
-        new Thread(){
-            @Override
-            public void run() {
-                //获取知乎主页数据
-                try {
-                    ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
-                    //TODO
-                    LogUtil.e("Result:"+data);
-                } catch (Exception e) {
-                    //TODO
-                    LogUtil.e("onFailed",e);
-                }
-            }
-        }.start();
+//        //生成Call
+//        final Call call = api.zhihuCall();
+//        //异步调用Call
+//        call.async(new Callback<ZhihuData>() {
+//            @Override
+//            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
+//                //TODO
+//                LogUtil.e("Result:"+result);
+//            }
+//
+//            @Override
+//            public void onFailed(Request req, Exception e) {
+//                //TODO
+//                LogUtil.e("onFailed",e);
+//            }
+//        });
+//        //或者同步调用Call
+//        new Thread(){
+//            @Override
+//            public void run() {
+//                //获取知乎主页数据
+//                try {
+//                    ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
+//                    //TODO
+//                    LogUtil.e("Result:"+data);
+//                } catch (Exception e) {
+//                    //TODO
+//                    LogUtil.e("onFailed",e);
+//                }
+//            }
+//        }.start();
     }
 
     public static void testCustom(HttpLite mHttplite){

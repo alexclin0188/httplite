@@ -19,13 +19,11 @@ import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Param;
 import alexclin.httplite.annotation.Path;
 import alexclin.httplite.annotation.Progress;
-import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.sample.model.ZhihuData;
-import rx.Observable;
+//import rx.Observable;
 
 /**
  * ApiService
@@ -57,7 +55,6 @@ public interface ApiService {
             @Param("param2") String param2,
             @IntoFile String path,
             @Progress ProgressListener progressListener,
-            @Retry RetryListener retryListener,
             Callback<File> callback
     );
 
@@ -100,12 +97,12 @@ public interface ApiService {
             @Param("param1") String param1,
             @Param("param2") String param2,
             @IntoFile String path,
-            @Progress @Retry MergeCallback<File> callback
+            @Progress MergeCallback<File> callback
     );
 
-    @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<ZhihuData> testZhihu();
-
-    @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
+//    @GET("http://news-at.zhihu.com/api/4/news/latest")
+//    Observable<ZhihuData> testZhihu();
+//
+//    @GET("http://news-at.zhihu.com/api/4/news/latest")
+//    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }

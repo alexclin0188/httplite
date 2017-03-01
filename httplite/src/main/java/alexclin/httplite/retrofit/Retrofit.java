@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.Call;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
@@ -116,8 +115,6 @@ public abstract class Retrofit {
     public abstract Request.Builder setMethod(Request.Builder builder, Request.Method method);
 
     public abstract Request.Builder setUrl(Request.Builder builder, String url);
-
-    public abstract Call makeCall(Request.Builder request);
 
     public abstract boolean isReleaseMode();
 

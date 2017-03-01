@@ -5,8 +5,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,12 +16,9 @@ import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
 import alexclin.httplite.impl.ProgressRequestBody;
-import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.listener.Response;
-import alexclin.httplite.listener.RetryListener;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.Util;
 
 /**
@@ -35,8 +31,6 @@ public final class Request{
     public static final int FORCE_CACHE = -1;
     public static final int UNSPECIFIED_CACHE = -100;
 
-    Builder mBuilder;
-
     private static final Comparator<Pair<String,Pair<String,Boolean>>> paramComparable = new Comparator<Pair<String, Pair<String, Boolean>>>() {
 
         @Override
@@ -48,78 +42,148 @@ public final class Request{
         }
     };
 
+    private final String mUrl;
+    private String fullUrl;
+    private String baseUrl;
+    private final Map<String,Pair<String,Boolean>> pathHolders;
+    private final Method method;
+    private final ProgressListener progressListener;
+    private final ProgressListener wrapListener;
+    private final Map<String,List<String>> headers;
+    private final List<Pair<String,Pair<String,Boolean>>> params;
+    private final RequestBody requestBody;
+    private final Object tag;
+    private final int cacheExpiredTime;
+    private final DownloadParams downloadParams;
+
     private Request(Builder builder) {
-        mBuilder = builder;
+        this.mUrl = builder.url;
+        this.method = builder.method;
+        this.progressListener = builder.progressListener;
+        this.headers = builder.headers;
+        this.params = builder.params;
+        this.tag = builder.tag;
+        this.cacheExpiredTime = builder.cacheExpiredTime;
+        this.downloadParams = builder.downloadParams;
+        this.pathHolders = Collections.unmodifiableMap(builder.pathHolders);
+        if(this.progressListener!=null){
+            this.wrapListener = new MainProgressListener(this.progressListener);
+            this.requestBody = new ProgressRequestBody(builder.body,wrapListener);
+        }else{
+            this.wrapListener = null;
+            this.requestBody = builder.body;
+        }
+    }
+
+    private String buildUrlAndParams(String baseUrl,String url,Map<String,Pair<String,Boolean>> pathHolders) {
+        if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)){
+            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and baseUrl is empty",url));
+        }else if(!Util.isHttpPrefix(url)&&!TextUtils.isEmpty(baseUrl)){
+            url = Util.appendString(baseUrl,url);
+        }
+        if(url==null){
+            throw new IllegalStateException("url is null for this request, set a url first");
+        }
+        if(TextUtils.isEmpty(url)){
+            throw new IllegalStateException("Url is empty for this Request");
+        }
+        if(pathHolders!=null){
+            String value;
+            for (String key : pathHolders.keySet()){
+                Pair<String,Boolean> pair = pathHolders.get(key);
+                value = pair.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
+                url = url.replace("{" + key + "}",value);
+            }
+        }
+        StringBuilder sb = new StringBuilder(url);
+        if (params != null && !params.isEmpty()){
+            int index = url.indexOf("?");
+            if(index == -1){
+                sb.append("?");
+            }else if(index<url.length()-1){
+                if(!url.endsWith("&")){
+                    sb.append("&");
+                }
+            }
+            Collections.sort(params,paramComparable);
+            boolean first = true;
+            String value;
+            for (Pair<String,Pair<String,Boolean>> pair : params){
+                Pair<String,Boolean> pairValue = pair.second;
+                String key = pairValue.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
+                value = pairValue.second?pairValue.first:Uri.encode(pairValue.first,Util.UTF_8.name());
+                if(first){
+                    sb.append(key).append("=").append(value);
+                    first = false;
+                }else{
+                    sb.append("&").append(key).append("=").append(value);
+                }
+            }
+        }
+        return sb.toString();
     }
 
     public String getUrl() {
-        return mBuilder.buildUrlAndParams(mBuilder.baseUrl,mBuilder.url);
+        return mUrl;
+    }
+
+    public String getFullUrl(){
+        if(fullUrl==null){
+            fullUrl = buildUrlAndParams(baseUrl,mUrl,pathHolders);
+        }
+        return fullUrl;
+    }
+
+    void setBaseUrl(String baseUrl){
+        this.baseUrl = baseUrl;
+    }
+
+    public ProgressListener getWrapListener() {
+        return wrapListener;
     }
 
     public Method getMethod() {
-        return mBuilder.method;
+        return method;
     }
 
     public List<Pair<String,Pair<String,Boolean>>> getParams() {
-        return mBuilder.params;
+        return params==null?null:Collections.unmodifiableList(params);
     }
 
-    public RequestBody getBody() {
-        if(mBuilder.progressListener!=null&&mBuilder.body!=null){
-            if(mBuilder.progressBody==null||!mBuilder.progressBody.isWrappBody(mBuilder.body)){
-                mBuilder.progressBody = new ProgressRequestBody(mBuilder.body,getMainProgressListener());
-            }
-            return mBuilder.progressBody;
-        }
-        return mBuilder.body;
-    }
-
-    Response handleResponse(Response response){
-        if(mBuilder.progressListener!=null&&getDownloadParams()==null){
-            return new ProgressResponse(response,getMainProgressListener());
-        }
-        return response;
-    }
-
-    private ProgressListener getMainProgressListener(){
-        if(mBuilder.progressWrapper ==null){
-            mBuilder.progressWrapper = new MainProgressListener(mBuilder.progressListener);
-        }
-        return mBuilder.progressWrapper;
+    public RequestBody getRequestBody() {
+        return requestBody;
     }
 
     public Object getTag() {
-        return mBuilder.tag;
+        return tag;
     }
 
     public ProgressListener getProgressListener() {
-        return mBuilder.progressListener;
-    }
-
-    public RetryListener getRetryListener() {
-        return mBuilder.retryListener;
+        return progressListener;
     }
 
     public int getCacheExpiredTime() {
-        return mBuilder.cacheExpiredTime;
+        return cacheExpiredTime;
     }
 
-    public Handle download(Callback<File> callback){
-        //TODO
-//        return get().async(callback);
-        return null;
-    }
-
-    public DownloadHandler.DownloadParams getDownloadParams() {
-        return mBuilder.downloadParams;
-    }
-
-    public Object getMark(){
-        return mBuilder.mark;
+    public DownloadParams getDownloadParams() {
+        return downloadParams;
     }
 
     public Map<String, List<String>> getHeaders() {
-        return mBuilder.headers;
+        return headers==null?null:Collections.unmodifiableMap(headers);
+    }
+
+    public <T> Result<T> execute(HttpLite lite, Type type){
+        return lite.execute(this,type);
+    }
+
+    public <T> Result<T> execute(HttpLite lite, Clazz<T> clazz){
+        return lite.execute(this,clazz);
+    }
+
+    public <T> void enqueue(HttpLite lite, Callback<T> callback){
+        lite.enqueue(this,callback);
     }
 
     private static class MainProgressListener implements ProgressListener{
@@ -131,7 +195,7 @@ public final class Request{
 
         @Override
         public void onProgressUpdate(final boolean out,final long current,final long total) {
-            HttpLite.postOnMain(new Runnable() {
+            HttpLite.runOnMain(new Runnable() {
                 @Override
                 public void run() {
                     listener.onProgressUpdate(out,current,total);
@@ -140,46 +204,43 @@ public final class Request{
         }
     }
 
-    HttpLite lite(){
-        return mBuilder.lite;
-    }
-
-    public Call call(){
-        return mBuilder.lite.makeCall(this.mBuilder);
-    }
-
     @Override
     public String toString() {
         //TODO
-        return null;
+        return super.toString();
     }
 
     public static final class Builder implements Cloneable{
-        private String baseUrl;
         private String url;
-        Method method;
+        private Method method;
         private ProgressListener progressListener;
-        private RetryListener retryListener;
-        HttpLite lite;
         private Map<String,List<String>> headers;
         private List<Pair<String,Pair<String,Boolean>>> params;
         private RequestBody body;
-        private ProgressRequestBody progressBody;
         private Object tag;
-        private MainProgressListener progressWrapper;
         private int cacheExpiredTime = UNSPECIFIED_CACHE;
 
-        private FormBuilder formBuilder;
-        private MultipartBuilder multipartBuilder;
+        private RequestBody.FormBody formBody;
+        private RequestBody.MultipartBody multipartBody;
 
         private HashMap<String,Pair<String,Boolean>> pathHolders;
 
-        private DownloadHandler.DownloadParams downloadParams;
+        private DownloadParams downloadParams;
 
         private Object mark;
 
-        Builder(HttpLite lite) {
-            this.lite = lite;
+        public Builder(String url) {
+            this.url = url;
+        }
+
+        Builder(){}
+
+        void setMethod(Method method) {
+            this.method = method;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
         }
 
         public Builder header(String name, String value) {
@@ -260,62 +321,68 @@ public final class Request{
         public Builder form(String name,String value,boolean encoded){
             initFormBuilder();
             if(encoded)
-                formBuilder.addEncoded(name, value);
+                formBody.addEncoded(name, value);
             else
-                formBuilder.add(name, value);
+                formBody.add(name, value);
             return this;
         }
 
         public Builder multipart(String name,String value){
             initMultiPartBuilder();
-            multipartBuilder.add(name, value);
+            multipartBody.add(name, value);
             return this;
         }
 
-        public Builder multipartType(MediaType type){
+        public Builder multipartType(String mediaType){
             initMultiPartBuilder();
-            multipartBuilder.setType(type);
+            multipartBody.setType(mediaType);
             return this;
         }
 
         public Builder multipart(RequestBody body){
             initMultiPartBuilder();
-            multipartBuilder.add(body);
+            multipartBody.add(body);
             return this;
         }
 
         public Builder multipart(Map<String,List<String>> headers,RequestBody body){
             initMultiPartBuilder();
-            multipartBuilder.add(headers,body);
+            multipartBody.add(headers,body);
             return this;
         }
 
         public Builder multipart(String name, String fileName, RequestBody body){
             initMultiPartBuilder();
-            multipartBuilder.add(name,fileName,body);
+            multipartBody.add(name,fileName,body);
             return this;
         }
 
         public Builder multipart(String name, String fileName, File file){
-            return multipart(name, fileName, lite.createRequestBody(Util.guessMediaType(lite, file), file));
+//            RequestBody requestBody = lite.createRequestBody(Util.guessMediaType(lite, file), file);
+            RequestBody body = RequestBody.createBody(file,null);
+            return multipart(name, fileName, body);
         }
 
         public Builder multipart(String name, String fileName, File file,String mediaType){
-            return multipart(name, fileName, lite.createRequestBody(lite.parse(mediaType), file));
+//            RequestBody requestBody = lite.createRequestBody(lite.parse(mediaType), file);
+            RequestBody body = RequestBody.createBody(file,mediaType);
+            return multipart(name, fileName, body);
         }
 
         public Builder body(String mediaType,String content){
             if(content==null) return this;
-            this.body = lite.createRequestBody(lite.parse(mediaType), content);
+//            this.requestBody = lite.createRequestBody(lite.parse(mediaType), content);
+            this.body = RequestBody.createBody(content,mediaType);
             return this;
         }
 
         public Builder body(String mediaType,File file){
-            if(TextUtils.isEmpty(mediaType)){
-                this.body = lite.createRequestBody(Util.guessMediaType(lite,file), file);
-            }else{
-                this.body = lite.createRequestBody(lite.parse(mediaType), file);
-            }
+//            if(TextUtils.isEmpty(mediaType)){
+//                this.requestBody = lite.createRequestBody(Util.guessMediaType(lite,file), file);
+//            }else{
+//                this.requestBody = lite.createRequestBody(lite.parse(mediaType), file);
+//            }
+            this.body = RequestBody.createBody(file,mediaType);
             return this;
         }
 
@@ -344,8 +411,8 @@ public final class Request{
             return this;
         }
 
-        private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
-            DownloadHandler.DownloadParams params = DownloadHandler.createParams(path, fileName, autoResume, autoRename,url);
+        private DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
+            DownloadParams params = DownloadParams.createParams(path, fileName, autoResume, autoRename,url);
             if(params==null){
                 String info = String.format("call intoFile() with wrong params->path:%s,fileName:%s,resume:%b,rename:%b",path,fileName,autoResume,autoRename);
                 throw new IllegalArgumentException(info);
@@ -370,11 +437,13 @@ public final class Request{
         }
 
         public Builder post(String mediaType,String content){
-            return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), content));
+//            return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), content));
+            return method(Method.POST, RequestBody.createBody(content,mediaType));
         }
 
         public Builder post(String mediaType,File file){
-            return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), file));
+//            return method(Method.POST, lite.createRequestBody(lite.parse(mediaType), file));
+            return method(Method.POST, RequestBody.createBody(file,mediaType));
         }
 
         public Builder delete(RequestBody body) {
@@ -382,7 +451,8 @@ public final class Request{
         }
 
         public Builder delete() {
-            return delete(lite.createRequestBody(null, new byte[0]));
+//            return delete(lite.createRequestBody(null, new byte[0]));
+            return delete(RequestBody.createBody(new byte[0],null));
         }
 
         public Builder put(RequestBody body) {
@@ -400,10 +470,10 @@ public final class Request{
                 throw new IllegalArgumentException("method == null");
             }
             if (!isBodyNull && !method.permitsRequestBody) {
-                throw new IllegalArgumentException("method " + method + " must not have a call body.");
+                throw new IllegalArgumentException("method " + method + " must not have a call requestBody.");
             }
             if (isBodyNull && method.requiresRequestBody) {
-                throw new IllegalArgumentException("method " + method + " must have a call body.");
+                throw new IllegalArgumentException("method " + method + " must have a call requestBody.");
             }
             this.method = method;
             if(body!=null){
@@ -423,114 +493,39 @@ public final class Request{
             return this;
         }
 
-        public Builder onRetry(RetryListener listener){
-            this.retryListener = listener;
-            return this;
-        }
-
         private void initFormBuilder(){
-            if(multipartBuilder!=null){
+            if(multipartBody !=null){
                 throw new IllegalOperationException("You cannot call form-Method after you have called multipart method on call");
             }
             if(body!=null){
                 throw new IllegalOperationException("You cannot call form-Method after you have set RequestBody on call");
             }
-            if(formBuilder == null){
-                formBuilder = new FormBuilder();
+            if(formBody == null){
+                formBody = new RequestBody.FormBody();
             }
         }
 
         private void initMultiPartBuilder(){
-            if(formBuilder!=null){
+            if(formBody !=null){
                 throw new IllegalOperationException("You cannot call multipart-method after you have called form-method on call");
             }
             if(body!=null){
                 throw new IllegalOperationException("You cannot call multipart-method after you have set RequestBody on call");
             }
-            if(multipartBuilder==null){
-                multipartBuilder = new MultipartBuilder();
+            if(multipartBody ==null){
+                multipartBody = new RequestBody.MultipartBody();
             }
         }
 
         private void preWorkForTask(RequestBody body) {
-            if((this.body!=null||body!=null)&&(formBuilder!=null||multipartBuilder!=null)){
+            if((this.body!=null||body!=null)&&(formBody !=null|| multipartBody !=null)){
                 throw new IllegalOperationException("You cannot not use multipart/from and raw RequestBody on the same call");
             }
-            if(formBuilder!=null){
-                this.body = formBuilder.build(lite.getClient());
-            }else if(multipartBuilder!=null){
-                this.body = multipartBuilder.build(lite.getClient());
+            if(formBody !=null){
+                this.body = formBody;
+            }else if(multipartBody !=null){
+                this.body = multipartBody;
             }
-        }
-
-        private void checkUrl(String baseUrl,String url){
-            if(url==null){
-                throw new NullPointerException("Url is null for this Request");
-            }
-            if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)&&TextUtils.isEmpty(lite.getBaseUrl())){
-                throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and baseUrl is empty",url));
-            }
-        }
-
-        private String buildUrlAndParams(String baseUrl,String url) {
-            checkUrl(baseUrl,url);
-            if(!Util.isHttpPrefix(url)){
-                if(!TextUtils.isEmpty(lite.getBaseUrl())){
-                    if(!TextUtils.isEmpty(baseUrl)){
-                        if(Util.isHttpPrefix(baseUrl)){
-                            url = Util.appendString(baseUrl,url);
-                        }else{
-                            baseUrl = Util.appendString(lite.getBaseUrl(),baseUrl);
-                            url = Util.appendString(baseUrl,url);
-                        }
-                    }else{
-                        url = Util.appendString(lite.getBaseUrl(), url);
-                    }
-                }else{
-                    if(!TextUtils.isEmpty(baseUrl)){
-                        url = Util.appendString(baseUrl,url);
-                    }
-                }
-            }
-            url = processPathHolders(url, pathHolders);
-            StringBuilder sb = new StringBuilder(url);
-            if (params != null && !params.isEmpty()){
-                int index = url.indexOf("?");
-                if(index == -1){
-                    sb.append("?");
-                }else if(index<url.length()-1){
-                    if(!url.endsWith("&")){
-                        sb.append("&");
-                    }
-                }
-                Collections.sort(params,paramComparable);
-                boolean first = true;
-                String value;
-                for (Pair<String,Pair<String,Boolean>> pair : params){
-                    Pair<String,Boolean> pairValue = pair.second;
-                    String key = pairValue.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
-                    value = pairValue.second?pairValue.first:Uri.encode(pairValue.first,Util.UTF_8.name());
-                    if(first){
-                        sb.append(key).append("=").append(value);
-                        first = false;
-                    }else{
-                        sb.append("&").append(key).append("=").append(value);
-                    }
-                }
-            }
-            return sb.toString();
-        }
-
-        private String processPathHolders(String url, Map<String, Pair<String,Boolean>> pathHolders) {
-            if(pathHolders!=null){
-                String value;
-                for (String key : pathHolders.keySet()){
-                    Pair<String,Boolean> pair = pathHolders.get(key);
-                    value = pair.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
-                    url = url.replace("{" + key + "}",value);
-                }
-            }
-            return url;
         }
 
         private HashMap<String,Pair<String,Boolean>> getPathHolders(){
@@ -551,24 +546,11 @@ public final class Request{
             }
             if(contentType!=null){
                 headers.remove(contentType);
-                final MediaType type = lite.parse(contentType);
-                final RequestBody tmp = body;
-                body = new RequestBody() {
-                    @Override
-                    public MediaType contentType() {
-                        return type;
-                    }
-
-                    @Override
-                    public long contentLength() throws IOException {
-                        return tmp.contentLength();
-                    }
-
-                    @Override
-                    public void writeTo(OutputStream sink) throws IOException {
-                        tmp.writeTo(sink);
-                    }
-                };
+                if(body instanceof RequestBody.NotBody){
+                    ((RequestBody.NotBody) body).setMediaType(contentType);
+                }else{
+                    body = RequestBody.wrapBody(body,contentType);
+                }
             }
         }
 
@@ -577,26 +559,9 @@ public final class Request{
             return this;
         }
 
-
-
-        Builder setUrl(String url){
-            checkUrl(baseUrl,url);
-            this.url = url;
-            return this;
-        }
-
-        Builder setBaseUrl(String baseUrl){
-            if(TextUtils.isEmpty(lite.getBaseUrl())&&!Util.isHttpPrefix(baseUrl)){
-                throw new IllegalArgumentException("Global BaseUrl is empty, you must set a baseUrl(@BaseURL) with http/https prefix for this request");
-            }
-            this.baseUrl = baseUrl;
-            return this;
-        }
-
         @Override
         public Object clone() throws CloneNotSupportedException {
             Builder builder = (Builder) super.clone();
-            builder.lite = this.lite;
             return builder;
         }
 
@@ -620,9 +585,9 @@ public final class Request{
             return requiresRequestBody(method)
                     || method.name().equals("OPTIONS")
                     || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
-                    || method.name().equals("PROPFIND")  // (WebDAV) without body: call <allprop/>
-                    || method.name().equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
-                    || method.name().equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
+                    || method.name().equals("PROPFIND")  // (WebDAV) without requestBody: call <allprop/>
+                    || method.name().equals("MKCOL")     // (WebDAV) may contain a requestBody, but behaviour is unspecified
+                    || method.name().equals("LOCK");     // (WebDAV) requestBody: create lock, without requestBody: refresh lock
         }
 
         public static boolean requiresRequestBody(Method method) {
@@ -631,6 +596,80 @@ public final class Request{
                     || method.name().equals("PATCH")
                     || method.name().equals("PROPPATCH") // WebDAV
                     || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
+        }
+    }
+
+    public static class DownloadParams{
+        public File parentDir;
+        public File targetFile;
+        public boolean autoResume;
+        public boolean autoRename;
+
+        DownloadParams(File parentDir, File targetFile, boolean autoResume, boolean autoRename) {
+            this.parentDir = parentDir;
+            this.targetFile = targetFile;
+            this.autoResume = autoResume;
+            this.autoRename = autoRename;
+        }
+
+        public File getParentDir() {
+            return parentDir;
+        }
+
+        public File getTargetFile() {
+            return targetFile;
+        }
+
+        public boolean isAutoResume() {
+            return autoResume;
+        }
+
+        public boolean isAutoRename() {
+            return autoRename;
+        }
+
+        private static DownloadParams createParams(String path, String fileName, boolean autoResume, boolean autoRename,String url) {
+            if(TextUtils.isEmpty(path)){
+                return null;
+            }
+            File parentDir = new File(path);
+            if(TextUtils.isEmpty(fileName)){
+                if(path.endsWith("/")){
+                    autoRename = true;
+                }else{
+                    if(parentDir.exists()&&parentDir.isDirectory()){
+                        autoRename = true;
+                    }else{
+                        int index = path.lastIndexOf("/");
+                        if(index!=-1){
+                            fileName = parentDir.getName();
+                            parentDir = parentDir.getParentFile();
+                        }else
+                            return null;
+                    }
+                }
+            }
+            if(TextUtils.isEmpty(fileName)){
+                fileName = createDefaultName(url);
+            }
+            File targetFile = new File(parentDir,fileName);
+            if(!parentDir.exists()){
+                if(!parentDir.mkdirs()){
+                    return null;
+                }
+            }
+            if(!parentDir.canWrite()){
+                return null;
+            }
+            return new DownloadParams(parentDir,targetFile,autoResume,autoRename);
+        }
+
+        private static String createDefaultName(String url) {
+            int index = url.lastIndexOf("/");
+            if(index>-1&&index<url.length()-1){
+                return url.substring(index+1);
+            }
+            return String.format(Locale.getDefault(),"download-%d.tmp", System.currentTimeMillis());
         }
     }
 }

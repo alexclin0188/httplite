@@ -12,7 +12,7 @@ import alexclin.httplite.listener.ProgressListener;
  *
  * @author alexclin  16/3/31 22:21
  */
-public class ProgressRequestBody implements RequestBody {
+public class ProgressRequestBody extends RequestBody {
     private RequestBody requestBody;
     private ProgressListener progressListener;
 

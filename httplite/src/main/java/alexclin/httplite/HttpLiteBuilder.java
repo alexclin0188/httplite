@@ -19,7 +19,6 @@ import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
 import alexclin.httplite.listener.ResponseListener;
-import alexclin.httplite.mock.MockCall;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.retrofit.CallAdapter;
@@ -43,19 +42,12 @@ public abstract class HttpLiteBuilder{
 
     private HashMap<String,ResponseParser> parserMap;
 
-    protected abstract LiteClient initLiteClient();
+    protected abstract ILite initLiteClient();
 
     public final HttpLite build(){
-        LiteClient client = initLiteClient();
+        ILite client = initLiteClient();
         client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(),new HttpCall.Factory(), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
-    }
-
-    public final HttpLite mock(MockHandler mockHandler){
-        LiteClient client = initLiteClient();
-        client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(),new MockCall.MockFactory(mockHandler), isRelease,
+        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(), isRelease,
                 mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
     }
 

@@ -108,7 +108,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                             }
                             list.add(fileInfo);
                         }
-                    HttpLite.postOnMain(new Runnable() {
+                    HttpLite.runOnMain(new Runnable() {
                         @Override
                         public void run() {
                             PostFrag.this.currentPath = currentPath;
@@ -128,7 +128,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             loadFiles(info.filePath);
         }else{
             File file = new File(basePath+info.filePath);
-            mHttpLite.url(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).build().call().async(new Callback<Result<String>>() {
+            new Request.Builder(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).build().enqueue(mHttpLite,new Callback<Result<String>>() {
                 @Override
                 public void onSuccess(Request req, Map<String, List<String>> headers,Result<String> result) {
                     LogUtil.e("Result:"+result);
@@ -140,16 +140,16 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                     e.printStackTrace();
                 }
             });
-            MediaType type = mHttpLite.parse(MediaType.MULTIPART_FORM+";charset=utf-8");
-            RequestBody body = mHttpLite.createRequestBody(mHttpLite.parse(MediaType.APPLICATION_STREAM),file);
-            mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
+            String type = MediaType.MULTIPART_FORM+";charset=utf-8";
+            RequestBody body = RequestBody.createBody(file,MediaType.APPLICATION_STREAM);
+            new Request.Builder("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
                     .onProgress(new ProgressListener() {
                         @Override
                         public void onProgressUpdate(boolean out, long current, long total) {
                             LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
                         }
                     })
-                    .post().build().call().async(new Callback<Result<String>>() {
+                    .post().build().enqueue(mHttpLite,new Callback<Result<String>>() {
                 @Override
                 public void onSuccess(Request req,Map<String, List<String>> headers,Result<String> result) {
                     LogUtil.e("Result:"+result);
@@ -161,7 +161,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                     e.printStackTrace();
                 }
             });
-            mHttpLite.url("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).build().call().async(new Callback<String>() {
+            new Request.Builder("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).build().enqueue(mHttpLite,new Callback<String>() {
                 @Override
                 public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
                     LogUtil.e("Result:" + result);
@@ -173,7 +173,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                     e.printStackTrace();
                 }
             });
-            mHttpLite.url("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().build().call().async(new Callback<String>() {
+            new Request.Builder("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().build().enqueue(mHttpLite,new Callback<String>() {
                 @Override
                 public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
                     LogUtil.e("Result:" + result);

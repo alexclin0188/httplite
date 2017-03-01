@@ -1,1 +1,6 @@
-include ':app', ':mockdata', ':mockserver', ':httplite', ':httplite-okhttp2', ':httplite-url', ':httplite-okhttp3', ':retrofit-rx'
+include ':app'
+
+
+include ':mockdata', ':mockserver'
+
+include ':httplite', ':httplite-okhttp3'//,':httplite-okhttp2', ':httplite-url',  ':retrofit-rx'

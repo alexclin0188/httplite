@@ -65,10 +65,10 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
     public void onResume() {
         super.onResume();
         mHttpLite = App.httpLite(getActivity());
-        mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
+        new Request.Builder(url).header("header","not chinese").header("test_header","2016-01-06")
                 .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().build().call().async(new Callback<Result<List<FileInfo>>>() {
+                .get().build().enqueue(mHttpLite,new Callback<Result<List<FileInfo>>>() {
             @Override
             public void onSuccess(Request req, Map<String, List<String>> headers,Result<List<FileInfo>> result) {
                 //TODO
@@ -96,10 +96,10 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
     }
 
     private void requestPath(String url) {
-        mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
+        new Request.Builder(url).header("header","not chinese").header("test_header","2016-01-06")
                 .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().build().call().async(this);
+                .get().build().enqueue(mHttpLite,this);
     }
 
     @Override

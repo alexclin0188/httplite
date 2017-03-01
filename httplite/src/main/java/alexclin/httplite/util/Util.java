@@ -88,7 +88,7 @@ public final class Util {
         return !TextUtils.isEmpty(url)&&(url.startsWith("http://")||url.startsWith("https://"));
     }
 
-    public static MediaType guessMediaType(HttpLite lite,File file){
+    public static String guessMediaType(HttpLite lite,File file){
         if(file==null||lite==null){
             return null;
         }
@@ -97,11 +97,7 @@ public final class Util {
         if(contentType==null){
             contentType = MediaType.APPLICATION_STREAM;
         }
-        MediaType type = lite.parse(contentType);
-        if(type==null){
-            type = lite.parse(MediaType.APPLICATION_STREAM);
-        }
-        return type;
+        return contentType;
     }
 
     //获取回调接口的结果类型T
@@ -154,6 +150,7 @@ public final class Util {
     }
 
     public static String appendString(String baseUrl,String url){
+        if(TextUtils.isEmpty(url)) return baseUrl;
         if(baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0,baseUrl.length()-1);
         }

@@ -15,9 +15,8 @@ import alexclin.httplite.listener.Response;
 import alexclin.httplite.cookie.PersistentCookieStore;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseListener;
-import alexclin.httplite.rx.RxCallAdapter;
+import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.sample.json.GsonParser;
-import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -46,7 +45,7 @@ public class App extends Application {
 
         TrustAllManager manager = new TrustAllManager();
 
-        HttpLiteBuilder builder = URLite.create();
+        HttpLiteBuilder builder = Ok3Lite.create();
         builder = builder.setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(30, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(30, TimeUnit.SECONDS)  //设置读超时
@@ -61,7 +60,8 @@ public class App extends Application {
                 .setSslSocketFactory(manager.getSocketFactory())
                 .setHostnameVerifier(manager)
                 .useCookie(PersistentCookieStore.getInstance(this))  //设置CookieStore,设置则启用Cookie,不设置则不启用
-                .addCallAdapter(new RxCallAdapter());//添加Rx支持
+//                .addCallAdapter(new RxCallAdapter())
+        ;//添加Rx支持
 
         builder.requestListener(new RequestListener() {
             @Override

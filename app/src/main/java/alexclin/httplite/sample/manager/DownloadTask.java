@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import alexclin.httplite.Handle;
+import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
@@ -93,7 +94,10 @@ public class DownloadTask implements Callback<File>,ProgressListener {
         }
         current = 0;
         total = 0;
-        mRequestHandle = App.httpLite(ctx).url(url).onProgress(this).intoFile(path,name,true,true).get().build().call().async(this);
+        HttpLite lite = App.httpLite(ctx);
+        Request request = new Request.Builder(url).onProgress(this).intoFile(path,name,true,true).get().build();
+        request.enqueue(lite,this);
+        //TODO mRequestHandle = ?
         updateState(State.Downloading);
     }
 
