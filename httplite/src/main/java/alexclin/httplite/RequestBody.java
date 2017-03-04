@@ -20,7 +20,7 @@ public abstract class RequestBody {
     /**
      * Returns the Content-Type header for this body.
      */
-    public abstract MediaType contentType();
+    public abstract String contentType();
 
     /**
      * Returns the number of bytes that will be written to {@code out} in a call to {@link #writeTo},
@@ -37,7 +37,7 @@ public abstract class RequestBody {
         public String mediaType;
 
         @Override
-        public MediaType contentType() {
+        public String contentType() {
             throw new IllegalStateException("This method should never be executed");
         }
 
@@ -55,7 +55,7 @@ public abstract class RequestBody {
             this.mediaType = mediaType;
         }
 
-        public abstract <T> T createReal(ILite.RequestBodyFactory<T> factory);
+        public abstract <T> T createReal(LiteClient.Converter<T> factory);
     }
 
     static RequestBody wrapBody(RequestBody body, String mediaType) {
@@ -87,7 +87,7 @@ public abstract class RequestBody {
         }
 
         @Override
-        public <T> T createReal(ILite.RequestBodyFactory<T> factory) {
+        public <T> T createReal(LiteClient.Converter<T> factory) {
             return factory.createRequestBody(file, mediaType);
         }
     }
@@ -101,7 +101,7 @@ public abstract class RequestBody {
         }
 
         @Override
-        public <T> T createReal(ILite.RequestBodyFactory<T> factory) {
+        public <T> T createReal(LiteClient.Converter<T> factory) {
             return factory.createRequestBody(content, mediaType);
         }
     }
@@ -119,7 +119,7 @@ public abstract class RequestBody {
         }
 
         @Override
-        public <T> T createReal(ILite.RequestBodyFactory<T> factory) {
+        public <T> T createReal(LiteClient.Converter<T> factory) {
             return factory.createRequestBody(content, mediaType,offset,byteCount);
         }
     }
@@ -133,7 +133,7 @@ public abstract class RequestBody {
         }
 
         @Override
-        public <T> T createReal(ILite.RequestBodyFactory<T> factory) {
+        public <T> T createReal(LiteClient.Converter<T> factory) {
             return factory.createRequestBody(realBody, mediaType);
         }
     }
@@ -162,7 +162,7 @@ public abstract class RequestBody {
         }
 
         @Override
-        public <T> T createReal(ILite.RequestBodyFactory<T> factory) {
+        public <T> T createReal(LiteClient.Converter<T> factory) {
             return factory.createRequestBody(paramList, encodedParamList);
         }
     }
@@ -221,7 +221,7 @@ public abstract class RequestBody {
         }
 
         @Override
-        public <T> T createReal(ILite.RequestBodyFactory<T> factory) {
+        public <T> T createReal(LiteClient.Converter<T> factory) {
             return factory.createRequestBody(boundary, type, bodyList, headBodyList, paramList, fileList);
         }
     }

@@ -244,7 +244,7 @@
 //            public void run() {
 //                ProgressListener listener = call.request.build().getProgressListener();
 //                if (listener != null) {
-//                    listener.onProgressUpdate(false,current, total);
+//                    listener.onProgress(false,current, total);
 //                }
 //            }
 //        });

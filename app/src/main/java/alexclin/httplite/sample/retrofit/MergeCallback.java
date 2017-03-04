@@ -25,7 +25,7 @@ public class MergeCallback<T> implements Callback<T>,ProgressListener {
     }
 
     @Override
-    public void onProgressUpdate(boolean out,long current, long total) {
+    public void onProgress(boolean out, long current, long total) {
         LogUtil.e("current:"+current+",total:"+total);
     }
 }

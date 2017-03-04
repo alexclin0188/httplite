@@ -15,7 +15,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
-import alexclin.httplite.impl.ProgressRequestBody;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.util.Clazz;
@@ -55,6 +54,7 @@ public final class Request{
     private final Object tag;
     private final int cacheExpiredTime;
     private final DownloadParams downloadParams;
+    private final Handle handle;
 
     private Request(Builder builder) {
         this.mUrl = builder.url;
@@ -66,12 +66,12 @@ public final class Request{
         this.cacheExpiredTime = builder.cacheExpiredTime;
         this.downloadParams = builder.downloadParams;
         this.pathHolders = Collections.unmodifiableMap(builder.pathHolders);
+        this.handle = new HandleImpl();
+        this.requestBody = builder.body;
         if(this.progressListener!=null){
             this.wrapListener = new MainProgressListener(this.progressListener);
-            this.requestBody = new ProgressRequestBody(builder.body,wrapListener);
         }else{
             this.wrapListener = null;
-            this.requestBody = builder.body;
         }
     }
 
@@ -186,6 +186,10 @@ public final class Request{
         lite.enqueue(this,callback);
     }
 
+    public Handle handle(){
+        return handle;
+    }
+
     private static class MainProgressListener implements ProgressListener{
         private ProgressListener listener;
 
@@ -194,11 +198,11 @@ public final class Request{
         }
 
         @Override
-        public void onProgressUpdate(final boolean out,final long current,final long total) {
+        public void onProgress(final boolean out, final long current, final long total) {
             HttpLite.runOnMain(new Runnable() {
                 @Override
                 public void run() {
-                    listener.onProgressUpdate(out,current,total);
+                    listener.onProgress(out,current,total);
                 }
             });
         }

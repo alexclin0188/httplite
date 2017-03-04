@@ -4,9 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.impl.ProgressResponse;
@@ -14,7 +12,6 @@ import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.ResponseListener;
-import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.mock.MockLite;
 import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.retrofit.MethodFilter;
@@ -27,30 +24,26 @@ import alexclin.httplite.util.Clazz;
  * @author alexclin at 15/12/31 17:13
  */
 public class HttpLite {
-    private static Handler sHandler = new Handler(Looper.getMainLooper());
+    private final static Handler sHandler = new Handler(Looper.getMainLooper());
     private final boolean isRelease;
-    private ILite client;
-    private String baseUrl;
-    private int maxRetryCount;
-    private RequestListener mRequestFilter;
-    private ResponseListener mResponseFilter;
-    private Executor customDownloadExecutor;
-    private Retrofit retrofit;
-    private ObjectParser mObjectParser;
+    private final LiteClient client;
+    private final String baseUrl;
+    private final RequestListener mRequestFilter;
+    private final ResponseListener mResponseFilter;
+    private final Retrofit retrofit;
+    private final ObjectParser mObjectParser;
 
-    private MockLite mocker;
+    private final MockLite mocker;
 
-    HttpLite(ILite client, String baseUrl, int maxRetryCount, boolean release,
-             RequestListener requestFilter, ResponseListener responseFilter, Executor downloadExecutor, HashMap<String,ResponseParser> parserMap, List<CallAdapter> invokers) {
+    HttpLite(HttpLiteBuilder builder,LiteClient client) {
         this.client = client;
-        this.mObjectParser = new ObjectParser(parserMap.values());
-        this.baseUrl = baseUrl;
-        this.maxRetryCount = maxRetryCount;
-        this.isRelease = release;
-        this.mRequestFilter = requestFilter;
-        this.mResponseFilter = responseFilter;
-        this.customDownloadExecutor = downloadExecutor;
-        this.retrofit = new RetrofitImpl(invokers);
+        this.mObjectParser = new ObjectParser(builder.parsers);
+        this.baseUrl = builder.baseUrl;
+        this.isRelease = builder.isRelease;
+        this.mRequestFilter = builder.mRequestFilter;
+        this.mResponseFilter = builder.mResponseFilter;
+        this.retrofit = new RetrofitImpl(builder.invokers);
+        this.mocker = builder.mockHandler!=null?new MockLite(builder.mockHandler):null;
     }
 
     public static void runOnMain(Runnable runnable){
@@ -67,20 +60,6 @@ public class HttpLite {
 
     public String getBaseUrl(){
         return baseUrl;
-    }
-
-    public HttpLite setBaseUrl(String baseUrl){
-        this.baseUrl = baseUrl;
-        return this;
-    }
-
-    public int getMaxRetryCount() {
-        return maxRetryCount;
-    }
-
-
-    public ILite getClient(){
-        return client;
     }
 
     public void cancel(Object tag){

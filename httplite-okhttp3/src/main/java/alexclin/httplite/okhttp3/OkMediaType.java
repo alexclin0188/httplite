@@ -9,10 +9,10 @@ import okhttp3.MediaType;
  *
  * @author alexclin 16/1/1 14:39
  */
-public class OkMediaType implements alexclin.httplite.listener.MediaType {
+class OkMediaType implements alexclin.httplite.listener.MediaType {
     private MediaType mediaType;
 
-    public OkMediaType(MediaType mediaType) {
+    OkMediaType(MediaType mediaType) {
         this.mediaType = mediaType;
     }
 
@@ -36,11 +36,11 @@ public class OkMediaType implements alexclin.httplite.listener.MediaType {
         return mediaType.charset(defaultValue);
     }
 
-    public MediaType raw() {
+    MediaType raw() {
         return mediaType;
     }
 
-    public static MediaType wrapperLite(alexclin.httplite.listener.MediaType type){
+    static MediaType wrapperLite(alexclin.httplite.listener.MediaType type){
         if(type == null) return null;
         if(type instanceof OkMediaType){
            return ((OkMediaType)type).raw();

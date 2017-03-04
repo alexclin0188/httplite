@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLiteBuilder;
-import alexclin.httplite.ILite;
+import alexclin.httplite.LiteClient;
 import alexclin.httplite.Request;
 import alexclin.httplite.exception.CanceledException;
+import alexclin.httplite.exception.IllegalOperationException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.util.ClientSettings;
@@ -16,23 +18,25 @@ import alexclin.httplite.util.Util;
 import okhttp3.Cache;
 import okhttp3.CacheControl;
 import okhttp3.Call;
+import okhttp3.Dispatcher;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 
 /**
  * Ok3Lite
  *
  * @author alexclin 16/2/16 20:15
  */
-public class Ok3Lite extends HttpLiteBuilder implements ILite {
+public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
     private OkHttpClient mClient;
+    private Ok3Factory mFactory;
 
     private Ok3Lite(OkHttpClient client){
-        if(client==null){
-            mClient = new OkHttpClient();
-        }else{
+        if(client!=null){
             mClient = client;
         }
+        mFactory = new Ok3Factory();
     }
 
     public static HttpLiteBuilder create() {
@@ -44,14 +48,32 @@ public class Ok3Lite extends HttpLiteBuilder implements ILite {
     }
 
     @Override
-    protected ILite initLiteClient() {
+    protected LiteClient initClient(ClientSettings settings) {
+        OkHttpClient.Builder builder = mClient==null?new OkHttpClient.Builder():mClient.newBuilder();
+        builder.followSslRedirects(settings.isFollowSslRedirects())
+                .followRedirects(settings.isFollowRedirects());
+        if(settings.getSocketFactory() != null) builder.socketFactory(settings.getSocketFactory());
+        if(settings.getSslSocketFactory() != null) builder.sslSocketFactory(settings.getSslSocketFactory());
+        if(settings.getHostnameVerifier() != null) builder.hostnameVerifier(settings.getHostnameVerifier());
+        if(settings.getProxySelector() != null) builder.proxySelector(settings.getProxySelector());
+        if(settings.getProxy() != null) builder.proxy(settings.getProxy());
+        if(settings.getExecutor()!=null) builder.dispatcher(new Dispatcher(settings.getExecutor()));
+        builder.retryOnConnectionFailure(settings.getMaxRetryCount() > 0);
+        builder.connectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
+        builder.readTimeout(settings.getReadTimeout(), TimeUnit.MILLISECONDS);
+        builder.writeTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
+        if (settings.getCookieHandler() != null) builder.cookieJar(new CookieJarImpl(settings.getCookieHandler()));
+        if (settings.getCacheDir() != null) {
+            builder.cache(new Cache(settings.getCacheDir(), settings.getCacheMaxSize()));
+        }
+        mClient = builder.build();
         return this;
     }
 
     @Override
     public Response execute(Request request) throws Throwable {
         Call call = mClient.newCall(makeRequest(request));
-        //TODO
+        request.handle().setHandle(new CallHandle(call));
         return new OkResponse(call.execute(),request);
     }
 
@@ -75,7 +97,7 @@ public class Ok3Lite extends HttpLiteBuilder implements ILite {
             }
         };
         Call call = mClient.newCall(makeRequest(request));
-        //TODO
+        request.handle().setHandle(new CallHandle(call));
         call.enqueue(okCallback);
     }
 
@@ -101,51 +123,32 @@ public class Ok3Lite extends HttpLiteBuilder implements ILite {
     }
 
     @Override
-    public void setConfig(ClientSettings settings) {
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.followSslRedirects(settings.isFollowSslRedirects())
-                .followRedirects(settings.isFollowRedirects());
-        if(settings.getSocketFactory()!=null) builder.socketFactory(settings.getSocketFactory());
-        if(settings.getSslSocketFactory()!=null) builder.sslSocketFactory(settings.getSslSocketFactory());
-        if(settings.getHostnameVerifier()!=null) builder.hostnameVerifier(settings.getHostnameVerifier());
-        if(settings.getProxySelector()!=null) builder.proxySelector(settings.getProxySelector());
-        if(settings.getProxy()!=null) builder.proxy(settings.getProxy());
-        builder.retryOnConnectionFailure(settings.getMaxRetryCount() > 0);
-        builder.connectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
-        builder.readTimeout(settings.getReadTimeout(), TimeUnit.MILLISECONDS);
-        builder.writeTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
-        if(settings.getCookieHandler()!=null) builder.cookieJar(new CookieJarImpl(settings.getCookieHandler()));
-        if(settings.getCacheDir()!=null){
-            builder.cache(new Cache(settings.getCacheDir(), settings.getCacheMaxSize()));
-        }
-        mClient = builder.build();
-    }
-
-    @Override
     public void shutDown() {
         cancelAll();
         mClient.dispatcher().executorService().shutdown();
     }
 
-    private static okhttp3.Request makeRequest(Request real){
-        //TODO
-        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(real.getUrl()).tag(real.getTag());
-        Headers okheader = createHeader(real.getHeaders());
-        if(okheader!=null){
-            rb.headers(okheader);
+    private okhttp3.Request makeRequest(Request real){
+        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(real.getFullUrl()).tag(real.getTag());
+        Headers okHeader = createHeader(real.getHeaders());
+        if(okHeader!=null) rb.headers(okHeader);
+        alexclin.httplite.RequestBody liteBody = real.getRequestBody();
+        RequestBody requestBody = null;
+        if(liteBody!=null){
+            requestBody = mFactory.convertBody(liteBody,real.getWrapListener());
         }
         switch (real.getMethod()){
             case GET:
                 rb = rb.get();
                 break;
             case POST:
-                rb = rb.post(OkRequestBody.wrapperLite(real.getRequestBody()));
+                rb = rb.post(requestBody);
                 break;
             case PUT:
-                rb = rb.put(OkRequestBody.wrapperLite(real.getRequestBody()));
+                rb = rb.put(requestBody);
                 break;
             case PATCH:
-                rb = rb.patch(OkRequestBody.wrapperLite(real.getRequestBody()));
+                rb = rb.patch(requestBody);
                 break;
             case HEAD:
                 rb = rb.head();
@@ -154,7 +157,7 @@ public class Ok3Lite extends HttpLiteBuilder implements ILite {
                 if(real.getRequestBody()==null){
                     rb = rb.delete();
                 }else{
-                    rb = rb.delete(OkRequestBody.wrapperLite(real.getRequestBody()));
+                    rb = rb.delete(requestBody);
                 }
                 break;
         }
@@ -180,5 +183,33 @@ public class Ok3Lite extends HttpLiteBuilder implements ILite {
             return hb.build();
         }
         return null;
+    }
+
+    private static class CallHandle implements Handle{
+        private Call call;
+
+        private CallHandle(Call call) {
+            this.call = call;
+        }
+
+        @Override
+        public void cancel() {
+            call.cancel();
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return call.isCanceled();
+        }
+
+        @Override
+        public boolean isExecuted() {
+            return call.isExecuted();
+        }
+
+        @Override
+        public void setHandle(Handle handle) {
+            throw new IllegalOperationException("not support method");
+        }
     }
 }

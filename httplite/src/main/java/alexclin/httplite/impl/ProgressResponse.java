@@ -67,7 +67,7 @@ public class ProgressResponse implements Response {
 
         private long contentLength;
 
-        public ProgressResponseBody(ResponseBody responseBody, ProgressListener progressListener) {
+        ProgressResponseBody(ResponseBody responseBody, ProgressListener progressListener) {
             this.responseBody = responseBody;
             this.progressListener = progressListener;
         }
@@ -101,7 +101,7 @@ public class ProgressResponse implements Response {
         private ProgressRunnable runnable;
 
 
-        public ProgressInputStream(InputStream inputStream,ProgressListener listener,long total) {
+        ProgressInputStream(InputStream inputStream,ProgressListener listener,long total) {
             this.inputStream = inputStream;
             this.progressListener = listener;
             this.runnable = new ProgressRunnable(false,total,this);
@@ -130,8 +130,8 @@ public class ProgressResponse implements Response {
         }
 
         @Override
-        public void onProgressUpdate(boolean out, long current, long total) {
-            progressListener.onProgressUpdate(out,current,total);
+        public void onProgress(boolean out, long current, long total) {
+            progressListener.onProgress(out,current,total);
         }
     }
 }

@@ -131,7 +131,7 @@ httpLite = builder.mock(new MockHandler() {
     mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
        .onProgress(new ProgressListener() {
             @Override
-            public void onProgressUpdate(boolean out, long current, long total) {
+            public void onProgress(boolean out, long current, long total) {
                 LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
             }
         })
@@ -178,7 +178,7 @@ httpLite = builder.mock(new MockHandler() {
 mHttpLite.url(url).intoFile(dir,name,true,true)
         .onProgress(new ProgressListener() {
             @Override
-            public void onProgressUpdate(boolean out, long current, long total) {
+            public void onProgress(boolean out, long current, long total) {
                         //TODO
                     }
                 })

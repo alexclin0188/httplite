@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import alexclin.httplite.Request;
 import alexclin.httplite.Result;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.MockHandler;
 import alexclin.httplite.util.Clazz;
 
 /**
@@ -12,6 +13,11 @@ import alexclin.httplite.util.Clazz;
  */
 
 public class MockLite {
+    private MockHandler handler;
+
+    public MockLite(MockHandler handler) {
+        this.handler = handler;
+    }
 
     public boolean needMock(Request request){
 

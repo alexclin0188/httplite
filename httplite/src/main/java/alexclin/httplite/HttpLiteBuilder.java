@@ -7,9 +7,7 @@ import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -31,24 +29,20 @@ import alexclin.httplite.util.Util;
  * @author alexclin at 16/1/1 10:56
  */
 public abstract class HttpLiteBuilder{
-    private String baseUrl;
-    private boolean isRelease;
-    private RequestListener mRequestFilter;
-    private ResponseListener mResponseFilter;
-    private Executor downloadExecutor;
-    private List<CallAdapter> invokers;
+    String baseUrl;
+    boolean isRelease;
+    RequestListener mRequestFilter;
+    ResponseListener mResponseFilter;
+    List<CallAdapter> invokers;
+    MockHandler mockHandler;
+    ClientSettings settings = new ClientSettings();
+    List<ResponseParser> parsers = new ArrayList<>();
 
-    private ClientSettings settings = new ClientSettings();
-
-    private HashMap<String,ResponseParser> parserMap;
-
-    protected abstract ILite initLiteClient();
+    protected abstract LiteClient initClient(ClientSettings settings);
 
     public final HttpLite build(){
-        ILite client = initLiteClient();
-        client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
+        LiteClient client = initClient(settings);
+        return new HttpLite(this,client);
     }
 
     public HttpLiteBuilder baseUrl(String baseUrl){
@@ -155,9 +149,17 @@ public abstract class HttpLiteBuilder{
         if(null==parser){
             return this;
         }
-        if(parserMap==null) parserMap = new HashMap<>();
-        String key = parser.getClass().getName();
-        parserMap.put(key,parser);
+        parsers.add(parser);
+        return this;
+    }
+
+    public HttpLiteBuilder setMockHandler(MockHandler mockHandler){
+        this.mockHandler = mockHandler;
+        return this;
+    }
+
+    public HttpLiteBuilder setExecutorService(ExecutorService executor){
+        this.settings.setExecutorService(executor);
         return this;
     }
 
@@ -168,11 +170,6 @@ public abstract class HttpLiteBuilder{
 
     public HttpLiteBuilder responseListener(ResponseListener responseFilter){
         this.mResponseFilter = responseFilter;
-        return this;
-    }
-
-    public HttpLiteBuilder customDownloadExecutor(ExecutorService executor){
-        this.downloadExecutor = executor;
         return this;
     }
 

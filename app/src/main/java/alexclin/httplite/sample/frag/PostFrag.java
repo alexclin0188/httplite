@@ -145,7 +145,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             new Request.Builder("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
                     .onProgress(new ProgressListener() {
                         @Override
-                        public void onProgressUpdate(boolean out, long current, long total) {
+                        public void onProgress(boolean out, long current, long total) {
                             LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
                         }
                     })

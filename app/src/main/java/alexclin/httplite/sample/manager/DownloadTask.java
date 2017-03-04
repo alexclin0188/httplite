@@ -75,7 +75,7 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     }
 
     @Override
-    public void onProgressUpdate(boolean out,long current, long total) {
+    public void onProgress(boolean out, long current, long total) {
         current = current/1024;
         total = total/1024;
         updateProgress(current, total);
@@ -118,12 +118,12 @@ public class DownloadTask implements Callback<File>,ProgressListener {
     }
 
     public String getPath() {
-        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getAbsolutePath();
+//TODO        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getAbsolutePath();
         return path+name;
     }
 
     public String getName() {
-        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getName();
+//TODO        if(mRequestHandle !=null) return mRequestHandle.request().getDownloadParams().getTargetFile().getName();
         return name;
     }
 

@@ -8,7 +8,7 @@ import alexclin.httplite.listener.ProgressListener;
  *
  * @author alexclin  16/3/31 23:15
  */
-class ProgressRunnable implements Runnable {
+public class ProgressRunnable implements Runnable {
     private static final int GAP = 1000;
     public interface ProgressSource extends ProgressListener{
         long progress();
@@ -27,7 +27,7 @@ class ProgressRunnable implements Runnable {
 
     @Override
     public void run() {
-        source.onProgressUpdate(isOut,source.progress(),total);
+        source.onProgress(isOut,source.progress(),total);
         postDelaySelf();
     }
 

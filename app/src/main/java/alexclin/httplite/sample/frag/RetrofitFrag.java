@@ -2,7 +2,6 @@ package alexclin.httplite.sample.frag;
 
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -16,11 +15,9 @@ import com.example.UserInfo;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.listener.Response;
 //import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.okhttp3.Ok3Lite;
