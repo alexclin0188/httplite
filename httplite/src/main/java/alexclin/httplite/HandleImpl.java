@@ -9,29 +9,33 @@ import alexclin.httplite.exception.IllegalOperationException;
 class HandleImpl implements Handle{
     private volatile boolean isCanceled;
     private volatile boolean isExecuted;
-    private Handle attched;
+    private Handle attached;
 
     @Override
     public void cancel() {
         isCanceled = true;
-        if(attched!=null) attched.cancel();
+        if(attached !=null) attached.cancel();
     }
 
     @Override
     public boolean isCanceled() {
-        return isCanceled||(attched!=null&&attched.isCanceled());
+        return isCanceled||(attached !=null&& attached.isCanceled());
     }
 
     @Override
     public boolean isExecuted() {
-        return isExecuted&&attched!=null&&attched.isExecuted();
+        return isExecuted&& attached !=null&& attached.isExecuted();
     }
 
     @Override
     public void setHandle(Handle handle) {
-        if(this.attched!=null){
+        if(this.attached !=null){
             throw new IllegalOperationException("setHandle show called just once");
         }
-        this.attched = handle;
+        this.attached = handle;
+    }
+
+    void setExecuted(){
+        isExecuted = true;
     }
 }

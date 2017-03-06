@@ -11,12 +11,11 @@ import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.Response;
-import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.mock.MockLite;
 import alexclin.httplite.retrofit.CallAdapter;
-import alexclin.httplite.retrofit.MethodFilter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Util;
 
 /**
  * HttpLite
@@ -29,7 +28,6 @@ public class HttpLite {
     private final LiteClient client;
     private final String baseUrl;
     private final RequestListener mRequestFilter;
-    private final ResponseListener mResponseFilter;
     private final Retrofit retrofit;
     private final ObjectParser mObjectParser;
 
@@ -41,7 +39,6 @@ public class HttpLite {
         this.baseUrl = builder.baseUrl;
         this.isRelease = builder.isRelease;
         this.mRequestFilter = builder.mRequestFilter;
-        this.mResponseFilter = builder.mResponseFilter;
         this.retrofit = new RetrofitImpl(builder.invokers);
         this.mocker = builder.mockHandler!=null?new MockLite(builder.mockHandler):null;
     }
@@ -82,19 +79,11 @@ public class HttpLite {
     }
 
     public <T> T retrofit(Class<T> clazz){
-        return retrofit.create(clazz,null,null);
+        return retrofit.create(clazz,null);
     }
 
     public <T> T retrofit(Class<T> clazz,RequestListener filter){
-        return retrofit.create(clazz,filter,null);
-    }
-
-    public <T> T retrofit(Class<T> clazz, RequestListener filter, MethodFilter methodFilter){
-        return retrofit.create(clazz,filter,methodFilter);
-    }
-
-    public <T> T retrofit(Class<T> clazz,MethodFilter methodFilter){
-        return retrofit.create(clazz,null,methodFilter);
+        return retrofit.create(clazz,filter);
     }
 
     public Retrofit getRetrofit() {
@@ -103,10 +92,6 @@ public class HttpLite {
 
     RequestListener getRequestFilter() {
         return mRequestFilter;
-    }
-
-    ResponseListener getResponseFilter() {
-        return mResponseFilter;
     }
 
     public <T> Result<T> execute(Request request, Clazz<T> clazz) {
@@ -127,6 +112,8 @@ public class HttpLite {
             return new Result<T>(result,response.headers());
         } catch (Throwable e) {
             return new Result<T>(e);
+        } finally {
+            ((HandleImpl)request.handle()).setExecuted();
         }
     }
 
@@ -145,19 +132,8 @@ public class HttpLite {
         }
 
         @Override
-        public Request.Builder makeRequest(String baseUrl) {
-            return new Request.Builder();
-        }
-
-        @Override
         public Request.Builder setMethod(Request.Builder request, Request.Method method) {
             request.setMethod(method);
-            return request;
-        }
-
-        @Override
-        public Request.Builder setUrl(Request.Builder request, String url) {
-            request.setUrl(url);
             return request;
         }
 
@@ -169,6 +145,12 @@ public class HttpLite {
         @Override
         public HttpLite lite() {
             return HttpLite.this;
+        }
+
+        @Override
+        public void setBaseUrl(Request.Builder builder, String baseUrl) {
+            String url = Util.appendString(baseUrl,builder.url);
+            builder.url(url);
         }
     }
 }

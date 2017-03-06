@@ -14,7 +14,6 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.cookie.PersistentCookieStore;
 import alexclin.httplite.listener.RequestListener;
-import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.sample.json.GsonParser;
 import alexclin.httplite.util.LogUtil;
@@ -71,13 +70,6 @@ public class App extends Application {
 
             @Override
             public void onRequestEnd(Request request, Type resultType, Response response) {
-
-            }
-        });
-
-        builder.responseListener(new ResponseListener() {
-            @Override
-            public void onResponse(HttpLite lite, Request request, Response response) {
 
             }
         });

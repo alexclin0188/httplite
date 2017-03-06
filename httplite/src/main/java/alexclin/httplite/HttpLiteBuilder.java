@@ -16,7 +16,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
-import alexclin.httplite.listener.ResponseListener;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.ResponseParser;
 import alexclin.httplite.retrofit.CallAdapter;
@@ -32,7 +31,6 @@ public abstract class HttpLiteBuilder{
     String baseUrl;
     boolean isRelease;
     RequestListener mRequestFilter;
-    ResponseListener mResponseFilter;
     List<CallAdapter> invokers;
     MockHandler mockHandler;
     ClientSettings settings = new ClientSettings();
@@ -165,11 +163,6 @@ public abstract class HttpLiteBuilder{
 
     public HttpLiteBuilder requestListener(RequestListener requestFilter){
         this.mRequestFilter = requestFilter;
-        return this;
-    }
-
-    public HttpLiteBuilder responseListener(ResponseListener responseFilter){
-        this.mResponseFilter = responseFilter;
         return this;
     }
 

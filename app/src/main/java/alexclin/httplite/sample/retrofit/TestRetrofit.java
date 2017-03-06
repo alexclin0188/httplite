@@ -1,8 +1,5 @@
 package alexclin.httplite.sample.retrofit;
 
-import android.text.TextUtils;
-
-import com.example.FileInfo;
 import com.example.RequestInfo;
 import com.example.Result;
 import com.example.UserInfo;
@@ -16,17 +13,13 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.Response;
-import alexclin.httplite.retrofit.MethodFilter;
-import alexclin.httplite.retrofit.MethodInvoker;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.sample.model.ZhihuData;
 import alexclin.httplite.sample.retrofit.custom.CustomApi;
 import alexclin.httplite.sample.retrofit.custom.GsonField;
 import alexclin.httplite.sample.retrofit.custom.GsonFieldProcesscor;
 import alexclin.httplite.sample.retrofit.custom.QueryProcessor;
-import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.LogUtil;
-import alexclin.httplite.util.Util;
 
 /**
  * TestRetrofit
@@ -213,26 +206,7 @@ public class TestRetrofit {
 
             }
         };
-        MethodFilter filter = new MethodFilter() {
-            @Override
-            public Object onMethod(HttpLite lite, final MethodInvoker invoker, final Object[] args) throws Throwable {
-                LogUtil.e("methodFilter:"+invoker);
-//                String publicKey = ......
-//                if(TextUtils.isEmpty(publicKey)){
-//                    new Thread(){
-//                        @Override
-//                        public void run() {
-//                            //获取key
-//                            ......
-//                            invoker.invoke(args);
-//                        }
-//                    }.start();
-//                }else{
-                    return invoker.invoke(args);
-//                }
-            }
-        };
-        SampleApi api = mHttplite.retrofit(SampleApi.class,listener,filter);
+        SampleApi api = mHttplite.retrofit(SampleApi.class,listener);
 
         api.login("user", "pass", "test", new Callback<Result<UserInfo>>() {
             @Override

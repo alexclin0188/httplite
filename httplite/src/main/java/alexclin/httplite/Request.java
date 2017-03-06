@@ -215,7 +215,7 @@ public final class Request{
     }
 
     public static final class Builder implements Cloneable{
-        private String url;
+        String url;
         private Method method;
         private ProgressListener progressListener;
         private Map<String,List<String>> headers;
@@ -231,19 +231,17 @@ public final class Request{
 
         private DownloadParams downloadParams;
 
-        private Object mark;
-
         public Builder(String url) {
             this.url = url;
         }
 
-        Builder(){}
+        public Builder(){}
 
         void setMethod(Method method) {
             this.method = method;
         }
 
-        public void setUrl(String url) {
+        public void url(String url) {
             this.url = url;
         }
 
@@ -556,11 +554,6 @@ public final class Request{
                     body = RequestBody.wrapBody(body,contentType);
                 }
             }
-        }
-
-        public Builder mark(Object mark){
-            this.mark = mark;
-            return this;
         }
 
         @Override

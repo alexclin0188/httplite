@@ -33,6 +33,8 @@ class ResponseCallback<T> implements Callback<Response> {
             });
         } catch (Exception e) {
             onFailed(req,e);
+        } finally {
+            ((HandleImpl)req.handle()).setExecuted();
         }
     }
 
@@ -44,5 +46,6 @@ class ResponseCallback<T> implements Callback<Response> {
                 callback.onFailed(req,e);
             }
         });
+        ((HandleImpl)req.handle()).setExecuted();
     }
 }

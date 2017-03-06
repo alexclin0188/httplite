@@ -80,7 +80,7 @@ public class BasicAnnotationRule implements AnnotationRule {
             for (Annotation annotation : annotations) {
                 if (annotation instanceof IntoFile) {
                     if (resultType== CallAdapter.ResultType.NotFile)
-                        throw Util.methodError(interfaceMethod,"Method use @InfoFile must has result type File(Callback<File>/return-file/Observale<File>/...)");
+                        throw Util.methodError(interfaceMethod,"Method use @InfoFile must has result type File(Callback<File>/return-Result<File>/Observable<File>/...)");
                     hasIntoFile = true;
                 } else {
                     BodyType type = bodyTypeFor(annotation);

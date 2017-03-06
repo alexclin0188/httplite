@@ -150,6 +150,7 @@ public final class Util {
     }
 
     public static String appendString(String baseUrl,String url){
+        if(TextUtils.isEmpty(baseUrl)) return url;
         if(TextUtils.isEmpty(url)) return baseUrl;
         if(baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0,baseUrl.length()-1);

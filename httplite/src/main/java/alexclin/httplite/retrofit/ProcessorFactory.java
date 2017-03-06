@@ -16,7 +16,6 @@ import alexclin.httplite.Request;
 import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.annotation.GET;
 import alexclin.httplite.annotation.HTTP;
-import alexclin.httplite.annotation.Mark;
 import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Progress;
 import alexclin.httplite.annotation.Tag;
@@ -112,13 +111,13 @@ public final class ProcessorFactory {
         public void process(Method method,Annotation annotation, Retrofit retrofit, Request.Builder request) {
             if (annotation instanceof GET) {
                 retrofit.setMethod(request, Request.Method.GET);
-                retrofit.setUrl(request, ((GET) annotation).value());
+                request.url(((GET) annotation).value());
             } else if (annotation instanceof POST) {
                 retrofit.setMethod(request, Request.Method.POST);
-                retrofit.setUrl(request, ((POST) annotation).value());
+                request.url(((POST) annotation).value());
             } else if (annotation instanceof HTTP) {
                 retrofit.setMethod(request, ((HTTP) annotation).method());
-                retrofit.setUrl(request, ((HTTP) annotation).path());
+                request.url(((HTTP) annotation).path());
             }
         }
 
@@ -132,9 +131,7 @@ public final class ProcessorFactory {
 
         @Override
         public void process(Method method,Annotation annotation, Retrofit retrofit, Request.Builder request) {
-            if (annotation instanceof Mark)
-                request.mark(((Mark) annotation).value());
-            else if(annotation instanceof FixHeaders){
+            if(annotation instanceof FixHeaders){
                 String[] headers = ((FixHeaders) annotation).value();
                 for (String header : headers) {
                     int colon = header.indexOf(':');
@@ -151,7 +148,7 @@ public final class ProcessorFactory {
 
         @Override
         public boolean support(Annotation annotation) {
-            return (annotation instanceof Mark) || (annotation instanceof FixHeaders);
+            return (annotation instanceof FixHeaders);
         }
     }
 

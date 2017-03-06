@@ -82,13 +82,13 @@ public abstract class Retrofit {
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> T create(Class<T> service, RequestListener filter, MethodFilter methodFilter){
+    public final <T> T create(Class<T> service, RequestListener filter){
         Util.validateServiceInterface(service);
         if (!isReleaseMode()) {
             eagerlyValidateMethods(service);
         }
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
-                new ProxyInvoker<T>(service,filter,methodFilter));
+                new ProxyInvoker<T>(service,filter));
     }
 
     private <T> void eagerlyValidateMethods(Class<T> service) {
@@ -98,7 +98,7 @@ public abstract class Retrofit {
         }
     }
 
-    MethodHandler loadMethodHandler(Method method) {
+    private MethodHandler loadMethodHandler(Method method) {
         MethodHandler handler;
         synchronized (methodHandlerCache) {
             handler = methodHandlerCache.get(method);
@@ -110,11 +110,7 @@ public abstract class Retrofit {
         return handler;
     }
 
-    public abstract Request.Builder makeRequest(String baseUrl);
-
     public abstract Request.Builder setMethod(Request.Builder builder, Request.Method method);
-
-    public abstract Request.Builder setUrl(Request.Builder builder, String url);
 
     public abstract boolean isReleaseMode();
 
@@ -129,21 +125,15 @@ public abstract class Retrofit {
         throw Util.methodError(method,"no CallAdapter for %s",method.getName());
     }
 
+    public abstract void setBaseUrl(Request.Builder builder, String baseUrl);
+
     private class ProxyInvoker<T> implements InvocationHandler{
         private final Class<T> service;
         private final RequestListener filter;
-        private final MethodFilter methodFilter;
-        private final LinkedHashMap<Method,MethodInvoker> invokerMap;
 
-        public ProxyInvoker(Class<T> service, RequestListener filter, MethodFilter methodFilter) {
+        public ProxyInvoker(Class<T> service, RequestListener filter) {
             this.service = service;
             this.filter = filter;
-            this.methodFilter = methodFilter;
-            if(this.methodFilter!=null){
-                this.invokerMap = new LinkedHashMap<>();
-            }else {
-                this.invokerMap = null;
-            }
         }
 
         @Override
@@ -156,19 +146,7 @@ public abstract class Retrofit {
                 return invokeDefaultMethod(method, service, proxy, args);
             }
             MethodHandler handler = loadMethodHandler(method);
-            if(invokerMap==null){
-                return handler.invoke(Retrofit.this,filter,args);
-            }else{
-                MethodInvoker methodInvoker;
-                synchronized (invokerMap){
-                    methodInvoker = invokerMap.get(method);
-                    if(methodInvoker==null){
-                        methodInvoker = new MethodInvoker(handler,method,Retrofit.this,filter);
-                        invokerMap.put(method,methodInvoker);
-                    }
-                }
-                return methodFilter.onMethod(lite(),methodInvoker,args);
-            }
+            return handler.invoke(Retrofit.this,filter,args);
         }
     }
 }

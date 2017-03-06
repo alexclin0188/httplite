@@ -8,6 +8,7 @@ import java.util.Collection;
 
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
+import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.Result;
 import alexclin.httplite.util.Util;
@@ -25,8 +26,8 @@ class BasicCallAdapters {
 
     private static class ResultCallAdapter implements CallAdapter {
         @Override
-        public Object adapt(HttpLite lite,MethodHandler handler, final Type returnType, Object... args) throws Exception{
-            return handler.createRequest(args).build().execute(lite,returnType);
+        public Object adapt(HttpLite lite,Request request, final Type returnType, Object... args) throws Exception{
+            return request.execute(lite,returnType);
         }
 
         @Override
@@ -44,11 +45,9 @@ class BasicCallAdapters {
     private static class AsyncCallAdapter implements CallAdapter {
 
         @Override
-        public Object adapt(HttpLite lite, MethodHandler handler, Type returnType, Object... args) throws Exception {
-            handler.createRequest(args).build().enqueue(lite,(Callback)args[args.length-1]);
-            //TODO
-//            return returnType==Handle.class?handle:null;
-            return null;
+        public Object adapt(HttpLite lite, Request request, Type returnType, Object... args) throws Exception {
+            request.enqueue(lite,(Callback)args[args.length-1]);
+            return returnType==Handle.class?request.handle():null;
         }
 
         @Override
@@ -77,22 +76,4 @@ class BasicCallAdapters {
             return Util.getTypeParameter(lastParamType)==File.class?ResultType.File:ResultType.NotFile;
         }
     }
-
-//    private static class ReturnCallAdapter implements CallAdapter {
-//
-//        @Override
-//        public Object adapt(HttpLite lite, MethodHandler handler, Type returnType, Object... args) throws Exception {
-//            return handler.createRequest(args).build().call();
-//        }
-//
-//        @Override
-//        public boolean support(Method method) {
-//            return Util.getRawType(method.getReturnType())==Call.class;
-//        }
-//
-//        @Override
-//        public ResultType checkMethod(Method method) throws RuntimeException {
-//            return ResultType.Any;
-//        }
-//    }
 }

@@ -26,8 +26,11 @@ public class MethodHandler{
     private Map<ParamMiscProcessor,List<Pair<Integer,Integer>>> paramMiscProcessors;
     private CallAdapter invoker;
     private Request.Builder originBuilder;
+    private final String mBaseUrl;
+    private final Retrofit mRetrofit;
 
     public MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
+        mRetrofit = retrofit;
         if(!retrofit.isReleaseMode()){
             CallAdapter.ResultType rt = invoker.checkMethod(method);
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
@@ -38,7 +41,8 @@ public class MethodHandler{
         this.invoker = invoker;
         Class<?> dc = method.getDeclaringClass();
         BaseURL baseURL = dc.getAnnotation(BaseURL.class);
-        this.originBuilder = retrofit.makeRequest(baseURL!=null?baseURL.value():null);
+        mBaseUrl = baseURL!=null?baseURL.value():null;
+        this.originBuilder = new Request.Builder();
 
         Annotation[] methodAnnotations = method.getAnnotations();
         int methodAnnoCount = methodAnnotations.length;
@@ -95,11 +99,7 @@ public class MethodHandler{
         list.add(new Pair<>(i,j));
     }
 
-    public Object invoke(Retrofit retrofit,Object... args) throws Exception{
-        return invoker.adapt(retrofit.lite(),this,returnType,args);
-    }
-
-    public Request.Builder createRequest(Object... args) throws Exception{
+    Object invoke(Object... args) throws Exception{
         Request.Builder builder = (Request.Builder) originBuilder.clone();
         int length = args==null?0:args.length;
         for(int i=0;i<length;i++){
@@ -116,6 +116,7 @@ public class MethodHandler{
                 processor.process(builder,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
             }
         }
-        return builder;
+        mRetrofit.setBaseUrl(builder,mBaseUrl);
+        return invoker.adapt(mRetrofit.lite(),builder.build(),returnType,args);
     }
 }
