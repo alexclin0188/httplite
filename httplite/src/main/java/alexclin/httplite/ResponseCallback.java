@@ -3,6 +3,7 @@ package alexclin.httplite;
 import java.util.List;
 import java.util.Map;
 
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.Response;
@@ -24,6 +25,7 @@ class ResponseCallback<T> implements Callback<Response> {
     @Override
     public void onSuccess(final Request req, final Map<String, List<String>> headers, final Response result) {
         try {
+            if(req.handle().isCanceled()) throw new CanceledException("Request is canceled");
             final T r = parser.parseObject(result, Util.type(Callback.class,callback));
             HttpLite.runOnMain(new Runnable() {
                 @Override
@@ -39,7 +41,7 @@ class ResponseCallback<T> implements Callback<Response> {
     }
 
     @Override
-    public void onFailed(final Request req, final Exception e) {
+    public void onFailed(final Request req, final Throwable e) {
         HttpLite.runOnMain(new Runnable() {
             @Override
             public void run() {

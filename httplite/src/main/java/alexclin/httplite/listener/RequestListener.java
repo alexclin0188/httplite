@@ -12,5 +12,4 @@ import alexclin.httplite.Request;
  */
 public interface RequestListener {
     void onRequestStart(Request request,Type resultType);
-    void onRequestEnd(Request request,Type resultType,Response response);
 }

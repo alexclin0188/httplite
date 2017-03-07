@@ -35,6 +35,7 @@ public abstract class HttpLiteBuilder{
     MockHandler mockHandler;
     ClientSettings settings = new ClientSettings();
     List<ResponseParser> parsers = new ArrayList<>();
+    ExecutorService mockExecutor;
 
     protected abstract LiteClient initClient(ClientSettings settings);
 
@@ -156,8 +157,13 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder setExecutorService(ExecutorService executor){
-        this.settings.setExecutorService(executor);
+    public HttpLiteBuilder setMockExecutor(ExecutorService executor){
+        this.mockExecutor = executor;
+        return this;
+    }
+
+    public HttpLiteBuilder setRequestExecutor(ExecutorService executor){
+        this.settings.setRequestExecutor(executor);
         return this;
     }
 

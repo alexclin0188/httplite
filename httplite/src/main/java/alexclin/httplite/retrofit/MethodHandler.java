@@ -19,7 +19,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/28 19:20
  */
-public class MethodHandler{
+class MethodHandler implements CallAdapter.RequestCreator{
     private ParameterProcessor[][] parameterProcessors;
     private Type returnType;
     private Annotation[][] methodParameterAnnotationArrays;
@@ -29,7 +29,7 @@ public class MethodHandler{
     private final String mBaseUrl;
     private final Retrofit mRetrofit;
 
-    public MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
+    MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
         mRetrofit = retrofit;
         if(!retrofit.isReleaseMode()){
             CallAdapter.ResultType rt = invoker.checkMethod(method);
@@ -100,23 +100,33 @@ public class MethodHandler{
     }
 
     Object invoke(Object... args) throws Exception{
-        Request.Builder builder = (Request.Builder) originBuilder.clone();
-        int length = args==null?0:args.length;
-        for(int i=0;i<length;i++){
-            ParameterProcessor[] processors = parameterProcessors[i];
-            Annotation[] parameterAnnotations = methodParameterAnnotationArrays[i];
-            Object arg = args[i];
-            for(int j=0;j<parameterAnnotations.length;j++){
-                ParameterProcessor processor = processors[j];
-                if(processor!=null) processor.process(parameterAnnotations[j],builder,arg);
+        return invoker.adapt(mRetrofit.lite(),this,returnType,args);
+    }
+
+    @Override
+    public Request createRequest(Object... args) {
+        try {
+            Request.Builder builder = (Request.Builder) originBuilder.clone();
+            int length = args==null?0:args.length;
+            for(int i=0;i<length;i++){
+                ParameterProcessor[] processors = parameterProcessors[i];
+                Annotation[] parameterAnnotations = methodParameterAnnotationArrays[i];
+                Object arg = args[i];
+                for(int j=0;j<parameterAnnotations.length;j++){
+                    ParameterProcessor processor = processors[j];
+                    if(processor!=null) processor.process(parameterAnnotations[j],builder,arg);
+                }
             }
-        }
-        if(!paramMiscProcessors.isEmpty()){
-            for(ParamMiscProcessor processor:paramMiscProcessors.keySet()){
-                processor.process(builder,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
+            if(!paramMiscProcessors.isEmpty()){
+                for(ParamMiscProcessor processor:paramMiscProcessors.keySet()){
+                    processor.process(builder,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
+                }
             }
+            mRetrofit.setBaseUrl(builder,mBaseUrl);
+            return builder.build();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
         }
-        mRetrofit.setBaseUrl(builder,mBaseUrl);
-        return invoker.adapt(mRetrofit.lite(),builder.build(),returnType,args);
     }
 }

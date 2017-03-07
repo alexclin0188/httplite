@@ -5,10 +5,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
 
 import alexclin.httplite.Handle;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.Result;
 import alexclin.httplite.util.Util;
@@ -20,14 +22,14 @@ import alexclin.httplite.util.Util;
  */
 class BasicCallAdapters {
 
-    public static Collection<CallAdapter> basicAdapters(){
-        return Arrays.asList(new AsyncCallAdapter(),new ResultCallAdapter());
+    public static Collection<CallAdapter> basicAdapters(ExecutorService executor){
+        return Arrays.asList(new AsyncCallAdapter(executor),new ResultCallAdapter());
     }
 
     private static class ResultCallAdapter implements CallAdapter {
         @Override
-        public Object adapt(HttpLite lite,Request request, final Type returnType, Object... args) throws Exception{
-            return request.execute(lite,returnType);
+        public Object adapt(HttpLite lite,RequestCreator creator, final Type returnType, Object... args) throws Exception{
+            return creator.createRequest(args).execute(lite,returnType);
         }
 
         @Override
@@ -43,11 +45,31 @@ class BasicCallAdapters {
 
     @SuppressWarnings("unchecked")
     private static class AsyncCallAdapter implements CallAdapter {
+        private final ExecutorService executor;
+
+        AsyncCallAdapter(ExecutorService executor) {
+            this.executor = executor;
+        }
 
         @Override
-        public Object adapt(HttpLite lite, Request request, Type returnType, Object... args) throws Exception {
-            request.enqueue(lite,(Callback)args[args.length-1]);
-            return returnType==Handle.class?request.handle():null;
+        public Object adapt(final HttpLite lite,final RequestCreator creator,final Type returnType,final Object... args) throws Exception {
+            if(executor!=null){
+                AsyncHandle handle = new AsyncHandle() {
+                    @Override
+                    public void run() {
+                        Request request = creator.createRequest(args);
+                        setHandle(request.handle());
+                        if(isCanceled()) cancel();
+                        request.enqueue(lite,(Callback)args[args.length-1]);
+                    }
+                };
+                executor.submit(handle);
+                return returnType==Handle.class?handle:null;
+            }else{
+                Request request = creator.createRequest(args);
+                request.enqueue(lite,(Callback)args[args.length-1]);
+                return returnType==Handle.class?request.handle():null;
+            }
         }
 
         @Override
@@ -75,5 +97,36 @@ class BasicCallAdapters {
             }
             return Util.getTypeParameter(lastParamType)==File.class?ResultType.File:ResultType.NotFile;
         }
+    }
+
+    private static abstract class AsyncHandle implements Handle,Runnable{
+        private Handle handle;
+        private volatile boolean isCanceled;
+
+        @Override
+        public void cancel() {
+            if(handle!=null){
+                handle.cancel();
+            }
+            isCanceled =  true;
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return handle==null?isCanceled:handle.isCanceled();
+        }
+
+        @Override
+        public boolean isExecuted() {
+            return handle!=null&&handle.isExecuted();
+        }
+
+        @Override
+        public void setHandle(Handle handle) {
+            this.handle = handle;
+        }
+
+        @Override
+        public abstract void run();
     }
 }

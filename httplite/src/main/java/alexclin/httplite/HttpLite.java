@@ -9,9 +9,9 @@ import java.util.List;
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.listener.Response;
-import alexclin.httplite.mock.MockLite;
 import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.util.Clazz;
@@ -40,7 +40,7 @@ public class HttpLite {
         this.isRelease = builder.isRelease;
         this.mRequestFilter = builder.mRequestFilter;
         this.retrofit = new RetrofitImpl(builder.invokers);
-        this.mocker = builder.mockHandler!=null?new MockLite(builder.mockHandler):null;
+        this.mocker = builder.mockHandler!=null?new MockLite(builder.mockHandler,mObjectParser,builder.settings.getExecutor(),this):null;
     }
 
     public static void runOnMain(Runnable runnable){
@@ -90,7 +90,7 @@ public class HttpLite {
         return retrofit;
     }
 
-    RequestListener getRequestFilter() {
+    private RequestListener getRequestFilter() {
         return mRequestFilter;
     }
 
@@ -100,8 +100,12 @@ public class HttpLite {
 
     public <T> Result<T> execute(Request request, Type type) {
         request.setBaseUrl(baseUrl);
+        RequestListener listener = getRequestFilter();
+        if(listener!=null) listener.onRequestStart(request,type);
         if(mocker!=null&&mocker.needMock(request)){
-            return mocker.mockExecute(request,type);
+            Result<T> result = mocker.execute(request,type);
+            ((HandleImpl)request.handle()).setExecuted();
+            return result;
         }
         try {
             Response response = client.execute(request);
@@ -119,10 +123,17 @@ public class HttpLite {
 
     public <T> void enqueue(Request request, Callback<T> callback) {
         request.setBaseUrl(baseUrl);
+        RequestListener listener = getRequestFilter();
+        if(listener!=null) listener.onRequestStart(request,Util.type(Callback.class,callback));
         if(mocker!=null&&mocker.needMock(request)){
-            mocker.mockEnqueue(request,callback);
+            mocker.enqueue(request,callback);
+        }else{
+            client.enqueue(request,new ResponseCallback<T>(callback,getObjectParser()));
         }
-        client.enqueue(request,new ResponseCallback<T>(callback,getObjectParser()));
+    }
+
+    public MediaType mediaType(String mediaType) {
+        return client.mediaType(mediaType);
     }
 
     private class RetrofitImpl extends Retrofit{

@@ -12,8 +12,12 @@ import alexclin.httplite.Request;
  * @author alexclin  16/3/24 23:24
  */
 public interface CallAdapter {
+    interface RequestCreator{
+        Request createRequest(Object... args);
+    }
+
     enum ResultType{File,NotFile}
-    Object adapt(HttpLite lite, Request request, Type returnType, Object... args) throws Exception;
+    Object adapt(HttpLite lite, RequestCreator creator, Type returnType, Object... args) throws Exception;
     boolean support(Method method);
 
     /**

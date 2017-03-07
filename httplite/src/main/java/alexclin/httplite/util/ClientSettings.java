@@ -147,7 +147,7 @@ public final class ClientSettings {
         this.cacheMaxSize = cacheMaxSize;
     }
 
-    public void setExecutorService(ExecutorService executor){
+    public void setRequestExecutor(ExecutorService executor){
         this.executor = executor;
     }
 

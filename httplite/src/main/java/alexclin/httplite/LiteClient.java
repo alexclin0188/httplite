@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.listener.Response;
 
 
@@ -26,6 +27,8 @@ public interface LiteClient {
     void cancelAll();
 
     void shutDown();
+
+    MediaType mediaType(String mediaType);
 
     interface Converter<T>{
         T createRequestBody(RequestBody requestBody,String mediaType);

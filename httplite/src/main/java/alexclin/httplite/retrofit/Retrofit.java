@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
@@ -27,12 +28,12 @@ public abstract class Retrofit {
 
     private List<CallAdapter> mInvokers;
 
-    public Retrofit(List<CallAdapter> invokers) {
+    public Retrofit(List<CallAdapter> invokers,ExecutorService executor) {
         mInvokers = new ArrayList<>();
         if(invokers!=null){
             mInvokers.addAll(invokers);
         }
-        mInvokers.addAll(BasicCallAdapters.basicAdapters());
+        mInvokers.addAll(BasicCallAdapters.basicAdapters(executor));
     }
 
     private static boolean isDefaultMethod(Method method){
