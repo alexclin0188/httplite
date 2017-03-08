@@ -85,7 +85,6 @@ public class ObjectParser {
 
     public <T> T parseObject(Response response, Type type) throws Exception{
         Handle cancelable = response.request().handle();
-        if(!isBaseType(type)&&!isSuccess(response)) throw responseToException(response);
         if(isBaseType(type)||isStringType(type)) return defaultParser.parseResponse(response, type);
         for (ResponseParser parser : parsers) {
             if (cancelable.isCanceled())
