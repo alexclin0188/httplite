@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import alexclin.httplite.listener.Response;
 //import alexclin.httplite.okhttp2.Ok2Lite;
 import alexclin.httplite.okhttp3.Ok3Lite;
+import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.TrustAllManager;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.HttpLite;
@@ -48,7 +49,6 @@ import alexclin.httplite.util.LogUtil;
  */
 public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private View view;
-    private HttpLite httpLite;
 
     private ApiService apiService;
 
@@ -64,9 +64,8 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
         view.findViewById(R.id.btn_retrofit6).setOnClickListener(this);
         view.findViewById(R.id.btn_retrofit7).setOnClickListener(this);
         view.findViewById(R.id.btn_retrofit8).setOnClickListener(this);
-        httpLite = initHttpLite();
 //        TestRetrofit.test(httpLite);
-        if(apiService==null) apiService = httpLite.retrofit(ApiService.class);
+        if(apiService==null) apiService = App.retrofit(getActivity()).create(ApiService.class);
         return view;
     }
 
@@ -85,7 +84,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                         LogUtil.e("Onfailed",e);
                     }
                 });
-                httpLite.cancel(this);
+                App.httpLite(getActivity()).cancel(this);
                 break;
             case R.id.btn_retrofit2:
                 apiService.testBaidu(new Callback<String>() {
@@ -212,36 +211,4 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
         }
     }
 
-    private HttpLite initHttpLite(){
-        if(this.httpLite!=null) return this.httpLite;
-//        String baseUrl = "http://192.168.99.238:10080/";
-        HttpLiteBuilder builder = Ok3Lite.create();//URLite.create();
-        TrustAllManager manager = new TrustAllManager();
-        HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
-                .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
-                .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
-                .setMaxRetryCount(2)  //设置失败重试次数
-                .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
-                .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
-                .setCache(getActivity().getCacheDir(), 10 * 1024 * 1024)
-                .setSslSocketFactory(manager.getSocketFactory())
-                .setHostnameVerifier(manager)
-//                .baseUrl(baseUrl)
-                .addResponseParser(new JacksonParser())
-                .requestListener(new RequestListener() {
-
-                    @Override
-                    public void onRequestStart(Request request, Type resultType) {
-
-                    }
-
-                    @Override
-                    public void onRequestEnd(Request request, Type resultType, Response response) {
-
-                    }
-                })
-//                .addCallAdapter(new RxCallAdapter())
-                .build();
-        return lite;
-    }
 }

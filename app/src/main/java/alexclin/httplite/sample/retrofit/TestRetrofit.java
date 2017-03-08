@@ -1,19 +1,19 @@
 package alexclin.httplite.sample.retrofit;
 
+import android.content.Context;
+
 import com.example.RequestInfo;
 import com.example.Result;
 import com.example.UserInfo;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.RequestListener;
-import alexclin.httplite.listener.Response;
 import alexclin.httplite.retrofit.Retrofit;
+import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.model.ZhihuData;
 import alexclin.httplite.sample.retrofit.custom.CustomApi;
 import alexclin.httplite.sample.retrofit.custom.GsonField;
@@ -88,9 +88,9 @@ public class TestRetrofit {
 //        LogUtil.e("IsSub:"+Util.isSubType(ExMergeCallback.class, Callback.class));
     }
 
-    public static void testSampleApi(HttpLite mHttplite){
+    public static void testSampleApi(Context ctx){
         //生成API接口实例
-        final SampleApi api = mHttplite.retrofit(SampleApi.class);
+        final SampleApi api = App.retrofit(ctx).create(SampleApi.class);
         //调用异步方法
         api.login("user", "pass", "token", new Callback<Result<UserInfo>>() {
             @Override
@@ -153,7 +153,7 @@ public class TestRetrofit {
 //        }.start();
     }
 
-    public static void testCustom(HttpLite mHttplite){
+    public static void testCustom(Context context){
         //添加自定义注解处理器
         //普通的参数注解处理ParamterProcessor
         Retrofit.registerParamterProcessor(new QueryProcessor());
@@ -162,7 +162,7 @@ public class TestRetrofit {
         //当注解处理的参数是用作Body时，还需要注册Body类型
         Retrofit.registerBodyAnnotation(GsonField.class,GsonFieldProcesscor.BODY_TYPE,true);
         //创建实例
-        CustomApi api = mHttplite.retrofit(CustomApi.class);
+        CustomApi api = App.retrofit(context).create(CustomApi.class);
         //发起请求
         Object tag = new Object();
         api.login("user", "pass", "token", tag, new Callback<Result<UserInfo>>() {
@@ -193,20 +193,8 @@ public class TestRetrofit {
         });
     }
 
-    public static void testFilter(HttpLite mHttplite){
-        RequestListener listener = new RequestListener() {
-
-            @Override
-            public void onRequestStart(Request request, Type resultType) {
-
-            }
-
-            @Override
-            public void onRequestEnd(Request request, Type resultType, Response response) {
-
-            }
-        };
-        SampleApi api = mHttplite.retrofit(SampleApi.class,listener);
+    public static void testFilter(Context context){
+        SampleApi api = App.retrofit(context).create(SampleApi.class);
 
         api.login("user", "pass", "test", new Callback<Result<UserInfo>>() {
             @Override

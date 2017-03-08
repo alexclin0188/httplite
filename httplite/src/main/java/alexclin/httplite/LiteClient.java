@@ -18,7 +18,7 @@ import alexclin.httplite.listener.Response;
  */
 public interface LiteClient {
 
-    Response execute(Request request) throws Throwable;
+    Response execute(Request request) throws Exception;
 
     void enqueue(Request request, Callback<Response> callback);
 

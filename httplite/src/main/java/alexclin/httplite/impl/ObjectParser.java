@@ -34,13 +34,15 @@ import alexclin.httplite.util.Util;
  * @author alexclin  16/4/1 22:25
  */
 public class ObjectParser {
-    private Collection<ResponseParser> parsers;
+    private final Collection<ResponseParser> parsers;
+    private final ResponseParser defaultParser;
 
     public ObjectParser(Collection<ResponseParser> parsers) {
         this.parsers = new ArrayList<>();
+        this.defaultParser = new DefaultParser();
         if(parsers!=null)
             this.parsers.addAll(parsers);
-        this.parsers.add(new DefaultParser());
+        this.parsers.add(defaultParser);
     }
 
     private static boolean isSuccess(Response response) {
@@ -84,6 +86,7 @@ public class ObjectParser {
     public <T> T parseObject(Response response, Type type) throws Exception{
         Handle cancelable = response.request().handle();
         if(!isBaseType(type)&&!isSuccess(response)) throw responseToException(response);
+        if(isBaseType(type)||isStringType(type)) return defaultParser.parseResponse(response, type);
         for (ResponseParser parser : parsers) {
             if (cancelable.isCanceled())
                 throw new CanceledException("Canceled during parse");
@@ -105,15 +108,15 @@ public class ObjectParser {
                 ||Response.class.equals(type);
     }
 
+    private static boolean isStringType(Type type) {
+        return String.class.equals(type) || CharSequence.class.equals(type);
+    }
+
     private static class DefaultParser implements ResponseParser{
 
         @Override
         public boolean isSupported(Type type) {
             return isStringType(type)||isBaseType(type);
-        }
-
-        private static boolean isStringType(Type type) {
-            return String.class.equals(type) || CharSequence.class.equals(type);
         }
 
         @Override @SuppressWarnings("unchecked")

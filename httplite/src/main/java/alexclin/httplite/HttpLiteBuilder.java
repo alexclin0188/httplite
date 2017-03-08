@@ -44,9 +44,9 @@ public abstract class HttpLiteBuilder{
         return new HttpLite(this,client);
     }
 
-    public HttpLiteBuilder baseUrl(String baseUrl){
+    public HttpLiteBuilder setBaseUrl(String baseUrl){
         if(!Util.isHttpPrefix(baseUrl)){
-            throw new IllegalArgumentException("You must set a baseUrl start with http/https prefix for global BaseUrl");
+            throw new IllegalArgumentException("You must set a setBaseUrl start with http/https prefix for global BaseUrl");
         }
         this.baseUrl = baseUrl;
         return this;
@@ -123,18 +123,13 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder useCookie(CookieStore cookieStore){
+    public HttpLiteBuilder setCookieStore(CookieStore cookieStore){
         settings.setCookieHandler(new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL));
         return this;
     }
 
-    public HttpLiteBuilder useCookie(CookieStore cookieStore,CookiePolicy policy){
+    public HttpLiteBuilder setCookieStore(CookieStore cookieStore, CookiePolicy policy){
         settings.setCookieHandler(new CookieManager(cookieStore, policy));
-        return this;
-    }
-
-    public HttpLiteBuilder setRelease(boolean isRelase){
-        this.isRelease = isRelase;
         return this;
     }
 
@@ -167,7 +162,7 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder requestListener(RequestListener requestFilter){
+    public HttpLiteBuilder setRequestListener(RequestListener requestFilter){
         this.mRequestFilter = requestFilter;
         return this;
     }

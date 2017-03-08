@@ -22,18 +22,34 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/5 23:06
  */
-public abstract class Retrofit {
+public class Retrofit {
 
     private final Map<Method,MethodHandler> methodHandlerCache = new LinkedHashMap<>();  //TODO LinkedHashMap？
 
     private List<CallAdapter> mInvokers;
+    final boolean isReleaseMode;
+    final HttpLite lite;
 
-    public Retrofit(List<CallAdapter> invokers,ExecutorService executor) {
+    public Retrofit(HttpLite lite,boolean release) {
+        this(lite,null,null,release);
+    }
+
+    public Retrofit(HttpLite lite,List<CallAdapter> invokers,boolean release) {
+        this(lite,invokers,null,release);
+    }
+
+    public Retrofit(HttpLite lite,ExecutorService executor,boolean release) {
+        this(lite,null,executor,release);
+    }
+
+    public Retrofit(HttpLite lite,List<CallAdapter> invokers,ExecutorService executor,boolean release) {
         mInvokers = new ArrayList<>();
         if(invokers!=null){
             mInvokers.addAll(invokers);
         }
         mInvokers.addAll(BasicCallAdapters.basicAdapters(executor));
+        isReleaseMode = release;
+        this.lite = lite;
     }
 
     private static boolean isDefaultMethod(Method method){
@@ -83,13 +99,27 @@ public abstract class Retrofit {
     }
 
     @SuppressWarnings("unchecked")
-    public final <T> T create(Class<T> service, RequestListener filter){
+    public final <T> T create(final Class<T> service){
         Util.validateServiceInterface(service);
-        if (!isReleaseMode()) {
+        if (!isReleaseMode) {
             eagerlyValidateMethods(service);
         }
+        InvocationHandler invocationHandler = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                // If the method is a method from Object then defer to normal invocation.
+                if (method.getDeclaringClass() == Object.class) {
+                    return method.invoke(this, args);
+                }
+                if (isDefaultMethod(method)) {
+                    return invokeDefaultMethod(method, service, proxy, args);
+                }
+                MethodHandler handler = loadMethodHandler(method);
+                return handler.invoke(Retrofit.this,args);
+            }
+        };
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
-                new ProxyInvoker<T>(service,filter));
+                invocationHandler);
     }
 
     private <T> void eagerlyValidateMethods(Class<T> service) {
@@ -111,12 +141,6 @@ public abstract class Retrofit {
         return handler;
     }
 
-    public abstract Request.Builder setMethod(Request.Builder builder, Request.Method method);
-
-    public abstract boolean isReleaseMode();
-
-    public abstract HttpLite lite();
-
     private CallAdapter searchInvoker(Method method) throws RuntimeException{
         for(CallAdapter invoker:mInvokers){
             if(invoker.support(method)){
@@ -124,30 +148,5 @@ public abstract class Retrofit {
             }
         }
         throw Util.methodError(method,"no CallAdapter for %s",method.getName());
-    }
-
-    public abstract void setBaseUrl(Request.Builder builder, String baseUrl);
-
-    private class ProxyInvoker<T> implements InvocationHandler{
-        private final Class<T> service;
-        private final RequestListener filter;
-
-        public ProxyInvoker(Class<T> service, RequestListener filter) {
-            this.service = service;
-            this.filter = filter;
-        }
-
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            // If the method is a method from Object then defer to normal invocation.
-            if (method.getDeclaringClass() == Object.class) {
-                return method.invoke(this, args);
-            }
-            if (isDefaultMethod(method)) {
-                return invokeDefaultMethod(method, service, proxy, args);
-            }
-            MethodHandler handler = loadMethodHandler(method);
-            return handler.invoke(Retrofit.this,filter,args);
-        }
     }
 }

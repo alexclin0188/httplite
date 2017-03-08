@@ -41,7 +41,7 @@ class ResponseCallback<T> implements Callback<Response> {
     }
 
     @Override
-    public void onFailed(final Request req, final Throwable e) {
+    public void onFailed(final Request req, final Exception e) {
         HttpLite.runOnMain(new Runnable() {
             @Override
             public void run() {

@@ -12,6 +12,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.exception.IllegalOperationException;
 import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.util.Util;
@@ -71,7 +72,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public Response execute(Request request) throws Throwable {
+    public Response execute(Request request) throws Exception {
         Call call = mClient.newCall(makeRequest(request));
         request.handle().setHandle(new CallHandle(call));
         return new OkResponse(call.execute(),request);
@@ -126,6 +127,11 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
     public void shutDown() {
         cancelAll();
         mClient.dispatcher().executorService().shutdown();
+    }
+
+    @Override
+    public MediaType mediaType(String mediaType) {
+        return OkMediaType.create(mediaType);
     }
 
     private okhttp3.Request makeRequest(Request real){

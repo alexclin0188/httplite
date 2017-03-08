@@ -31,7 +31,7 @@ class MethodHandler implements CallAdapter.RequestCreator{
 
     MethodHandler(Method method,Retrofit retrofit,CallAdapter invoker) {
         mRetrofit = retrofit;
-        if(!retrofit.isReleaseMode()){
+        if(!retrofit.isReleaseMode){
             CallAdapter.ResultType rt = invoker.checkMethod(method);
             List<AnnotationRule> annotationRules = ProcessorFactory.getAnnotationRules();
             for(AnnotationRule rule:annotationRules){
@@ -76,7 +76,7 @@ class MethodHandler implements CallAdapter.RequestCreator{
             ParameterProcessor[] processors = new ParameterProcessor[annotationCount];
             for(int j=0;j<parameterAnnotations.length;j++){
                 AbsParamProcessor processor  = ProcessorFactory.paramProcessor(parameterAnnotations[j]);
-                if(!retrofit.isReleaseMode() && processor!=null) processor.checkParameters(method,parameterAnnotations[j],parameterType);
+                if(!retrofit.isReleaseMode && processor!=null) processor.checkParameters(method,parameterAnnotations[j],parameterType);
                 if(processor==null){
                     processors[j] = null;
                 }else if(processor instanceof ParameterProcessor){
@@ -100,7 +100,7 @@ class MethodHandler implements CallAdapter.RequestCreator{
     }
 
     Object invoke(Object... args) throws Exception{
-        return invoker.adapt(mRetrofit.lite(),this,returnType,args);
+        return invoker.adapt(mRetrofit.lite,this,returnType,args);
     }
 
     @Override
@@ -122,7 +122,7 @@ class MethodHandler implements CallAdapter.RequestCreator{
                     processor.process(builder,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),args);
                 }
             }
-            mRetrofit.setBaseUrl(builder,mBaseUrl);
+            builder.baseUrl(mBaseUrl);
             return builder.build();
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();

@@ -115,6 +115,7 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
                         public void onSuccess(Request req, Map<String, List<String>> headers, String result) {
                             mRequestInfo.setText(req.toString());
                             mReturnInfo.setText(result);
+                            mSearchEdt.setText("");
                         }
 
                         @Override
@@ -123,7 +124,6 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
                             mReturnInfo.setText(e.getLocalizedMessage());
                         }
                     });
-                    mSearchEdt.setText("");
                 }
                 break;
         }

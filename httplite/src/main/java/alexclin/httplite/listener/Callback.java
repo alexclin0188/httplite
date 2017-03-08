@@ -12,5 +12,5 @@ import alexclin.httplite.Request;
  */
 public interface Callback<T> {
     void onSuccess(Request req,Map<String,List<String>> headers,T result);
-    void onFailed(Request req, Throwable e);
+    void onFailed(Request req, Exception e);
 }

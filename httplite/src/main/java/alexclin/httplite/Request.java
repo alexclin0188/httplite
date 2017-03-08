@@ -57,7 +57,7 @@ public final class Request{
     private final Handle handle;
 
     private Request(Builder builder) {
-        this.mUrl = builder.url;
+        this.mUrl = Util.appendString(builder.baseUrl,builder.url);
         this.method = builder.method;
         this.progressListener = builder.progressListener;
         this.headers = builder.headers;
@@ -65,7 +65,7 @@ public final class Request{
         this.tag = builder.tag;
         this.cacheExpiredTime = builder.cacheExpiredTime;
         this.downloadParams = builder.downloadParams;
-        this.pathHolders = Collections.unmodifiableMap(builder.pathHolders);
+        this.pathHolders = builder.pathHolders==null?null:Collections.unmodifiableMap(builder.pathHolders);
         this.handle = new HandleImpl();
         this.requestBody = builder.body;
         if(this.progressListener!=null){
@@ -77,7 +77,7 @@ public final class Request{
 
     private String buildUrlAndParams(String baseUrl,String url,Map<String,Pair<String,Boolean>> pathHolders) {
         if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)){
-            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and baseUrl is empty",url));
+            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and setBaseUrl is empty",url));
         }else if(!Util.isHttpPrefix(url)&&!TextUtils.isEmpty(baseUrl)){
             url = Util.appendString(baseUrl,url);
         }
@@ -210,12 +210,77 @@ public final class Request{
 
     @Override
     public String toString() {
-        //TODO
-        return super.toString();
+        boolean first;
+        StringBuilder builder = new StringBuilder("Request{url='").append(mUrl).append('\'');
+        if(!Util.isHttpPrefix(mUrl)){
+            builder.append(", baseUrl='").append(baseUrl).append('\'');
+        }
+        builder.append(", method=").append(method);
+        if(progressListener!=null){
+            builder.append(", progress=").append(progressListener);
+        }
+        if(pathHolders!=null){
+            builder.append(", paths=[");
+            first = true;
+            for(Map.Entry<String,Pair<String,Boolean>> entry:pathHolders.entrySet()){
+                if(first){
+                    first = false;
+                }else{
+                    builder.append(",");
+                }
+                builder.append(entry.getKey()).append(":").append(entry.getValue().first).append("-")
+                        .append(entry.getValue().second);
+            }
+            builder.append("]");
+        }
+        if(headers!=null){
+            builder.append(", headers=[");
+            first = true;
+            for(Map.Entry<String,List<String>> entry:headers.entrySet()){
+                if(first){
+                    first = false;
+                }else{
+                    builder.append(",");
+                }
+                builder.append(entry.getKey()).append(":");
+                if(entry.getValue().size()>1){
+                    for(String v:entry.getValue()){
+                        builder.append(v).append(" ");
+                    }
+                }else{
+                    builder.append(entry.getValue().get(0));
+                }
+            }
+        }
+        if(params!=null){
+            builder.append(", , params=[");
+            first = true;
+            for(Pair<String,Pair<String,Boolean>> entry:params){
+                if(first){
+                    first = false;
+                }else{
+                    builder.append(",");
+                }
+                builder.append(entry.first).append(":").append(entry.second.first).append("-").append(entry.second.second);
+            }
+            builder.append("]");
+        }
+        if(requestBody!=null){
+            builder.append(", body=").append(requestBody);
+        }
+        if(tag!=null){
+            builder.append(", tag=").append(tag);
+        }
+        if(downloadParams!=null){
+            builder.append(", download=").append(downloadParams);
+        }
+        builder.append(", cache=").append(cacheExpiredTime).append('}');
+        return builder.toString();
     }
 
     public static final class Builder implements Cloneable{
-        String url;
+        private String url;
+        private String baseUrl;
         private Method method;
         private ProgressListener progressListener;
         private Map<String,List<String>> headers;
@@ -237,8 +302,14 @@ public final class Request{
 
         public Builder(){}
 
-        void setMethod(Method method) {
+        public Builder method(Method method) {
             this.method = method;
+            return this;
+        }
+
+        public Builder baseUrl(String baseUrl){
+            this.baseUrl = baseUrl;
+            return this;
         }
 
         public void url(String url) {
@@ -667,6 +738,15 @@ public final class Request{
                 return url.substring(index+1);
             }
             return String.format(Locale.getDefault(),"download-%d.tmp", System.currentTimeMillis());
+        }
+
+        @Override
+        public String toString() {
+            return "{parentDir=" + parentDir +
+                    ", targetFile=" + targetFile +
+                    ", autoResume=" + autoResume +
+                    ", autoRename=" + autoRename +
+                    '}';
         }
     }
 }

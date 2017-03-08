@@ -11,9 +11,9 @@ import java.util.Map;
 public class Result<T> {
     private final T result;
     private final Map<String,List<String>> headers;
-    private final Throwable throwable;
+    private final Exception throwable;
 
-    public Result(Throwable throwable) {
+    public Result(Exception throwable) {
         this(null,null,throwable);
     }
 
@@ -21,7 +21,7 @@ public class Result<T> {
         this(result,headers,null);
     }
 
-    public Result(T result, Map<String, List<String>> headers, Throwable throwable) {
+    public Result(T result, Map<String, List<String>> headers, Exception throwable) {
         this.result = result;
         this.headers = headers;
         this.throwable = throwable;
@@ -36,7 +36,7 @@ public class Result<T> {
         return headers;
     }
 
-    public Throwable error() {
+    public Exception error() {
         return throwable;
     }
 }

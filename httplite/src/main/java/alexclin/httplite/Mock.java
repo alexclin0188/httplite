@@ -137,11 +137,17 @@ public class Mock<T>{
         @Override
         public void run() {
             execMock();
-            if(result.error()!=null){
-                callback.onFailed(request,result.error());
-            }else{
-                callback.onSuccess(request,result.headers(),result.result());
-            }
+            HttpLite.runOnMain(new Runnable() {
+                @Override
+                public void run() {
+                    if(result.error()!=null){
+                        callback.onFailed(request,result.error());
+                    }else{
+                        callback.onSuccess(request,result.headers(),result.result());
+                    }
+                }
+            });
         }
+
     }
 }
