@@ -80,7 +80,7 @@ class Ok3Factory implements LiteClient.Converter<RequestBody> {
         }
         if(headBodyList!=null){
             for(Pair<Map<String,List<String>>, alexclin.httplite.RequestBody> bodyPair:headBodyList){
-                builder.addPart(createHeader(bodyPair.first), convertBody(bodyPair.second));
+                builder.addPart(Ok3Lite.createHeader(bodyPair.first), convertBody(bodyPair.second));
             }
         }
         if(paramList!=null){
@@ -95,20 +95,6 @@ class Ok3Factory implements LiteClient.Converter<RequestBody> {
             }
         }
         return builder.build();
-    }
-
-    private static Headers createHeader(Map<String, List<String>> headers){
-        if(headers!=null&&!headers.isEmpty()){
-            Headers.Builder hb = new Headers.Builder();
-            for(String key:headers.keySet()){
-                List<String> values = headers.get(key);
-                for(String value:values){
-                    hb.add(key,value);
-                }
-            }
-            return hb.build();
-        }
-        return null;
     }
 
     private RequestBody convertBody(alexclin.httplite.RequestBody requestBody){

@@ -177,7 +177,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
         return rb.build();
     }
 
-    private static Headers createHeader(Map<String, List<String>> headers){
+    static Headers createHeader(Map<String, List<String>> headers){
         if(headers!=null&&!headers.isEmpty()){
             Headers.Builder hb = new Headers.Builder();
             for(String key:headers.keySet()){

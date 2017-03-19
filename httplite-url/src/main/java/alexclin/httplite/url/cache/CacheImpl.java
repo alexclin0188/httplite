@@ -2,6 +2,9 @@ package alexclin.httplite.url.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Response;
@@ -90,10 +93,10 @@ public class CacheImpl{
         return returnResponse;
     }
 
-    public void addCacheHeaders(Request.Builder request){
+    public void addCacheHeaders(Request request,Map<String, List<String>> headers){
         CacheEntry entry = null;
         try {
-            DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request.build()));
+            DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request));
             if(snapshot==null){
                 return;
             }
@@ -107,14 +110,25 @@ public class CacheImpl{
         }
 
         if (entry.getEtag() != null) {
-            request.header("If-None-Match", entry.getEtag());
+            addHeader(headers,"If-None-Match", entry.getEtag());
         }
 
         if (entry.getLastModified() > 0) {
             String lastModified = CacheParser.formatDateAsEpoch(entry.getLastModified());
             if(lastModified!=null)
-                request.header("If-Modified-Since", lastModified);
+                addHeader(headers,"If-Modified-Since", lastModified);
         }
+    }
+
+    private static void addHeader(Map<String, List<String>> headers,String key,String value){
+        List<String> list = headers.get(key);
+        if(list==null){
+            list = new ArrayList<>();
+        }else if(!(list instanceof ArrayList)){
+            list = new ArrayList<>(list);
+        }
+        list.add(value);
+        headers.put(key,list);
     }
 
     public String createCacheKey(Request request){

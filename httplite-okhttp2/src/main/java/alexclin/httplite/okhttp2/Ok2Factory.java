@@ -27,10 +27,10 @@ import okio.Sink;
  * @author xiehonglin429 on 2017/3/16.
  */
 
-public class Ok2Factory implements LiteClient.Converter<RequestBody> {
+class Ok2Factory implements LiteClient.Converter<RequestBody> {
     @Override
     public RequestBody createRequestBody(alexclin.httplite.RequestBody requestBody, String mediaType) {
-        return null;
+        return convertBody(requestBody,mediaType,null);
     }
 
     @Override

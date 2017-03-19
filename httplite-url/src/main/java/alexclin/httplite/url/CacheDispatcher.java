@@ -6,6 +6,7 @@ import android.util.Pair;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
@@ -14,8 +15,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.exception.HttpException;
-import alexclin.httplite.Dispatcher;
-import alexclin.httplite.impl.TaskDispatcher;
 import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.LogUtil;
@@ -26,32 +25,32 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/2/18 19:42
  */
-public class CacheDispatcher extends Thread implements Dispatcher<Response>{
+class CacheDispatcher extends Thread implements Dispatcher{
 
-    private final PriorityBlockingQueue<Task<Response>> mCacheQueue = new PriorityBlockingQueue<>();
+    private final PriorityBlockingQueue<Task> mCacheQueue = new PriorityBlockingQueue<>();
 
-    private final Map<String, Queue<Pair<Task<Response>,Boolean>>> mWaitingRequests = new HashMap<>();
+    private final Map<String, Queue<Pair<Task,Boolean>>> mWaitingRequests = new HashMap<>();
 
-    private TaskDispatcher<Response> networkDispatcher;
+    private NetDispatcher networkDispatcher;
 
     private CacheImpl cache;
 
     /** Used for telling us to die. */
     private volatile boolean mQuit = false;
 
-    public CacheDispatcher(TaskDispatcher<Response> networkDispatcher,CacheImpl cache) {
+    CacheDispatcher(NetDispatcher networkDispatcher, CacheImpl cache) {
         this.networkDispatcher = networkDispatcher;
         this.cache = cache;
         start();
     }
 
-    public void dispatch(Task<Response> task) {
+    public void dispatch(Task task) {
         if(!isSameKeyTaskRunning(task,false)){
             mCacheQueue.add(task);
         }
     }
 
-    public Response execute(Task<Response> task) throws Exception{
+    public Response execute(Task task) throws Exception{
         if(!isSameKeyTaskRunning(task,true)){
             try {
                 return networkDispatcher.execute(task);
@@ -73,8 +72,8 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         for(Task task:mCacheQueue){
             if(Util.equal(tag,task.tag())) task.cancel();
         }
-        for(Queue<Pair<Task<Response>,Boolean>> queue:mWaitingRequests.values()){
-            for(Pair<Task<Response>,Boolean> pair:queue){
+        for(Queue<Pair<Task,Boolean>> queue:mWaitingRequests.values()){
+            for(Pair<Task,Boolean> pair:queue){
                 Task task = pair.first;
                 if(Util.equal(tag,task.tag())) task.cancel();
             }
@@ -86,8 +85,8 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         for(Task task:mCacheQueue){
             task.cancel();
         }
-        for(Queue<Pair<Task<Response>,Boolean>> queue:mWaitingRequests.values()){
-            for(Pair<Task<Response>,Boolean> pair:queue){
+        for(Queue<Pair<Task,Boolean>> queue:mWaitingRequests.values()){
+            for(Pair<Task,Boolean> pair:queue){
                 Task task = pair.first;
                 task.cancel();
             }
@@ -99,7 +98,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         mQuit = true;
     }
 
-    public Response cacheResponse(Response response) throws IOException {
+    Response cacheResponse(Response response) throws IOException {
         String cacheKey = cache.createCacheKey(response.request());
         if (cacheKey != null) {
             try {
@@ -122,13 +121,13 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
 
     private void notifyTaskFinish(String cacheKey) {
         synchronized (mWaitingRequests) {
-            Queue<Pair<Task<Response>,Boolean>> waitingRequests = mWaitingRequests.remove(cacheKey);
+            Queue<Pair<Task,Boolean>> waitingRequests = mWaitingRequests.remove(cacheKey);
             if (waitingRequests != null) {
                 LogUtil.i(String.format(Locale.ENGLISH,"Releasing %d waiting requests for cacheKey=%s.",
                         waitingRequests.size(), cacheKey));
                 // Process all queued up requests. They won't be considered as in flight, but
                 // that's not a problem as the cache has been primed by 'request'.
-                for(Pair<Task<Response>,Boolean> pair:waitingRequests) {
+                for(Pair<Task,Boolean> pair:waitingRequests) {
                     if(pair.second){
                         pair.first.notify();
                     }else{
@@ -139,12 +138,12 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
     }
 
-    private boolean isSameKeyTaskRunning(Task<Response> task,boolean sync){
+    private boolean isSameKeyTaskRunning(Task task,boolean sync){
         synchronized (mWaitingRequests) {
             String cacheKey = cache.createCacheKey(task.request());
             if (mWaitingRequests.containsKey(cacheKey)) {
                 // There is already a request in flight. Queue up.
-                Queue<Pair<Task<Response>,Boolean>> stagedRequests = mWaitingRequests.get(cacheKey);
+                Queue<Pair<Task,Boolean>> stagedRequests = mWaitingRequests.get(cacheKey);
                 if (stagedRequests == null) {
                     stagedRequests = new LinkedList<>();
                 }
@@ -163,7 +162,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
     public void run() {
         android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
         while (true){
-            final Task<Response> task;
+            final Task task;
             try {
                 // Take a request from the queue.
                 task = mCacheQueue.take();
@@ -189,19 +188,19 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
     }
 
-    public void addCacheHeaders(Request.Builder request){
-        cache.addCacheHeaders(request);
+    void addCacheHeaders(Request request,Map<String, List<String>> headers){
+        cache.addCacheHeaders(request,headers);
     }
 
-    public boolean canCache(Request request) {
+    boolean canCache(Request request) {
         return cache.canCache(request)&&request.getCacheExpiredTime()!=Request.NO_CACHE;
     }
 
-    static class CacheTask implements Task<Response>{
+    private static class CacheTask implements Task{
         private Task task;
         private Response response;
 
-        public CacheTask(Task task,Response response) {
+        CacheTask(Task task,Response response) {
             this.task = task;
             this.response = response;
         }
@@ -212,12 +211,12 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
 
         @Override
-        public void enqueueTask() {
+        public void enqueue(URLite lite) {
             ((URLTask)task).onResponse(response);
         }
 
         @Override
-        public Response executeTask() throws Exception {
+        public Response execute(URLite lite) throws Exception {
             return response;
         }
 
@@ -242,7 +241,7 @@ public class CacheDispatcher extends Thread implements Dispatcher<Response>{
         }
     }
 
-    public static class DefaultCachePolicy implements CachePolicy{
+    static class DefaultCachePolicy implements CachePolicy{
 
         @Override
         public String createCacheKey(Request request) {

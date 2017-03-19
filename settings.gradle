@@ -3,4 +3,4 @@ include ':app'
 
 include ':mockdata', ':mockserver'
 
-include ':httplite', ':httplite-okhttp3',':httplite-okhttp2'//, ':httplite-url',  ':retrofit-rx'
+include ':httplite', ':httplite-okhttp3',':httplite-okhttp2', ':httplite-url'//,  ':retrofit-rx'

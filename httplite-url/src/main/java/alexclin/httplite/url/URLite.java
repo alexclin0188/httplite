@@ -1,9 +1,7 @@
 package alexclin.httplite.url;
 
 import android.text.TextUtils;
-import android.util.Pair;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.CookieHandler;
@@ -14,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import alexclin.httplite.Executable;
+import alexclin.httplite.listener.Callback;
 import alexclin.httplite.url.cache.CachePolicy;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.HttpLiteBuilder;
@@ -24,10 +22,8 @@ import alexclin.httplite.Request;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.ResponseBody;
-import alexclin.httplite.Dispatcher;
-import alexclin.httplite.impl.ResponseBodyImpl;
+import alexclin.httplite.impl.ResponseImpl.ResponseBodyImpl;
 import alexclin.httplite.impl.ResponseImpl;
-import alexclin.httplite.impl.TaskDispatcher;
 import alexclin.httplite.url.cache.CacheImpl;
 import alexclin.httplite.util.LogUtil;
 
@@ -39,14 +35,17 @@ import alexclin.httplite.util.LogUtil;
 public class URLite extends HttpLiteBuilder implements LiteClient {
     ClientSettings settings;
 
-    private TaskDispatcher<Response> mNetDispatcher;
+    private NetDispatcher mNetDispatcher;
     private CacheDispatcher mCacheDispatcher;
     private CacheImpl mCache;
     private CachePolicy mCachePolicy;
 
-    public URLite(CachePolicy cachePolicy) {
-        mNetDispatcher = new TaskDispatcher<>();
+    private URLiteFactory mFactory;
+
+    private URLite(CachePolicy cachePolicy) {
+        mNetDispatcher = new NetDispatcher(this);
         mCachePolicy = cachePolicy;
+        mFactory = new URLiteFactory();
     }
 
     public static HttpLiteBuilder create(CachePolicy mCachePolicy) {
@@ -79,19 +78,8 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return new ResponseBodyImpl(stream, type, contentLength);
     }
 
-    @Override
-    public void setConfig(ClientSettings settings) {
-        this.settings = settings;
-        mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
-        if (settings.getCacheDir() != null) {
-            if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
-            try {
-                mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize(),mCachePolicy);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache);
-        }
+    RequestBody realBody(RequestBody requestBody){
+        return mFactory.createRequestBody(requestBody,null);
     }
 
     @Override
@@ -102,8 +90,22 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public Executable executable(Request.Builder request) {
-        return new URLTask(this,request);
+    public MediaType mediaType(String mediaType) {
+        return URLMediaType.parse(mediaType);
+    }
+
+    @Override
+    public Response execute(Request request) throws Exception {
+        URLTask task = new URLTask(request,null);
+        request.handle().setHandle(task);
+        return dispatchTaskSync(task);
+    }
+
+    @Override
+    public void enqueue(Request request, Callback<Response> callback) {
+        URLTask task = new URLTask(request,callback);
+        request.handle().setHandle(task);
+        dispatchTask(task);
     }
 
     @Override
@@ -121,79 +123,18 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     @Override
-    public RequestBody createRequestBody(MediaType contentType, String content) {
-        return URLRequestBody.create(contentType, content);
-    }
-
-    @Override
-    public RequestBody createRequestBody(MediaType contentType, byte[] content) {
-        return URLRequestBody.create(contentType, content);
-    }
-
-    @Override
-    public RequestBody createRequestBody(MediaType contentType, byte[] content, int offset, int byteCount) {
-        return URLRequestBody.create(contentType, content, offset, byteCount);
-    }
-
-    @Override
-    public RequestBody createRequestBody(MediaType contentType, File file) {
-        return URLRequestBody.create(contentType, file);
-    }
-
-    @Override
-    public MediaType parse(String type) {
-        return URLMediaType.parse(type);
-    }
-
-    @Override
-    public RequestBody createMultipartBody(String boundary, MediaType type, List<RequestBody> bodyList, List<Pair<Map<String, List<String>>, RequestBody>> headBodyList, List<Pair<String, String>> paramList, List<Pair<String, Pair<String, RequestBody>>> fileList) {
-        URLMultipartBody.Builder builder;
-        if (boundary == null) {
-            builder = new URLMultipartBody.Builder().setType(type);
-        } else {
-            builder = new URLMultipartBody.Builder(boundary).setType(type);
-        }
-        if (bodyList != null) {
-            for (RequestBody body : bodyList) {
-                builder.addPart(body);
+    protected LiteClient initClient(ClientSettings settings) {
+        this.settings = settings;
+        mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
+        if (settings.getCacheDir() != null) {
+            if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
+            try {
+                mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize(),mCachePolicy);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache);
         }
-        if (headBodyList != null) {
-            for (Pair<Map<String, List<String>>, RequestBody> bodyPair : headBodyList) {
-                builder.addPart(bodyPair.first, bodyPair.second);
-            }
-        }
-        if (paramList != null) {
-            for (Pair<String, String> pair : paramList) {
-                builder.addFormDataPart(pair.first, pair.second);
-            }
-        }
-        if (fileList != null) {
-            for (Pair<String, Pair<String, RequestBody>> pair : fileList) {
-                builder.addFormDataPart(pair.first, pair.second.first, pair.second.second);
-            }
-        }
-        return builder.build();
-    }
-
-    @Override
-    public RequestBody createFormBody(List<Pair<String, String>> paramList, List<Pair<String, String>> encodedParamList) {
-        URLFormBody.Builder builder = new URLFormBody.Builder();
-        if (paramList != null) {
-            for (Pair<String, String> param : paramList) {
-                builder.add(param.first, param.second);
-            }
-        }
-        if (encodedParamList != null) {
-            for (Pair<String, String> param : encodedParamList) {
-                builder.addEncoded(param.first, param.second);
-            }
-        }
-        return builder.build();
-    }
-
-    @Override
-    protected LiteClient initLiteClient() {
         return this;
     }
 
@@ -236,7 +177,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return settings.getCookieHandler();
     }
 
-    void dispatchTask(Dispatcher.Task task) {
+    void dispatchTask(Task task) {
         if (isCacheAble(task)) {
             mCacheDispatcher.dispatch(task);
         } else {
@@ -244,14 +185,14 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         }
     }
 
-    Response dispatchTaskSync(Dispatcher.Task<Response> task) throws Exception {
+    Response dispatchTaskSync(Task task) throws Exception {
         if (isCacheAble(task))
             return mCacheDispatcher.execute(task);
         else
             return mNetDispatcher.execute(task);
     }
 
-    boolean isCacheAble(Dispatcher.Task task) {
+    boolean isCacheAble(Task task) {
         return mCacheDispatcher!=null&&mCacheDispatcher.canCache(task.request());
     }
 
@@ -263,11 +204,11 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         }
     }
 
-    public void addCacheHeaders(Request.Builder request) {
-        if (mCacheDispatcher != null) mCacheDispatcher.addCacheHeaders(request);
+    public void addCacheHeaders(Request request,Map<String, List<String>> headers) {
+        if (mCacheDispatcher != null) mCacheDispatcher.addCacheHeaders(request,headers);
     }
 
-    public TaskDispatcher getNetDispatcher() {
+    public NetDispatcher getNetDispatcher() {
         return mNetDispatcher;
     }
 }

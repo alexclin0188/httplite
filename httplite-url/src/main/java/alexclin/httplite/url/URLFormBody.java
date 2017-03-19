@@ -50,8 +50,8 @@ public class URLFormBody extends URLRequestBody {
         return Uri.decode(encodedValue(index));
     }
 
-    @Override public MediaType contentType() {
-        return CONTENT_TYPE;
+    @Override public String contentType() {
+        return CONTENT_TYPE.toString();
     }
 
     @Override public long contentLength() {

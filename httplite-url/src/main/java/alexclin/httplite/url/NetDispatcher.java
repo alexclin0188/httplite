@@ -1,4 +1,4 @@
-package alexclin.httplite.impl;
+package alexclin.httplite.url;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -8,16 +8,16 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.Dispatcher;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.util.Util;
 
 /**
- * TaskDispatcher
+ * NetDispatcher
  *
  * @author alexclin
  * @date 16/1/2 19:19
  */
-public class TaskDispatcher<T> implements Dispatcher<T> {
+class NetDispatcher implements Dispatcher {
 
     /**
      * Ready calls in the order they'll be run.
@@ -33,24 +33,26 @@ public class TaskDispatcher<T> implements Dispatcher<T> {
      * Executes calls. Created lazily.
      */
     private ExecutorService executorService;
+    private URLite lite;
 
-    public TaskDispatcher() {
-        this(null);
+    NetDispatcher(URLite lite) {
+        this(lite,null);
     }
 
-    public TaskDispatcher(ExecutorService executorService) {
+    NetDispatcher(URLite lite, ExecutorService executorService) {
+        this.lite = lite;
         this.executorService = executorService;
     }
 
-    public void dispatch(Task<T> task) {
+    public void dispatch(Task task) {
         dispatchInner(new AsyncWrapper(task, this));
     }
 
     @Override
-    public T execute(Task<T> task) throws Exception{
+    public Response execute(Task task) throws Exception{
         registerSyncCall(task);
         try {
-            return task.executeTask();
+            return task.execute(lite);
         } finally {
             unregisterSyncCall(task);
         }
@@ -168,17 +170,17 @@ public class TaskDispatcher<T> implements Dispatcher<T> {
 
     private static class AsyncWrapper implements Runnable {
         private Task realTask;
-        private TaskDispatcher dispatcher;
+        private NetDispatcher dispatcher;
 
-        public AsyncWrapper(Task realTask,TaskDispatcher dispatcher) {
+        public AsyncWrapper(Task realTask,NetDispatcher dispatcher) {
             this.realTask = realTask;
             this.dispatcher = dispatcher;
         }
 
         @Override
         public void run() {
-            realTask.enqueueTask();
-            final TaskDispatcher dispatcher = this.dispatcher;
+            realTask.enqueue(dispatcher.lite);
+            final NetDispatcher dispatcher = this.dispatcher;
             if(dispatcher!=null)dispatcher.onFinished(this);
             this.dispatcher = null;
         }
