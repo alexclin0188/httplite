@@ -1,7 +1,7 @@
 package alexclin.httplite.sample.retrofit.custom;
 
+import com.example.BaseResult;
 import com.example.RequestInfo;
-import com.example.Result;
 import com.example.UserInfo;
 
 import alexclin.httplite.annotation.BaseURL;
@@ -28,11 +28,11 @@ public interface CustomApi {
             @Query("password") String password,
             @Query("token") String token,
             @Tag Object tag,
-            Callback<Result<UserInfo>> callback
+            Callback<BaseResult<UserInfo>> callback
     );
 
     @POST("/test")
     void testPost(@GsonField("param1") String param1,
                   @GsonField("param2")String param2,
-                  Callback<Result<RequestInfo>> callback);
+                  Callback<BaseResult<RequestInfo>> callback);
 }

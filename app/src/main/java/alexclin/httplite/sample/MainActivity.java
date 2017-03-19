@@ -10,16 +10,21 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.example.RequestInfo;
+import com.example.BaseResult;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import alexclin.httplite.Result;
 import alexclin.httplite.sample.event.ChangeFragEvent;
 import alexclin.httplite.sample.frag.RequestFrag;
 import alexclin.httplite.sample.frag.DownloadFrag;
 import alexclin.httplite.sample.frag.GetFrag;
 import alexclin.httplite.sample.frag.PostFrag;
 import alexclin.httplite.sample.frag.RetrofitFrag;
-import alexclin.httplite.sample.retrofit.TestRetrofit;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Util;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import de.greenrobot.event.EventBus;
@@ -61,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        TestRetrofit.testCustom(App.httpLite(this));
 //        TestRetrofit.testFilter(App.httpLite(this));
 //        TestRetrofit.testSampleApi(App.httpLite(this));
+        Util.isSubType(new Clazz<Result<RequestInfo>>(){}.type(),Result.class);
     }
 
     @Override

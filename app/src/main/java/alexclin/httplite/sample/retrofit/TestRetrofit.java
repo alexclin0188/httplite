@@ -2,8 +2,8 @@ package alexclin.httplite.sample.retrofit;
 
 import android.content.Context;
 
+import com.example.BaseResult;
 import com.example.RequestInfo;
-import com.example.Result;
 import com.example.UserInfo;
 
 import java.util.List;
@@ -92,11 +92,11 @@ public class TestRetrofit {
         //生成API接口实例
         final SampleApi api = App.retrofit(ctx).create(SampleApi.class);
         //调用异步方法
-        api.login("user", "pass", "token", new Callback<Result<UserInfo>>() {
+        api.login("user", "pass", "token", new Callback<BaseResult<UserInfo>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers, BaseResult<UserInfo> result) {
                 //TODO
-                LogUtil.e("Result:"+result);
+                LogUtil.e("BaseResult:"+result);
             }
 
             @Override
@@ -113,7 +113,7 @@ public class TestRetrofit {
                 try {
                     ZhihuData data = api.syncZhihu();
                     //TODO
-                    LogUtil.e("Result:"+data);
+                    LogUtil.e("BaseResult:"+data);
                 } catch (Exception e) {
                     //TODO
                     LogUtil.e("onFailed",e);
@@ -127,7 +127,7 @@ public class TestRetrofit {
 //            @Override
 //            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
 //                //TODO
-//                LogUtil.e("Result:"+result);
+//                LogUtil.e("BaseResult:"+result);
 //            }
 //
 //            @Override
@@ -144,7 +144,7 @@ public class TestRetrofit {
 //                try {
 //                    ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
 //                    //TODO
-//                    LogUtil.e("Result:"+data);
+//                    LogUtil.e("BaseResult:"+data);
 //                } catch (Exception e) {
 //                    //TODO
 //                    LogUtil.e("onFailed",e);
@@ -165,11 +165,11 @@ public class TestRetrofit {
         CustomApi api = App.retrofit(context).create(CustomApi.class);
         //发起请求
         Object tag = new Object();
-        api.login("user", "pass", "token", tag, new Callback<Result<UserInfo>>() {
+        api.login("user", "pass", "token", tag, new Callback<BaseResult<UserInfo>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers, BaseResult<UserInfo> result) {
                 //TODO
-                LogUtil.e("Result:"+result);
+                LogUtil.e("BaseResult:"+result);
             }
 
             @Override
@@ -178,11 +178,11 @@ public class TestRetrofit {
                 LogUtil.e("onFailed",e);
             }
         });
-        api.testPost("test1", "test2", new Callback<Result<RequestInfo>>() {
+        api.testPost("test1", "test2", new Callback<BaseResult<RequestInfo>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, Result<RequestInfo> result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers, BaseResult<RequestInfo> result) {
                 //TODO
-                LogUtil.e("Result:"+result);
+                LogUtil.e("BaseResult:"+result);
             }
 
             @Override
@@ -196,10 +196,10 @@ public class TestRetrofit {
     public static void testFilter(Context context){
         SampleApi api = App.retrofit(context).create(SampleApi.class);
 
-        api.login("user", "pass", "test", new Callback<Result<UserInfo>>() {
+        api.login("user", "pass", "test", new Callback<BaseResult<UserInfo>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
-                LogUtil.e("Result:"+result);
+            public void onSuccess(Request req, Map<String, List<String>> headers, BaseResult<UserInfo> result) {
+                LogUtil.e("BaseResult:"+result);
             }
 
             @Override

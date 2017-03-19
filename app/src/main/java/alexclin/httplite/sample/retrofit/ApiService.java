@@ -1,12 +1,13 @@
 package alexclin.httplite.sample.retrofit;
 
 import com.example.RequestInfo;
-import com.example.Result;
+import com.example.BaseResult;
 import com.example.UserInfo;
 
 import java.io.File;
 
 import alexclin.httplite.Request;
+import alexclin.httplite.Result;
 import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.annotation.BaseURL;
@@ -38,7 +39,7 @@ public interface ApiService {
             @JsonField("password")String password,
             @JsonField("token") String token,
             @Tag Object tag,
-            Callback<Result<UserInfo>> callback
+            Callback<BaseResult<UserInfo>> callback
     );
 
     @GET("http://www.baidu.com")
@@ -59,7 +60,7 @@ public interface ApiService {
     );
 
     @GET( "http://news-at.zhihu.com/api/4/news/latest")
-    ZhihuData syncZhihu(Clazz<ZhihuData> clazz) throws Exception;
+    Result<ZhihuData> syncZhihu();
 
     @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
     void doSomething(
@@ -68,7 +69,7 @@ public interface ApiService {
             @Param("param2") String param2,
             @Form("form_f1") String form_f1,
             @Tag Object tag,
-            Callback<Result<RequestInfo>> callback
+            Callback<BaseResult<RequestInfo>> callback
     );
 
     @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
@@ -77,9 +78,7 @@ public interface ApiService {
             @Param("param1") String param1,
             @Param("param2") String param2,
             @Form("form_f1") String form_f1,
-            @Tag Object tag,
-            Clazz<Result<RequestInfo>> clazz
-    ) throws Exception;
+            @Tag Object tag);
 
     @HTTP(method = Request.Method.PUT,path = "put/{holde_test}")
     void putJsonBody(
@@ -104,5 +103,5 @@ public interface ApiService {
 //    Observable<ZhihuData> testZhihu();
 //
 //    @GET("http://news-at.zhihu.com/api/4/news/latest")
-//    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
+//    Observable<alexclin.httplite.BaseResult<ZhihuData>> testZhihuResult();
 }

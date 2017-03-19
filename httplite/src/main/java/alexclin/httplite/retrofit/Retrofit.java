@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
 /**
@@ -143,10 +144,11 @@ public class Retrofit {
 
     private CallAdapter searchInvoker(Method method) throws RuntimeException{
         for(CallAdapter invoker:mInvokers){
+            LogUtil.e("invoker:"+invoker.getClass().getSimpleName()+",support:"+invoker.support(method));
             if(invoker.support(method)){
                 return invoker;
             }
         }
-        throw Util.methodError(method,"no CallAdapter for %s",method.getName());
+        throw Util.methodError(method,"No CallAdapter for %s",method.getName());
     }
 }

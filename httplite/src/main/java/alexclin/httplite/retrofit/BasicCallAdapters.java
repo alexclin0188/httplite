@@ -23,7 +23,7 @@ import alexclin.httplite.util.Util;
 class BasicCallAdapters {
 
     public static Collection<CallAdapter> basicAdapters(ExecutorService executor){
-        return Arrays.asList(new AsyncCallAdapter(executor),new ResultCallAdapter());
+        return Arrays.asList(new ResultCallAdapter(),new AsyncCallAdapter(executor));
     }
 
     private static class ResultCallAdapter implements CallAdapter {

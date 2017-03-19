@@ -1,6 +1,6 @@
 package alexclin.httplite.sample.retrofit;
 
-import com.example.Result;
+import com.example.BaseResult;
 import com.example.UserInfo;
 
 import alexclin.httplite.annotation.GET;
@@ -21,7 +21,7 @@ public interface SampleApi {
             @JsonField("username") String userName,
             @JsonField("password")String password,
             @JsonField("token") String token,
-            Callback<Result<UserInfo>> callback
+            Callback<BaseResult<UserInfo>> callback
     );
     //同步请求方法
     @GET( "http://news-at.zhihu.com/api/4/news/latest")

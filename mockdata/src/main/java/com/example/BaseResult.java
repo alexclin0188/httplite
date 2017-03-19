@@ -1,6 +1,6 @@
 package com.example;
 
-public class Result<T> {
+public class BaseResult<T> {
     public String requestPath;
     public String requestMethod;
     public T data;
@@ -9,7 +9,7 @@ public class Result<T> {
 
     @Override
     public String toString() {
-        return "Result{" +
+        return "BaseResult{" +
                 "requestPath='" + requestPath + '\'' +
                 ", requestMethod='" + requestMethod + '\'' +
                 ", data=" + data +

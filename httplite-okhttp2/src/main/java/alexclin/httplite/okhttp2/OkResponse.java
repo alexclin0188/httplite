@@ -2,10 +2,13 @@ package alexclin.httplite.okhttp2;
 
 import com.squareup.okhttp.Response;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Request;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.listener.ResponseBody;
 
 /**
@@ -13,11 +16,11 @@ import alexclin.httplite.listener.ResponseBody;
  *
  * @author alexclin 16/1/1 15:02
  */
-public class OkResponse implements alexclin.httplite.listener.Response {
+class OkResponse implements alexclin.httplite.listener.Response {
     private Response realResponse;
     private Request request;
 
-    public OkResponse(Response realResponse, Request request) {
+    OkResponse(Response realResponse, Request request) {
         this.realResponse = realResponse;
         this.request = request;
     }
@@ -55,5 +58,34 @@ public class OkResponse implements alexclin.httplite.listener.Response {
     @Override
     public ResponseBody body() {
         return new OkResponseBody(realResponse.body());
+    }
+
+    private static class OkResponseBody implements alexclin.httplite.listener.ResponseBody {
+        private com.squareup.okhttp.ResponseBody realBody;
+        private MediaType type;
+        private OkResponseBody(com.squareup.okhttp.ResponseBody realBody) {
+            this.realBody = realBody;
+            this.type = new OkMediaType(realBody.contentType());
+        }
+
+        @Override
+        public MediaType contentType() {
+            return type;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return realBody.contentLength();
+        }
+
+        @Override
+        public InputStream stream() throws IOException{
+            return realBody.byteStream();
+        }
+
+        @Override
+        public void close() throws IOException {
+            realBody.close();
+        }
     }
 }

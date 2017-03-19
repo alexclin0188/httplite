@@ -14,8 +14,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
+import com.example.BaseResult;
 import com.example.FileInfo;
-import com.example.Result;
 import com.example.util.EncryptUtil;
 
 import java.io.File;
@@ -128,10 +128,10 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             loadFiles(info.filePath);
         }else{
             File file = new File(basePath+info.filePath);
-            new Request.Builder(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).build().enqueue(mHttpLite,new Callback<Result<String>>() {
+            new Request.Builder(String.format("/?hash=%s",info.hash)).post(MediaType.APPLICATION_STREAM,file).build().enqueue(mHttpLite,new Callback<BaseResult<String>>() {
                 @Override
-                public void onSuccess(Request req, Map<String, List<String>> headers,Result<String> result) {
-                    LogUtil.e("Result:"+result);
+                public void onSuccess(Request req, Map<String, List<String>> headers,BaseResult<String> result) {
+                    LogUtil.e("BaseResult:"+result);
                 }
 
                 @Override
@@ -149,10 +149,10 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
                             LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
                         }
                     })
-                    .post().build().enqueue(mHttpLite,new Callback<Result<String>>() {
+                    .post().build().enqueue(mHttpLite,new Callback<BaseResult<String>>() {
                 @Override
-                public void onSuccess(Request req,Map<String, List<String>> headers,Result<String> result) {
-                    LogUtil.e("Result:"+result);
+                public void onSuccess(Request req,Map<String, List<String>> headers,BaseResult<String> result) {
+                    LogUtil.e("BaseResult:"+result);
                 }
 
                 @Override
@@ -164,7 +164,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             new Request.Builder("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).build().enqueue(mHttpLite,new Callback<String>() {
                 @Override
                 public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
-                    LogUtil.e("Result:" + result);
+                    LogUtil.e("BaseResult:" + result);
                 }
 
                 @Override
@@ -176,7 +176,7 @@ public class PostFrag extends Fragment implements FileAdapter.OnFileClickListene
             new Request.Builder("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().build().enqueue(mHttpLite,new Callback<String>() {
                 @Override
                 public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
-                    LogUtil.e("Result:" + result);
+                    LogUtil.e("BaseResult:" + result);
                 }
 
                 @Override

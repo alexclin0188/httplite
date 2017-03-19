@@ -11,9 +11,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.FileInfo;
+import com.example.BaseResult;
 import com.example.RequestInfo;
-import com.example.Result;
 
 import java.util.List;
 import java.util.Map;
@@ -76,7 +75,7 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
                     @Override
                     public void onSuccess(Request req,Map<String,List<String>> headers,ZhihuData result) {
                         mRequestInfo.setText(req.toString());
-                        LogUtil.e("Result:" + result);
+                        LogUtil.e("BaseResult:" + result);
                         mReturnInfo.setText(result.toString());
                     }
 
@@ -91,9 +90,9 @@ public class RequestFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_test3:
                 new Request.Builder("http://192.168.99.238:10080/abcde").header("header","not chinese").header("test_header","2016-01-06")
                         .header("double_header","header1").header("double_header","head2")
-                        .param("type","json").param("param2","You dog").param("param3", "中文").get().build().enqueue(lite,new Callback<Result<RequestInfo>>() {
+                        .param("type","json").param("param2","You dog").param("param3", "中文").get().build().enqueue(lite,new Callback<BaseResult<RequestInfo>>() {
                     @Override
-                    public void onSuccess(Request req,Map<String,List<String>> headers,Result<RequestInfo> result) {
+                    public void onSuccess(Request req,Map<String,List<String>> headers,BaseResult<RequestInfo> result) {
                         mRequestInfo.setText(req.toString());
                         mReturnInfo.setText(result.toString());
                     }

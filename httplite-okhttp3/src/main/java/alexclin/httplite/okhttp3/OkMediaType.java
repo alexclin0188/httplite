@@ -36,18 +36,6 @@ class OkMediaType implements alexclin.httplite.listener.MediaType {
         return mediaType.charset(defaultValue);
     }
 
-    MediaType raw() {
-        return mediaType;
-    }
-
-//    static MediaType wrapperLite(alexclin.httplite.listener.MediaType type){
-//        if(type == null) return null;
-//        if(type instanceof OkMediaType){
-//           return ((OkMediaType)type).raw();
-//        }else
-//            return MediaType.parse(type.toString());
-//    }
-
     static alexclin.httplite.listener.MediaType create(String mediaType){
         MediaType type = MediaType.parse(mediaType);
         return type==null?null:new OkMediaType(type);

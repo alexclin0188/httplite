@@ -49,7 +49,7 @@ public class MiscHandle implements MethodHandle{
         if(methodUp.equals("POST")||methodUp.equals("PUT")){
             requestInfo.bodyInfo = createBodyInfo(request);
         }
-        Result<RequestInfo> result = new Result<>();
+        BaseResult<RequestInfo> result = new BaseResult<>();
         result.requestMethod = requestInfo.method;
         result.requestPath = requestInfo.path;
         result.data = requestInfo;
