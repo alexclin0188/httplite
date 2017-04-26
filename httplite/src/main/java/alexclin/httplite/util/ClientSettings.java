@@ -27,7 +27,7 @@ public final class ClientSettings {
     private int connectTimeout = 10_000;
     private int readTimeout = 10_000;
     private int writeTimeout = 10_000;
-    private CookieHandler cookieHandler;
+    private Object cookieHandler;
     private File cacheDir;
     private long cacheMaxSize;
     private ExecutorService executor;
@@ -83,7 +83,7 @@ public final class ClientSettings {
         return cacheDir;
     }
 
-    public CookieHandler getCookieHandler() {
+    public Object getCookieHandler() {
         return cookieHandler;
     }
 
@@ -135,7 +135,7 @@ public final class ClientSettings {
         this.writeTimeout = writeTimeout;
     }
 
-    public void setCookieHandler(CookieHandler cookieHandler) {
+    public void setCookieHandler(Object cookieHandler) {
         this.cookieHandler = cookieHandler;
     }
 

@@ -39,6 +39,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     private CacheDispatcher mCacheDispatcher;
     private CacheImpl mCache;
     private CachePolicy mCachePolicy;
+    private CookieHandler mCookieHandler;
 
     private URLiteFactory mFactory;
 
@@ -56,7 +57,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return create(null);
     }
 
-    public static Response createResponse(HttpURLConnection urlConnection, Request request) throws IOException {
+    static Response createResponse(HttpURLConnection urlConnection, Request request) throws IOException {
         ResponseBody body = createResponseBody(urlConnection);
         return new ResponseImpl(request, urlConnection.getResponseCode(), urlConnection.getResponseMessage(),
                 urlConnection.getHeaderFields(), body);
@@ -125,6 +126,12 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     @Override
     protected LiteClient initClient(ClientSettings settings) {
         this.settings = settings;
+        Object cookieHandler = settings.getCookieHandler();
+        if(cookieHandler instanceof CookieHandler){
+            mCookieHandler = (CookieHandler) cookieHandler;
+        }else if(cookieHandler!=null){
+            throw new IllegalArgumentException("Only support type CookieHandler implement for cookie settings");
+        }
         mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
         if (settings.getCacheDir() != null) {
             if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
@@ -174,10 +181,10 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     private CookieHandler getCookieHandler() {
-        return settings.getCookieHandler();
+        return mCookieHandler;
     }
 
-    void dispatchTask(Task task) {
+    private void dispatchTask(Task task) {
         if (isCacheAble(task)) {
             mCacheDispatcher.dispatch(task);
         } else {
@@ -196,7 +203,11 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         return mCacheDispatcher!=null&&mCacheDispatcher.canCache(task.request());
     }
 
-    public Response createCacheResponse(Response response) throws IOException {
+    boolean hasCacheSetting(){
+        return mCacheDispatcher!=null;
+    }
+
+    Response createCacheResponse(Response response) throws IOException {
         if (mCacheDispatcher != null) {
             return mCacheDispatcher.cacheResponse(response);
         }else {
@@ -204,11 +215,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         }
     }
 
-    public void addCacheHeaders(Request request,Map<String, List<String>> headers) {
+    void addCacheHeaders(Request request,Map<String, List<String>> headers) {
         if (mCacheDispatcher != null) mCacheDispatcher.addCacheHeaders(request,headers);
-    }
-
-    public NetDispatcher getNetDispatcher() {
-        return mNetDispatcher;
     }
 }

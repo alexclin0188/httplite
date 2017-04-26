@@ -1,6 +1,7 @@
 package alexclin.httplite.okhttp3;
 
 import java.io.IOException;
+import java.net.CookieHandler;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +20,7 @@ import alexclin.httplite.util.Util;
 import okhttp3.Cache;
 import okhttp3.CacheControl;
 import okhttp3.Call;
+import okhttp3.CookieJar;
 import okhttp3.Dispatcher;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -63,7 +65,14 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
         builder.connectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
         builder.readTimeout(settings.getReadTimeout(), TimeUnit.MILLISECONDS);
         builder.writeTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
-        if (settings.getCookieHandler() != null) builder.cookieJar(new CookieJarImpl(settings.getCookieHandler()));
+        Object handler = settings.getCookieHandler();
+        if(handler instanceof CookieJar){
+            builder.cookieJar((CookieJar)handler);
+        }else if(handler instanceof CookieHandler){
+            builder.cookieJar(new CookieJarImpl((CookieHandler)handler));
+        }else if(handler!=null){
+            throw new IllegalArgumentException("Only support type CookieJar/CookieHandler implement for cookie settings");
+        }
         if (settings.getCacheDir() != null) {
             builder.cache(new Cache(settings.getCacheDir(), settings.getCacheMaxSize()));
         }

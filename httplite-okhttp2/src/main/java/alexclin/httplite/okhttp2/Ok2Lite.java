@@ -8,6 +8,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.RequestBody;
 
 import java.io.IOException;
+import java.net.CookieHandler;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -107,7 +108,12 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         mClient.setConnectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
         mClient.setReadTimeout(settings.getReadTimeout(),TimeUnit.MILLISECONDS);
         mClient.setWriteTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
-        if(settings.getCookieHandler()!=null)mClient.setCookieHandler(settings.getCookieHandler());
+        Object cookieHandler = settings.getCookieHandler();
+        if(cookieHandler instanceof CookieHandler){
+            mClient.setCookieHandler((CookieHandler) cookieHandler);
+        }else if(cookieHandler!=null){
+            throw new IllegalArgumentException("Only support type CookieHandler implement for cookie settings");
+        }
         if(settings.getCacheDir()!=null){
             mClient.setCache(new Cache(settings.getCacheDir(),settings.getCacheMaxSize()));
         }

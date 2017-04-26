@@ -15,7 +15,6 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.MockHandler;
 import alexclin.httplite.cookie.PersistentCookieStore;
 import alexclin.httplite.listener.RequestListener;
-import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.sample.json.GsonParser;
 import alexclin.httplite.util.LogUtil;
@@ -82,7 +81,7 @@ public class App extends Application {
             }
         };
 
-        HttpLiteBuilder builder = Ok3Lite.create();
+        HttpLiteBuilder builder = alexclin.httplite.okhttp2.Ok2Lite.create();
         builder = builder.setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(30, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(30, TimeUnit.SECONDS)  //设置读超时

@@ -21,10 +21,10 @@ import okhttp3.HttpUrl;
  *
  * @author alexclin 16/2/16 20:54
  */
-public class CookieJarImpl implements CookieJar {
+class CookieJarImpl implements CookieJar {
     private CookieHandler cookieHandler;
 
-    public CookieJarImpl(CookieHandler cookieHandler) {
+    CookieJarImpl(CookieHandler cookieHandler) {
         this.cookieHandler = cookieHandler;
     }
 

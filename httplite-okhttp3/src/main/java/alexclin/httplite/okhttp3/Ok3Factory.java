@@ -80,7 +80,7 @@ class Ok3Factory implements LiteClient.Converter<RequestBody> {
         }
         if(headBodyList!=null){
             for(Pair<Map<String,List<String>>, alexclin.httplite.RequestBody> bodyPair:headBodyList){
-                builder.addPart(Ok3Lite.createHeader(bodyPair.first), convertBody(bodyPair.second));
+                builder.addPart(createHeader(bodyPair.first), convertBody(bodyPair.second));
             }
         }
         if(paramList!=null){
@@ -97,6 +97,20 @@ class Ok3Factory implements LiteClient.Converter<RequestBody> {
         return builder.build();
     }
 
+    private static Headers createHeader(Map<String, List<String>> headers){
+        if(headers!=null&&!headers.isEmpty()){
+            Headers.Builder hb = new Headers.Builder();
+            for(String key:headers.keySet()){
+                List<String> values = headers.get(key);
+                for(String value:values){
+                    hb.add(key,value);
+                }
+            }
+            return hb.build();
+        }
+        return null;
+    }
+
     private RequestBody convertBody(alexclin.httplite.RequestBody requestBody){
         return convertBody(requestBody,null,null);
     }
@@ -111,18 +125,18 @@ class Ok3Factory implements LiteClient.Converter<RequestBody> {
             RequestBody body = ((alexclin.httplite.RequestBody.NotBody) requestBody).createReal(this);
             return new ProgressRequestBody(body,mediaType,listener);
         }else{
-            return new Ok2RequestBody(requestBody,mediaType,listener);
+            return new Ok3RequestBody(requestBody,mediaType,listener);
         }
     }
 
-    private static class Ok2RequestBody extends RequestBody{
+    public static class Ok3RequestBody extends RequestBody{
         private okhttp3.MediaType mediaType;
         private alexclin.httplite.RequestBody requestBody;
         private ProgressListener listener;
 
         private long contentLength;
 
-        Ok2RequestBody(alexclin.httplite.RequestBody requestBody, String mediaType, ProgressListener listener) {
+        Ok3RequestBody(alexclin.httplite.RequestBody requestBody, String mediaType, ProgressListener listener) {
             this.requestBody = requestBody;
             if(TextUtils.isEmpty(mediaType)){
                 mediaType = requestBody.contentType();
@@ -186,11 +200,11 @@ class Ok3Factory implements LiteClient.Converter<RequestBody> {
             progressListener.onProgress(out,current,total);
         }
 
-        private void startProgress(){
+        public void startProgress(){
             runnable.run();
         }
 
-        private void stopProgress(){
+        public void stopProgress(){
             runnable.end();
         }
     }

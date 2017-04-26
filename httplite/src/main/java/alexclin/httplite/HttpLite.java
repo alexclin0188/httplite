@@ -75,11 +75,11 @@ public class HttpLite {
         return mRequestFilter;
     }
 
-    public <T> Result<T> execute(Request request, Clazz<T> clazz) {
+    <T> Result<T> execute(Request request, Clazz<T> clazz) {
         return execute(request,clazz.type());
     }
 
-    public <T> Result<T> execute(Request request, Type type) {
+    <T> Result<T> execute(Request request, Type type) {
         request.setBaseUrl(baseUrl);
         RequestListener listener = getRequestFilter();
         if(listener!=null) listener.onRequestStart(request,type);

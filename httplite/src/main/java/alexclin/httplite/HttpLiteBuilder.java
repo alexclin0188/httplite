@@ -29,7 +29,6 @@ import alexclin.httplite.util.Util;
  */
 public abstract class HttpLiteBuilder{
     String baseUrl;
-    boolean isRelease;
     RequestListener mRequestFilter;
     List<CallAdapter> invokers;
     MockHandler mockHandler;
@@ -130,6 +129,11 @@ public abstract class HttpLiteBuilder{
 
     public HttpLiteBuilder setCookieStore(CookieStore cookieStore, CookiePolicy policy){
         settings.setCookieHandler(new CookieManager(cookieStore, policy));
+        return this;
+    }
+
+    public HttpLiteBuilder setCookieStore(Object anySupportCookie){
+        settings.setCookieHandler(anySupportCookie);
         return this;
     }
 
