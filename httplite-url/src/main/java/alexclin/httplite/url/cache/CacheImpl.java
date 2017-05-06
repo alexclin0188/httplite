@@ -22,15 +22,15 @@ public class CacheImpl{
 
     private DiskLruCache cache;
     private ByteArrayPool pool;
-    private CachePolicy cachePolicy;
+    private CacheHandler cachePolicy;
 
-    public CacheImpl(File directory, long maxSize, ByteArrayPool pool,CachePolicy cachePolicy) throws IOException{
+    public CacheImpl(File directory, long maxSize, ByteArrayPool pool,CacheHandler cachePolicy) throws IOException{
         cache = DiskLruCache.open(directory,APP_VERSION,2,maxSize,2048);
         this.pool = pool;
         this.cachePolicy = cachePolicy;
     }
 
-    public CacheImpl(File directory, long maxSize,CachePolicy cachePolicy) throws IOException{
+    public CacheImpl(File directory, long maxSize,CacheHandler cachePolicy) throws IOException{
         this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE),cachePolicy);
     }
 

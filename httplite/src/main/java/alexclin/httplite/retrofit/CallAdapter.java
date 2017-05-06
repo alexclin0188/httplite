@@ -13,11 +13,11 @@ import alexclin.httplite.Request;
  */
 public interface CallAdapter {
     interface RequestCreator{
-        Request createRequest(Object... args);
+        Request createRequest(Object[] args);
     }
 
     enum ResultType{File,NotFile}
-    Object adapt(HttpLite lite, RequestCreator creator, Type returnType, Object... args) throws Exception;
+    Object adapt(HttpLite lite, RequestCreator creator, Type returnType, Object[] args) throws Exception;
     boolean support(Method method);
 
     /**

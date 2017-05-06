@@ -9,7 +9,7 @@ import alexclin.httplite.listener.Response;
 
 interface Task {
     Request request();
-    void enqueue(URLite lite);
+    void executeCallback(URLite lite);
     Response execute(URLite lite) throws Exception;
     Object tag();
     boolean isCanceled();

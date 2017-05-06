@@ -9,6 +9,9 @@ import com.squareup.okhttp.RequestBody;
 
 import java.io.IOException;
 import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,33 +32,20 @@ import alexclin.httplite.util.ClientSettings;
  *
  * @author alexclin 16/1/1 17:16
  */
-public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
+public class Ok2Lite implements LiteClient{
     private static final Object ALL_TAG = new Object(){
         @Override
         public boolean equals(Object o) {
             return true;
         }
     };
-    private OkHttpClient mClient;
-    private Ok2Factory mFactory;
+    private final OkHttpClient mClient;
+    private final Ok2Factory mFactory;
 
-    Ok2Lite(OkHttpClient client){
-        if(client==null){
-            mClient = new OkHttpClient();
-        }else{
-            mClient = client;
-        }
+    private Ok2Lite(OkHttpClient client){
+        mClient = client;
         mFactory = new Ok2Factory();
     }
-
-    public static HttpLiteBuilder create() {
-        return create(null);
-    }
-
-    public static HttpLiteBuilder create(OkHttpClient client) {
-        return new Ok2Lite(client);
-    }
-
 
     @Override
     public Response execute(Request request) throws Exception {
@@ -96,28 +86,6 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
     @Override
     public void cancelAll() {
         mClient.getDispatcher().cancel(ALL_TAG);
-    }
-
-    @Override
-    protected LiteClient initClient(ClientSettings settings) {
-        mClient.setProxy(settings.getProxy()).setProxySelector(settings.getProxySelector()).setSocketFactory(settings.getSocketFactory())
-                .setSslSocketFactory(settings.getSslSocketFactory())
-                .setHostnameVerifier(settings.getHostnameVerifier()).setFollowSslRedirects(settings.isFollowSslRedirects())
-                .setFollowRedirects(settings.isFollowRedirects());
-        mClient.setRetryOnConnectionFailure(settings.getMaxRetryCount()>0);
-        mClient.setConnectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
-        mClient.setReadTimeout(settings.getReadTimeout(),TimeUnit.MILLISECONDS);
-        mClient.setWriteTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
-        Object cookieHandler = settings.getCookieHandler();
-        if(cookieHandler instanceof CookieHandler){
-            mClient.setCookieHandler((CookieHandler) cookieHandler);
-        }else if(cookieHandler!=null){
-            throw new IllegalArgumentException("Only support type CookieHandler implement for cookie settings");
-        }
-        if(settings.getCacheDir()!=null){
-            mClient.setCache(new Cache(settings.getCacheDir(),settings.getCacheMaxSize()));
-        }
-        return this;
     }
 
     @Override
@@ -213,6 +181,46 @@ public class Ok2Lite extends HttpLiteBuilder implements LiteClient{
         @Override
         public void setHandle(Handle handle) {
             throw new IllegalOperationException("not support method");
+        }
+    }
+
+    public static class Builder extends HttpLiteBuilder{
+        private OkHttpClient client;
+        private CookieHandler cookieHandler;
+
+        public Builder(OkHttpClient client) {
+            this.client = client;
+        }
+
+        public Builder() {
+        }
+
+        public Builder setCookieStore(CookieStore cookieStore){
+            cookieHandler = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
+            return this;
+        }
+
+        public Builder setCookieStore(CookieStore cookieStore, CookiePolicy policy){
+            cookieHandler = new CookieManager(cookieStore, policy);
+            return this;
+        }
+
+        @Override
+        protected LiteClient initClient(ClientSettings settings) {
+            if(client==null) client = new OkHttpClient();
+            client.setProxy(settings.getProxy()).setProxySelector(settings.getProxySelector()).setSocketFactory(settings.getSocketFactory())
+                    .setSslSocketFactory(settings.getSslSocketFactory())
+                    .setHostnameVerifier(settings.getHostnameVerifier()).setFollowSslRedirects(settings.isFollowSslRedirects())
+                    .setFollowRedirects(settings.isFollowRedirects());
+            client.setRetryOnConnectionFailure(settings.getMaxRetryCount()>0);
+            client.setConnectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
+            client.setReadTimeout(settings.getReadTimeout(),TimeUnit.MILLISECONDS);
+            client.setWriteTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
+            client.setCookieHandler(cookieHandler);
+            if(settings.getCacheDir()!=null){
+                client.setCache(new Cache(settings.getCacheDir(),settings.getCacheMaxSize()));
+            }
+            return new Ok2Lite(client);
         }
     }
 }

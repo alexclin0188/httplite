@@ -1,11 +1,13 @@
 package alexclin.httplite.sample.retrofit;
 
+
 import com.example.RequestInfo;
 import com.example.BaseResult;
 import com.example.UserInfo;
 
 import java.io.File;
 
+import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
 import alexclin.httplite.Result;
 import alexclin.httplite.annotation.FixHeaders;
@@ -24,7 +26,7 @@ import alexclin.httplite.annotation.Tag;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
 import alexclin.httplite.sample.model.ZhihuData;
-//import rx.Observable;
+import io.reactivex.Observable;
 
 /**
  * ApiService
@@ -91,7 +93,7 @@ public interface ApiService {
     );
 
     @GET("/download/{test_holder}")
-    void downdloadFile(
+    Handle downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
@@ -99,9 +101,9 @@ public interface ApiService {
             @Progress MergeCallback<File> callback
     );
 
-//    @GET("http://news-at.zhihu.com/api/4/news/latest")
-//    Observable<ZhihuData> testZhihu();
-//
-//    @GET("http://news-at.zhihu.com/api/4/news/latest")
-//    Observable<alexclin.httplite.BaseResult<ZhihuData>> testZhihuResult();
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<ZhihuData> testZhihu();
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }

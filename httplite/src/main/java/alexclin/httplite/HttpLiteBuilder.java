@@ -16,9 +16,8 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
-import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.RequestInterceptor;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.util.Util;
 
@@ -29,10 +28,9 @@ import alexclin.httplite.util.Util;
  */
 public abstract class HttpLiteBuilder{
     String baseUrl;
-    RequestListener mRequestFilter;
-    List<CallAdapter> invokers;
+    RequestInterceptor mRequestInterceptor;
     MockHandler mockHandler;
-    ClientSettings settings = new ClientSettings();
+    private ClientSettings settings = new ClientSettings();
     List<ResponseParser> parsers = new ArrayList<>();
     ExecutorService mockExecutor;
 
@@ -122,21 +120,6 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder setCookieStore(CookieStore cookieStore){
-        settings.setCookieHandler(new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL));
-        return this;
-    }
-
-    public HttpLiteBuilder setCookieStore(CookieStore cookieStore, CookiePolicy policy){
-        settings.setCookieHandler(new CookieManager(cookieStore, policy));
-        return this;
-    }
-
-    public HttpLiteBuilder setCookieStore(Object anySupportCookie){
-        settings.setCookieHandler(anySupportCookie);
-        return this;
-    }
-
     public HttpLiteBuilder setCache(File dir,long maxCacheSize){
         settings.setCacheDir(dir);
         settings.setCacheMaxSize(maxCacheSize);
@@ -166,16 +149,8 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder setRequestListener(RequestListener requestFilter){
-        this.mRequestFilter = requestFilter;
-        return this;
-    }
-
-    public HttpLiteBuilder addCallAdapter(CallAdapter invoker){
-        if(invokers==null) invokers = new ArrayList<>();
-        if(invoker!=null&&!invokers.contains(invoker)){
-            this.invokers.add(invoker);
-        }
+    public HttpLiteBuilder setRequestInterceptor(RequestInterceptor requestFilter){
+        this.mRequestInterceptor = requestFilter;
         return this;
     }
 }

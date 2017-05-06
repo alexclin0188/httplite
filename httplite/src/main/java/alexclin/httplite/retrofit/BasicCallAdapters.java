@@ -22,8 +22,13 @@ import alexclin.httplite.util.Util;
  */
 class BasicCallAdapters {
 
-    public static Collection<CallAdapter> basicAdapters(ExecutorService executor){
-        return Arrays.asList(new ResultCallAdapter(),new AsyncCallAdapter(executor));
+    static Collection<CallAdapter> basicAdapters(ExecutorService executor){
+        try {
+            Class.forName("io.reactivex.Observable");
+            return Arrays.asList(new ResultCallAdapter(),new AsyncCallAdapter(executor),new RxCallAdapter());
+        } catch (ClassNotFoundException e) {
+            return Arrays.asList(new ResultCallAdapter(),new AsyncCallAdapter(executor));
+        }
     }
 
     private static class ResultCallAdapter implements CallAdapter {
@@ -52,7 +57,7 @@ class BasicCallAdapters {
         }
 
         @Override
-        public Object adapt(final HttpLite lite,final RequestCreator creator,final Type returnType,final Object... args) throws Exception {
+        public Object adapt(final HttpLite lite,final RequestCreator creator,final Type returnType,final Object[] args) throws Exception {
             if(executor!=null){
                 AsyncHandle handle = new AsyncHandle() {
                     @Override

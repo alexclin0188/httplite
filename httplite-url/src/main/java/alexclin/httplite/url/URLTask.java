@@ -39,9 +39,11 @@ class URLTask implements Task,Comparable<Task>,Handle{
         this.callback = callback;
     }
 
-    public void enqueue(URLite lite) {
+    @Override
+    public void executeCallback(URLite lite) {
         int maxRetry = lite.settings.getMaxRetryCount();
         Response response = null;
+        Exception exception = null;
         while (retryCount<= maxRetry&& !isCanceled()){
             try {
                 retryCount++;
@@ -50,17 +52,19 @@ class URLTask implements Task,Comparable<Task>,Handle{
                     break;
                 }
             }catch (Exception e) {
-                e.printStackTrace();
+                exception = e;
                 if(retryCount>maxRetry || e instanceof CanceledException){
                     callback.onFailed(request,e);
                     return;
                 }
             }
         }
-        if(!isCanceled()){
+        if(!isCanceled()&&response!=null){
             onResponse(response);
-        }else{
+        }else if(isCanceled()){
             callback.onFailed(request,new CanceledException("URLTask has been canceled"));
+        }else{
+            callback.onFailed(request,exception);
         }
     }
 

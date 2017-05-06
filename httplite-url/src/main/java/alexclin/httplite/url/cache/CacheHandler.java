@@ -7,7 +7,7 @@ import alexclin.httplite.Request;
  *
  * @author alexclin  16/4/7 21:46
  */
-public interface CachePolicy {
+public interface CacheHandler {
     String createCacheKey(Request request);
     boolean canCache(Request request);
 }

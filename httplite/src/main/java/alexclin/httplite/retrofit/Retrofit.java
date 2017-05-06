@@ -7,14 +7,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-import alexclin.httplite.listener.RequestListener;
 import alexclin.httplite.HttpLite;
-import alexclin.httplite.Request;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -35,7 +34,7 @@ public class Retrofit {
         this(lite,null,null,release);
     }
 
-    public Retrofit(HttpLite lite,List<CallAdapter> invokers,boolean release) {
+    public Retrofit(HttpLite lite, Collection<CallAdapter> invokers, boolean release) {
         this(lite,invokers,null,release);
     }
 
@@ -43,7 +42,7 @@ public class Retrofit {
         this(lite,null,executor,release);
     }
 
-    public Retrofit(HttpLite lite,List<CallAdapter> invokers,ExecutorService executor,boolean release) {
+    public Retrofit(HttpLite lite,Collection<CallAdapter> invokers,ExecutorService executor,boolean release) {
         mInvokers = new ArrayList<>();
         if(invokers!=null){
             mInvokers.addAll(invokers);
@@ -116,7 +115,7 @@ public class Retrofit {
                     return invokeDefaultMethod(method, service, proxy, args);
                 }
                 MethodHandler handler = loadMethodHandler(method);
-                return handler.invoke(Retrofit.this,args);
+                return handler.invoke(args);
             }
         };
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},

@@ -57,7 +57,7 @@ public final class Request{
     private final Handle handle;
 
     private Request(Builder builder) {
-        this.mUrl = Util.appendString(builder.baseUrl,builder.url);
+        this.mUrl = Util.isHttpPrefix(builder.url)?builder.url:Util.appendString(builder.baseUrl,builder.url);
         this.method = builder.method;
         this.progressListener = builder.progressListener;
         this.headers = builder.headers;
@@ -124,14 +124,14 @@ public final class Request{
     }
 
     public String getUrl() {
-        return mUrl;
-    }
-
-    public String getFullUrl(){
-        if(fullUrl==null){
-            fullUrl = buildUrlAndParams(baseUrl,mUrl,pathHolders);
+        if(baseUrl==null){
+            return mUrl;
+        }else {
+            if(fullUrl==null){
+                fullUrl = buildUrlAndParams(baseUrl,mUrl,pathHolders);
+            }
+            return fullUrl;
         }
-        return fullUrl;
     }
 
     void setBaseUrl(String baseUrl){
@@ -193,7 +193,7 @@ public final class Request{
     private static class MainProgressListener implements ProgressListener{
         private ProgressListener listener;
 
-        public MainProgressListener(ProgressListener listener) {
+        MainProgressListener(ProgressListener listener) {
             this.listener = listener;
         }
 

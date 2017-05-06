@@ -2,6 +2,9 @@ package alexclin.httplite.okhttp3;
 
 import java.io.IOException;
 import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,53 +34,13 @@ import okhttp3.RequestBody;
  *
  * @author alexclin 16/2/16 20:15
  */
-public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
-    private OkHttpClient mClient;
-    private Ok3Factory mFactory;
+public class Ok3Lite implements LiteClient {
+    private final OkHttpClient mClient;
+    private final Ok3Factory mFactory;
 
     private Ok3Lite(OkHttpClient client){
-        if(client!=null){
-            mClient = client;
-        }
+        mClient = client;
         mFactory = new Ok3Factory();
-    }
-
-    public static HttpLiteBuilder create() {
-        return create(null);
-    }
-
-    public static HttpLiteBuilder create(OkHttpClient client) {
-        return new Ok3Lite(client);
-    }
-
-    @Override
-    protected LiteClient initClient(ClientSettings settings) {
-        OkHttpClient.Builder builder = mClient==null?new OkHttpClient.Builder():mClient.newBuilder();
-        builder.followSslRedirects(settings.isFollowSslRedirects())
-                .followRedirects(settings.isFollowRedirects());
-        if(settings.getSocketFactory() != null) builder.socketFactory(settings.getSocketFactory());
-        if(settings.getSslSocketFactory() != null) builder.sslSocketFactory(settings.getSslSocketFactory());
-        if(settings.getHostnameVerifier() != null) builder.hostnameVerifier(settings.getHostnameVerifier());
-        if(settings.getProxySelector() != null) builder.proxySelector(settings.getProxySelector());
-        if(settings.getProxy() != null) builder.proxy(settings.getProxy());
-        if(settings.getExecutor()!=null) builder.dispatcher(new Dispatcher(settings.getExecutor()));
-        builder.retryOnConnectionFailure(settings.getMaxRetryCount() > 0);
-        builder.connectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
-        builder.readTimeout(settings.getReadTimeout(), TimeUnit.MILLISECONDS);
-        builder.writeTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
-        Object handler = settings.getCookieHandler();
-        if(handler instanceof CookieJar){
-            builder.cookieJar((CookieJar)handler);
-        }else if(handler instanceof CookieHandler){
-            builder.cookieJar(new CookieJarImpl((CookieHandler)handler));
-        }else if(handler!=null){
-            throw new IllegalArgumentException("Only support type CookieJar/CookieHandler implement for cookie settings");
-        }
-        if (settings.getCacheDir() != null) {
-            builder.cache(new Cache(settings.getCacheDir(), settings.getCacheMaxSize()));
-        }
-        mClient = builder.build();
-        return this;
     }
 
     @Override
@@ -144,7 +107,7 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
     }
 
     private okhttp3.Request makeRequest(Request real){
-        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(real.getFullUrl()).tag(real.getTag());
+        okhttp3.Request.Builder rb = new okhttp3.Request.Builder().url(real.getUrl()).tag(real.getTag());
         Headers okHeader = createHeader(real.getHeaders());
         if(okHeader!=null) rb.headers(okHeader);
         alexclin.httplite.RequestBody liteBody = real.getRequestBody();
@@ -225,6 +188,59 @@ public class Ok3Lite extends HttpLiteBuilder implements LiteClient {
         @Override
         public void setHandle(Handle handle) {
             throw new IllegalOperationException("not support method");
+        }
+    }
+
+    public static final class Builder extends HttpLiteBuilder{
+        private OkHttpClient client;
+        private CookieJar cookieJar;
+
+        public Builder(OkHttpClient client) {
+            this.client = client;
+        }
+
+        public Builder() {
+        }
+
+        public Builder setCookieJar(CookieJar cookieJar) {
+            this.cookieJar = cookieJar;
+            return this;
+        }
+
+        public Builder setCookieStore(CookieStore cookieStore){
+            if(cookieStore!=null)
+                this.cookieJar = new CookieJarImpl(new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL));
+            return this;
+        }
+
+        public Builder setCookieStore(CookieStore cookieStore, CookiePolicy policy){
+            if(cookieStore!=null)
+                this.cookieJar = new CookieJarImpl(new CookieManager(cookieStore, policy));
+            return this;
+        }
+
+        @Override
+        protected LiteClient initClient(ClientSettings settings) {
+            OkHttpClient.Builder builder = client==null?new OkHttpClient.Builder():client.newBuilder();
+            builder.followSslRedirects(settings.isFollowSslRedirects())
+                    .followRedirects(settings.isFollowRedirects());
+            if(settings.getSocketFactory() != null) builder.socketFactory(settings.getSocketFactory());
+            if(settings.getSslSocketFactory() != null) builder.sslSocketFactory(settings.getSslSocketFactory());
+            if(settings.getHostnameVerifier() != null) builder.hostnameVerifier(settings.getHostnameVerifier());
+            if(settings.getProxySelector() != null) builder.proxySelector(settings.getProxySelector());
+            if(settings.getProxy() != null) builder.proxy(settings.getProxy());
+            if(settings.getRequestExecutor()!=null) builder.dispatcher(new Dispatcher(settings.getRequestExecutor()));
+            builder.retryOnConnectionFailure(settings.getMaxRetryCount() > 0);
+            builder.connectTimeout(settings.getConnectTimeout(), TimeUnit.MILLISECONDS);
+            builder.readTimeout(settings.getReadTimeout(), TimeUnit.MILLISECONDS);
+            builder.writeTimeout(settings.getWriteTimeout(), TimeUnit.MILLISECONDS);
+            if(cookieJar!=null)
+                builder.cookieJar(cookieJar);
+            if (settings.getCacheDir() != null) {
+                builder.cache(new Cache(settings.getCacheDir(), settings.getCacheMaxSize()));
+            }
+            client = builder.build();
+            return new Ok3Lite(client);
         }
     }
 }

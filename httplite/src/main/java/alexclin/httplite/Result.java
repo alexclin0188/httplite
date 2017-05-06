@@ -39,4 +39,8 @@ public class Result<T> {
     public Exception error() {
         return throwable;
     }
+
+    public boolean isSuccessful(){
+        return throwable==null;
+    }
 }

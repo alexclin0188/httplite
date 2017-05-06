@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
@@ -14,10 +15,17 @@ import alexclin.httplite.Mock;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.MockHandler;
 import alexclin.httplite.cookie.PersistentCookieStore;
-import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.RequestInterceptor;
+import alexclin.httplite.okhttp2.Ok2Lite;
+import alexclin.httplite.okhttp3.Ok3Lite;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.sample.json.GsonParser;
+import alexclin.httplite.url.URLite;
+import alexclin.httplite.url.cache.CacheHandler;
 import alexclin.httplite.util.LogUtil;
+import okhttp3.Cookie;
+import okhttp3.CookieJar;
+import okhttp3.HttpUrl;
 
 /**
  * App
@@ -39,6 +47,7 @@ public class App extends Application {
     public static Retrofit retrofit(Context ctx){
         App app = (App) ctx.getApplicationContext();
         if(app.retrofit==null){
+
             app.retrofit = new Retrofit(httpLite(ctx),false);
         }
         return app.retrofit;
@@ -81,8 +90,29 @@ public class App extends Application {
             }
         };
 
-        HttpLiteBuilder builder = alexclin.httplite.okhttp2.Ok2Lite.create();
-        builder = builder.setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
+        URLite.Builder urlBuilder = new alexclin.httplite.url.URLite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app));//设置CookieStore;
+
+        Ok2Lite.Builder ok2Builder = new Ok2Lite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app));
+
+        Ok3Lite.Builder ok3Builder = new Ok3Lite.Builder()
+                .setCookieJar(new CookieJar() {
+                    @Override
+                    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+
+                    }
+
+                    @Override
+                    public List<Cookie> loadForRequest(HttpUrl url) {
+                        return null;
+                    }
+                });//okhttp3的cookie接口
+
+
+
+        HttpLiteBuilder builder = urlBuilder
+                .setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
                 .setWriteTimeout(30, TimeUnit.SECONDS)  //设置写超时
                 .setReadTimeout(30, TimeUnit.SECONDS)  //设置读超时
                 .setMaxRetryCount(2)  //设置失败重试次数
@@ -96,12 +126,11 @@ public class App extends Application {
                 .setSocketFactory(SocketFactory.getDefault())
                 .setSslSocketFactory(manager.getSocketFactory())
                 .setHostnameVerifier(manager)
-                .setCookieStore(PersistentCookieStore.getInstance(app))  //设置CookieStore,设置则启用Cookie,不设置则不启用
-//                .addCallAdapter(new RxCallAdapter())//添加Rx支持
-                .setRequestListener(new RequestListener() {
+                .setRequestInterceptor(new RequestInterceptor() {
                     @Override
-                    public void onRequestStart(Request request, Type resultType) {
+                    public Request interceptRequest(Request request, Type resultType) {
                         LogUtil.e("Request:" + request);
+                        return request;
                     }
                 });
         return builder.build();

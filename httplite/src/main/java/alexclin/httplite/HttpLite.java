@@ -4,17 +4,13 @@ import android.os.Handler;
 import android.os.Looper;
 
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import alexclin.httplite.impl.ObjectParser;
 import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.MediaType;
-import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.RequestInterceptor;
 import alexclin.httplite.listener.Response;
-import alexclin.httplite.retrofit.CallAdapter;
-import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.Util;
 
@@ -27,7 +23,7 @@ public class HttpLite {
     private final static Handler sHandler = new Handler(Looper.getMainLooper());
     private final LiteClient client;
     private final String baseUrl;
-    private final RequestListener mRequestFilter;
+    private final RequestInterceptor mRequestInterceptor;
     private final ObjectParser mObjectParser;
 
     private final MockLite mocker;
@@ -36,8 +32,8 @@ public class HttpLite {
         this.client = client;
         this.mObjectParser = new ObjectParser(builder.parsers);
         this.baseUrl = builder.baseUrl;
-        this.mRequestFilter = builder.mRequestFilter;
-        this.mocker = builder.mockHandler!=null?new MockLite(builder.mockHandler,mObjectParser,builder.settings.getExecutor(),this):null;
+        this.mRequestInterceptor = builder.mRequestInterceptor;
+        this.mocker = builder.mockHandler!=null?new MockLite(builder.mockHandler,mObjectParser,builder.mockExecutor,this):null;
     }
 
     public static void runOnMain(Runnable runnable){
@@ -71,8 +67,8 @@ public class HttpLite {
         this.client.shutDown();
     }
 
-    private RequestListener getRequestFilter() {
-        return mRequestFilter;
+    private RequestInterceptor getRequestFilter() {
+        return mRequestInterceptor;
     }
 
     <T> Result<T> execute(Request request, Clazz<T> clazz) {
@@ -81,8 +77,9 @@ public class HttpLite {
 
     <T> Result<T> execute(Request request, Type type) {
         request.setBaseUrl(baseUrl);
-        RequestListener listener = getRequestFilter();
-        if(listener!=null) listener.onRequestStart(request,type);
+        RequestInterceptor listener = getRequestFilter();
+        if(listener!=null)
+            request = listener.interceptRequest(request,type);
         if(mocker!=null&&mocker.needMock(request)){
             Result<T> result = mocker.execute(request,type);
             ((HandleImpl)request.handle()).setExecuted();
@@ -104,8 +101,9 @@ public class HttpLite {
 
     public <T> void enqueue(Request request, Callback<T> callback) {
         request.setBaseUrl(baseUrl);
-        RequestListener listener = getRequestFilter();
-        if(listener!=null) listener.onRequestStart(request,Util.type(Callback.class,callback));
+        RequestInterceptor listener = getRequestFilter();
+        if(listener!=null)
+            request = listener.interceptRequest(request,Util.type(Callback.class,callback));
         if(mocker!=null&&mocker.needMock(request)){
             mocker.enqueue(request,callback);
         }else{

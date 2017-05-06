@@ -5,6 +5,9 @@ import android.text.TextUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.Collections;
@@ -13,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.url.cache.CachePolicy;
+import alexclin.httplite.url.cache.CacheHandler;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.HttpLiteBuilder;
 import alexclin.httplite.LiteClient;
@@ -32,29 +35,19 @@ import alexclin.httplite.util.LogUtil;
  *
  * @author alexclin 16/1/1 20:53
  */
-public class URLite extends HttpLiteBuilder implements LiteClient {
+public class URLite implements LiteClient {
     ClientSettings settings;
-
     private NetDispatcher mNetDispatcher;
     private CacheDispatcher mCacheDispatcher;
     private CacheImpl mCache;
-    private CachePolicy mCachePolicy;
+    private CacheHandler mCachePolicy;
     private CookieHandler mCookieHandler;
 
     private URLiteFactory mFactory;
 
-    private URLite(CachePolicy cachePolicy) {
-        mNetDispatcher = new NetDispatcher(this);
-        mCachePolicy = cachePolicy;
+    private URLite(ClientSettings settings) {
+        mNetDispatcher = new NetDispatcher(this,settings.getRequestExecutor());
         mFactory = new URLiteFactory();
-    }
-
-    public static HttpLiteBuilder create(CachePolicy mCachePolicy) {
-        return new URLite(mCachePolicy);
-    }
-
-    public static HttpLiteBuilder create() {
-        return create(null);
     }
 
     static Response createResponse(HttpURLConnection urlConnection, Request request) throws IOException {
@@ -123,28 +116,6 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
         mNetDispatcher.cancelAll();
     }
 
-    @Override
-    protected LiteClient initClient(ClientSettings settings) {
-        this.settings = settings;
-        Object cookieHandler = settings.getCookieHandler();
-        if(cookieHandler instanceof CookieHandler){
-            mCookieHandler = (CookieHandler) cookieHandler;
-        }else if(cookieHandler!=null){
-            throw new IllegalArgumentException("Only support type CookieHandler implement for cookie settings");
-        }
-        mNetDispatcher.setMaxRequests(settings.getMaxRetryCount());
-        if (settings.getCacheDir() != null) {
-            if(mCachePolicy==null) mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
-            try {
-                mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize(),mCachePolicy);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (mCache != null) mCacheDispatcher = new CacheDispatcher(mNetDispatcher, mCache);
-        }
-        return this;
-    }
-
     void processCookie(String url, Map<String, List<String>> headers) {
         if (!isUseCookie()) {
             return;
@@ -177,7 +148,7 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
     }
 
     private boolean isUseCookie() {
-        return settings.getCookieHandler() != null;
+        return mCookieHandler != null;
     }
 
     private CookieHandler getCookieHandler() {
@@ -217,5 +188,55 @@ public class URLite extends HttpLiteBuilder implements LiteClient {
 
     void addCacheHeaders(Request request,Map<String, List<String>> headers) {
         if (mCacheDispatcher != null) mCacheDispatcher.addCacheHeaders(request,headers);
+    }
+
+    public static class Builder extends HttpLiteBuilder{
+        private CacheHandler cachePolicy;
+        private CookieHandler cookieHandler;
+        private int maxRequests;
+
+        @Override
+        protected LiteClient initClient(ClientSettings settings) {
+            URLite lite = new URLite(settings);
+            lite.settings = settings;
+            lite.mCookieHandler = cookieHandler;
+            if(maxRequests>5){
+                lite.mNetDispatcher.setMaxRequests(maxRequests);
+            }
+            if (settings.getCacheDir() != null) {
+                if(cachePolicy==null)
+                    lite.mCachePolicy = new CacheDispatcher.DefaultCachePolicy();
+                else
+                    lite.mCachePolicy = cachePolicy;
+                try {
+                    lite.mCache = new CacheImpl(settings.getCacheDir(), settings.getCacheMaxSize(),lite.mCachePolicy);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (lite.mCache != null)
+                    lite.mCacheDispatcher = new CacheDispatcher(lite.mNetDispatcher, lite.mCache);
+            }
+            return lite;
+        }
+
+        public Builder setCacheHandler(CacheHandler cachePolicy){
+            this.cachePolicy = cachePolicy;
+            return this;
+        }
+
+        public Builder setCookieStore(CookieStore cookieStore){
+            cookieHandler = new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL);
+            return this;
+        }
+
+        public Builder setCookieStore(CookieStore cookieStore, CookiePolicy policy){
+            cookieHandler = new CookieManager(cookieStore, policy);
+            return this;
+        }
+
+        public Builder setMaxRequests(int maxRequests){
+            this.maxRequests = maxRequests;
+            return this;
+        }
     }
 }

@@ -16,7 +16,7 @@ import alexclin.httplite.Request;
 import alexclin.httplite.listener.Response;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.url.cache.CacheImpl;
-import alexclin.httplite.url.cache.CachePolicy;
+import alexclin.httplite.url.cache.CacheHandler;
 import alexclin.httplite.util.LogUtil;
 import alexclin.httplite.util.Util;
 
@@ -211,7 +211,7 @@ class CacheDispatcher extends Thread implements Dispatcher{
         }
 
         @Override
-        public void enqueue(URLite lite) {
+        public void executeCallback(URLite lite) {
             ((URLTask)task).onResponse(response);
         }
 
@@ -241,7 +241,7 @@ class CacheDispatcher extends Thread implements Dispatcher{
         }
     }
 
-    static class DefaultCachePolicy implements CachePolicy{
+    static class DefaultCachePolicy implements CacheHandler {
 
         @Override
         public String createCacheKey(Request request) {

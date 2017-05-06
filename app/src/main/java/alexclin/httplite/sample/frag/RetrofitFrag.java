@@ -2,6 +2,7 @@ package alexclin.httplite.sample.frag;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -16,23 +17,24 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-//import alexclin.httplite.okhttp2.Ok2Lite;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Result;
 import alexclin.httplite.sample.App;
-import alexclin.httplite.util.Clazz;
+import alexclin.httplite.sample.retrofit.ExMergeCallback;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
-//import alexclin.httplite.rx.AndroidSchedulers;
-//import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.model.ZhihuData;
 import alexclin.httplite.sample.retrofit.ApiService;
 import alexclin.httplite.sample.retrofit.ExRequestInfo;
 import alexclin.httplite.sample.retrofit.MergeListener;
 import alexclin.httplite.util.LogUtil;
-//import rx.Observable;
-//import rx.Subscriber;
-//import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * RetrofitFrag
@@ -169,36 +171,40 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_retrofit8:
-//                String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-//                ExMergeCallback callback = new ExMergeCallback();
-//                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
-//                callback.setHandle(handle1);
-//                view.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        handle1.cancel();
-//                    }
-//                },2);
-//                Observable<ZhihuData> observable = apiService.testZhihu();
-//                observable.subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe(new Subscriber<ZhihuData>() {
-//                    @Override
-//                    public void onCompleted() {
-//                        LogUtil.e("onCompleted");
-//                    }
-//
-//                    @Override
-//                    public void onError(Throwable e) {
-//                        LogUtil.e("Onfailed", e);
-//                    }
-//
-//                    @Override
-//                    public void onNext(ZhihuData zhihuData) {
-//                        LogUtil.e("BaseResult:" + zhihuData);
-//                        LogUtil.e("BaseResult:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
-//                    }
-//                });
+                String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+                ExMergeCallback callback = new ExMergeCallback();
+                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
+                view.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handle1.cancel();
+                    }
+                },2);
+                Observable<ZhihuData> observable = apiService.testZhihu();
+                observable.subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Observer<ZhihuData>() {
+                            @Override
+                            public void onSubscribe(@NonNull Disposable d) {
+                                LogUtil.e("onSubscribe d:"+d.isDisposed());
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                LogUtil.e("Onfailed", e);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                LogUtil.e("onCompleted");
+                            }
+
+                            @Override
+                            public void onNext(ZhihuData zhihuData) {
+                                LogUtil.e("onNext Result:" + zhihuData);
+                                LogUtil.e("onNext Result isMain:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
+                            }
+                        });
                 break;
         }
     }

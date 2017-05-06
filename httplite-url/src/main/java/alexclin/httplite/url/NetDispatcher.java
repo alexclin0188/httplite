@@ -35,10 +35,6 @@ class NetDispatcher implements Dispatcher {
     private ExecutorService executorService;
     private URLite lite;
 
-    NetDispatcher(URLite lite) {
-        this(lite,null);
-    }
-
     NetDispatcher(URLite lite, ExecutorService executorService) {
         this.lite = lite;
         this.executorService = executorService;
@@ -58,19 +54,19 @@ class NetDispatcher implements Dispatcher {
         }
     }
 
-    public synchronized ExecutorService getExecutorService() {
+    private synchronized ExecutorService getExecutorService() {
         if (executorService == null) {
-            executorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
+            executorService = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 60, TimeUnit.SECONDS,
                     new SynchronousQueue<Runnable>(), Util.threadFactory("URLite Dispatcher", false));
         }
         return executorService;
     }
 
-    void registerSyncCall(Task task){
+    private void registerSyncCall(Task task){
         executingSyncCalls.offer(task);
     }
 
-    void unregisterSyncCall(Task task) {
+    private void unregisterSyncCall(Task task) {
         executingSyncCalls.remove(task);
     }
 
@@ -96,7 +92,7 @@ class NetDispatcher implements Dispatcher {
             AsyncWrapper call = i.next();
             i.remove();
             runningCalls.add(call);
-            getExecutorService().execute(call);
+            getExecutorService().submit(call);
             if (runningCalls.size() >= maxRequests) return;
         }
     }
@@ -149,7 +145,8 @@ class NetDispatcher implements Dispatcher {
     public synchronized void dispatchInner(AsyncWrapper wrapper) {
         if (runningCalls.size() < maxRequests) {
             runningCalls.add(wrapper);
-            if(getExecutorService().isShutdown()) return;
+            if(getExecutorService().isShutdown())
+                return;
             getExecutorService().submit(wrapper);
         } else {
             readyCalls.add(wrapper);
@@ -172,14 +169,14 @@ class NetDispatcher implements Dispatcher {
         private Task realTask;
         private NetDispatcher dispatcher;
 
-        public AsyncWrapper(Task realTask,NetDispatcher dispatcher) {
+        AsyncWrapper(Task realTask,NetDispatcher dispatcher) {
             this.realTask = realTask;
             this.dispatcher = dispatcher;
         }
 
         @Override
         public void run() {
-            realTask.enqueue(dispatcher.lite);
+            realTask.executeCallback(dispatcher.lite);
             final NetDispatcher dispatcher = this.dispatcher;
             if(dispatcher!=null)dispatcher.onFinished(this);
             this.dispatcher = null;

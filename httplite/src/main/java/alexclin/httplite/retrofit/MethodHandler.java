@@ -99,12 +99,12 @@ class MethodHandler implements CallAdapter.RequestCreator{
         list.add(new Pair<>(i,j));
     }
 
-    Object invoke(Object... args) throws Exception{
+    Object invoke(Object[] args) throws Exception{
         return invoker.adapt(mRetrofit.lite,this,returnType,args);
     }
 
     @Override
-    public Request createRequest(Object... args) {
+    public Request createRequest(Object[] args) {
         try {
             Request.Builder builder = (Request.Builder) originBuilder.clone();
             int length = args==null?0:args.length;
