@@ -1,9 +1,9 @@
 project.ext{
-    httpLiteVersion = '1.1.0'
-    httpLiteOkhttp2Version = '1.1.0'
-    httpLiteOkhttp3Version = '1.1.0'
-    httpLiteURLVersion = '1.1.0'
-    retrofitRxVersion = '1.0.2'
+    httpLiteVersion = '2.0.0'
+    httpLiteOkhttp2Version = '2.0.0'
+    httpLiteOkhttp3Version = '2.0.0'
+    httpLiteURLVersion = '2.0.0'
+
     compileSdkVersion = 23
     buildToolsVersion = '25.0.2'
     minSdkVersion = 15

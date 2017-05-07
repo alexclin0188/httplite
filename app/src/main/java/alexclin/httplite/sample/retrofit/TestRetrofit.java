@@ -11,6 +11,7 @@ import java.util.Map;
 
 import alexclin.httplite.HttpLite;
 import alexclin.httplite.Request;
+import alexclin.httplite.Result;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.retrofit.Retrofit;
 import alexclin.httplite.sample.App;
@@ -92,17 +93,15 @@ public class TestRetrofit {
         //生成API接口实例
         final SampleApi api = App.retrofit(ctx).create(SampleApi.class);
         //调用异步方法
-        api.login("user", "pass", "token", new Callback<BaseResult<UserInfo>>() {
+        api.asyncZhihu(new Callback<ZhihuData>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, BaseResult<UserInfo> result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
                 //TODO
-                LogUtil.e("BaseResult:"+result);
             }
 
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
-                LogUtil.e("onFailed",e);
             }
         });
         //调用异步方法
@@ -110,11 +109,13 @@ public class TestRetrofit {
             @Override
             public void run() {
                 //获取知乎主页数据
-                try {
-                    ZhihuData data = api.syncZhihu();
+                Result<ZhihuData> result = api.syncZhihu();
+                if(result.isSuccessful()){
+                    ZhihuData data = result.result();
                     //TODO
                     LogUtil.e("BaseResult:"+data);
-                } catch (Exception e) {
+                } else {
+                    Exception e = result.error();
                     //TODO
                     LogUtil.e("onFailed",e);
                 }
@@ -188,22 +189,6 @@ public class TestRetrofit {
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
-                LogUtil.e("onFailed",e);
-            }
-        });
-    }
-
-    public static void testFilter(Context context){
-        SampleApi api = App.retrofit(context).create(SampleApi.class);
-
-        api.login("user", "pass", "test", new Callback<BaseResult<UserInfo>>() {
-            @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, BaseResult<UserInfo> result) {
-                LogUtil.e("BaseResult:"+result);
-            }
-
-            @Override
-            public void onFailed(Request req, Exception e) {
                 LogUtil.e("onFailed",e);
             }
         });

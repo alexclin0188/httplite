@@ -55,6 +55,7 @@ public final class Request{
     private final int cacheExpiredTime;
     private final DownloadParams downloadParams;
     private final Handle handle;
+    private final Builder builder;
 
     private Request(Builder builder) {
         this.mUrl = Util.isHttpPrefix(builder.url)?builder.url:Util.appendString(builder.baseUrl,builder.url);
@@ -73,6 +74,7 @@ public final class Request{
         }else{
             this.wrapListener = null;
         }
+        this.builder = builder;
     }
 
     private String buildUrlAndParams(String baseUrl,String url,Map<String,Pair<String,Boolean>> pathHolders) {
@@ -276,6 +278,14 @@ public final class Request{
         }
         builder.append(", cache=").append(cacheExpiredTime).append('}');
         return builder.toString();
+    }
+
+    public Builder newBuilder(){
+        try {
+            return (Builder) builder.clone();
+        } catch (CloneNotSupportedException e) {
+            return builder;
+        }
     }
 
     public static final class Builder implements Cloneable{

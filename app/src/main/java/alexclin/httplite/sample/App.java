@@ -129,6 +129,8 @@ public class App extends Application {
                 .setRequestInterceptor(new RequestInterceptor() {
                     @Override
                     public Request interceptRequest(Request request, Type resultType) {
+                        //支持对Request做一些处理操作
+                        //Request.Builder newBuilder = request.newBuilder();
                         LogUtil.e("Request:" + request);
                         return request;
                     }
