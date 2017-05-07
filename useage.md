@@ -20,7 +20,7 @@
 其中urlite/okhttp2/okkhttp3的gradle包是依赖于httplite，所以使用时只用添加三者其一为依赖即可。如使用URLite则添加依赖
 
 ```
-    compile 'alexclin.httplite:httplite-url:1.1.0'
+    compile 'alexclin.httplite:httplite-url:2.0.0'
 ```
 
 * 如果需要在JAVA接口定义API时使用RxJava,则需要添加以下依赖
@@ -37,18 +37,18 @@ httplite核心库中自动做了RxJava类的检测，创建接口实例时会自
   - 使用okhttp 2.x作为http实现
 
 ```
-    compile 'alexclin.httplite:httplite-okhttp2:1.1.1'
+    compile 'alexclin.httplite:httplite-okhttp2:2.0.0'
     compile 'com.squareup.okhttp:okhttp:2.x'
 ```
 
   - 使用okhttp 3.x作为http实现
 
 ```
-    compile 'alexclin.httplite:httplite-okhttp3:1.1.1'
+    compile 'alexclin.httplite:httplite-okhttp3:2.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.x'
 ```
 
-
+PS:如需使用jar包可在项目releaselib目录下找到对应jar包
 
 ## 二、类库初始化
 

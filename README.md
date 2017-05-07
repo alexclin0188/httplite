@@ -21,7 +21,7 @@ A android http library
 使用系统URLConnection作为http实现
 
 ```
-    compile 'alexclin.httplite:httplite-url:1.1.0'
+    compile 'alexclin.httplite:httplite-url:2.0.0'
 ```
 
 如果需要在JAVA接口定义API时使用RxJava,则需要添加以下依赖
@@ -30,6 +30,8 @@ A android http library
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'//可选，在Android中使用会需要使用此类库
     compile 'io.reactivex.rxjava2:rxjava:2.1.0'
 ```
+
+PS:如需使用jar包可在项目releaselib目录下找到对应jar包
 
 ### 初始化Httplite
 
@@ -156,13 +158,15 @@ public interface SampleApi {
 
 ```         
     //使用okhttp 2.7.5作为http实现
-    compile 'alexclin.httplite:httplite-okhttp2:1.1.0'
+    compile 'alexclin.httplite:httplite-okhttp2:2.0.0'
     compile 'com.squareup.okhttp:okhttp:2.7.5'
 
     //使用okhttp 3.2.0作为http实现
-    compile 'alexclin.httplite:httplite-okhttp3:1.1.0'
+    compile 'alexclin.httplite:httplite-okhttp3:2.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
 ```
+
+PS:如需使用jar包可在项目releaselib目录下找到对应jar包
 
 ### 详细使用指南请移步[使用指南](./useage.md)
 

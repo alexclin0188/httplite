@@ -33,13 +33,16 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.3.1'
     compile 'com.google.code.gson:gson:2.5'
     compile project(':mockdata')
+    compile 'alexclin.httplite:httplite-url:2.0.0'
+    compile 'alexclin.httplite:httplite-okhttp2:2.0.0'
+    compile 'alexclin.httplite:httplite-okhttp3:2.0.0'
+
+//    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+//    compile 'com.squareup.okhttp:okhttp:2.7.5'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.0'
+
     compile project(':httplite-okhttp2')
     compile project(':httplite-okhttp3')
     compile project(':httplite-url')
-    compile project(':httplite')
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-//    compile 'com.squareup.okhttp:okhttp:2.7.5'
-//    compile 'alexclin.httplite:httplite:1.1.0'
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'io.reactivex.rxjava2:rxjava:2.1.0'
 }

@@ -24,8 +24,7 @@ android {
 }
 
 dependencies {
-    provided project(':httplite')
-//    compile 'alexclin.httplite:httplite:1.1.0'
+    compile 'alexclin.httplite:httplite:2.0.0'
 }
 
 apply from: "${project.rootDir}/bintray.gradle"
