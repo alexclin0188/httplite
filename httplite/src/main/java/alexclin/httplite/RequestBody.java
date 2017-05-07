@@ -19,17 +19,22 @@ import alexclin.httplite.listener.MediaType;
 public abstract class RequestBody {
     /**
      * Returns the Content-Type header for this body.
+     * @return Content-Type
      */
     public abstract String contentType();
 
     /**
      * Returns the number of bytes that will be written to {@code out} in a call to {@link #writeTo},
      * or -1 if that count is unknown.
+     * @return contentLength
+     * @throws IOException Exception
      */
     public abstract long contentLength() throws IOException;
 
     /**
      * Writes the content of this call to {@code out}.
+     * @param sink ouputStream
+     * @throws IOException Exception in wtrite stream
      */
     public abstract void writeTo(OutputStream sink) throws IOException;
 

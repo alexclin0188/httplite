@@ -16,6 +16,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface Forms {
-    /** Specifies whether the names and values are already URL encoded. */
+    /** Specifies whether the names and values are already URL encoded.
+     * @return encoded
+     */
     boolean encoded() default false;
 }

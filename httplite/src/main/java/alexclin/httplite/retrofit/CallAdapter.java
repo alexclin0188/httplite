@@ -24,7 +24,7 @@ public interface CallAdapter {
      * check method defined in interface and return whether the result want to parse is File
      * @param method method
      * @return whether the result want to parse is File
-     * @throws RuntimeException
+     * @throws RuntimeException exception
      */
     ResultType checkMethod(Method method) throws RuntimeException;
 }
