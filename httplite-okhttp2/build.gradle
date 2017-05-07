@@ -3,12 +3,12 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
 android {
-    compileSdkVersion project.ext.compileSdkVersion
-    buildToolsVersion project.ext.buildToolsVersion
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
 
     defaultConfig {
-        minSdkVersion project.ext.minSdkVersion
-        targetSdkVersion project.ext.targetSdkVersion
+        minSdkVersion 15
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
@@ -21,16 +21,12 @@ android {
     lintOptions {
         abortOnError false
     }
-    compileOptions {
-        sourceCompatibility project.ext.javaVersion
-        targetCompatibility project.ext.javaVersion
-    }
 }
 
 dependencies {
     provided 'com.squareup.okhttp:okhttp:2.7.5'
-//    provided project(':httplite')
-    compile 'alexclin.httplite:httplite:1.1.1'
+    provided project(':httplite')
+//    compile 'alexclin.httplite:httplite:1.1.0'
 }
 
 apply from: "${project.rootDir}/bintray.gradle"

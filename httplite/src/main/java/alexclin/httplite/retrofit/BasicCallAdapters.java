@@ -5,12 +5,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
 
-import alexclin.httplite.Call;
 import alexclin.httplite.Handle;
+import alexclin.httplite.HttpLite;
+import alexclin.httplite.Request;
+import alexclin.httplite.exception.CanceledException;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.util.Clazz;
-import alexclin.httplite.util.Result;
+import alexclin.httplite.Result;
 import alexclin.httplite.util.Util;
 
 /**
@@ -20,51 +22,59 @@ import alexclin.httplite.util.Util;
  */
 class BasicCallAdapters {
 
-    public static Collection<CallAdapter> basicAdapters(){
-        return Arrays.asList(new ReturnCallAdapter(),new AsyncCallAdapter(),new SyncCallAdapter());
+    static Collection<CallAdapter> basicAdapters(ExecutorService executor){
+        try {
+            Class.forName("io.reactivex.Observable");
+            return Arrays.asList(new ResultCallAdapter(),new AsyncCallAdapter(executor),new RxCallAdapter());
+        } catch (ClassNotFoundException e) {
+            return Arrays.asList(new ResultCallAdapter(),new AsyncCallAdapter(executor));
+        }
     }
 
-    private static class SyncCallAdapter implements CallAdapter {
+    private static class ResultCallAdapter implements CallAdapter {
         @Override
-        public Object adapt(Call call, final Type returnType, Object... args) throws Exception{
-            Clazz clazz = new Clazz<Object>() {
-                @Override
-                public Type type() {
-                    return returnType;
-                }
-            };
-            if(Util.isSubType(returnType, Result.class)){
-                return call.syncResult(clazz);
-            }else{
-                return call.sync(clazz);
-            }
+        public Object adapt(HttpLite lite,RequestCreator creator, final Type returnType, Object... args) throws Exception{
+            return creator.createRequest(args).execute(lite,returnType);
         }
 
         @Override
         public boolean support(Method method) {
-            return true;
+            return Util.isSubType(method.getGenericReturnType(),Result.class);
         }
 
         @Override
         public ResultType checkMethod(Method method) throws RuntimeException {
-            if(method.getReturnType()!=Result.class){
-                Class[] exceptionClasses = method.getExceptionTypes();
-                if(exceptionClasses.length!=1|| exceptionClasses[0]!=Exception.class){
-                    throw Util.methodError(method,"Sync method must declare throws Exception");
-                }
-                return Util.getTypeParameter(method.getGenericReturnType())==File.class?ResultType.File:ResultType.NotFile;
-            }else{
-                return method.getReturnType().equals(File.class)?ResultType.File:ResultType.NotFile;
-            }
+            return method.getReturnType().equals(File.class)?ResultType.File:ResultType.NotFile;
         }
     }
 
     @SuppressWarnings("unchecked")
     private static class AsyncCallAdapter implements CallAdapter {
+        private final ExecutorService executor;
+
+        AsyncCallAdapter(ExecutorService executor) {
+            this.executor = executor;
+        }
+
         @Override
-        public Object adapt(Call call, Type returnType, Object... args) throws Exception{
-            Handle handle = call.async(true,(Callback)args[args.length-1]);
-            return returnType==Handle.class?handle:null;
+        public Object adapt(final HttpLite lite,final RequestCreator creator,final Type returnType,final Object[] args) throws Exception {
+            if(executor!=null){
+                AsyncHandle handle = new AsyncHandle() {
+                    @Override
+                    public void run() {
+                        Request request = creator.createRequest(args);
+                        setHandle(request.handle());
+                        if(isCanceled()) cancel();
+                        request.enqueue(lite,(Callback)args[args.length-1]);
+                    }
+                };
+                executor.submit(handle);
+                return returnType==Handle.class?handle:null;
+            }else{
+                Request request = creator.createRequest(args);
+                request.enqueue(lite,(Callback)args[args.length-1]);
+                return returnType==Handle.class?request.handle():null;
+            }
         }
 
         @Override
@@ -94,21 +104,34 @@ class BasicCallAdapters {
         }
     }
 
-    private static class ReturnCallAdapter implements CallAdapter {
+    private static abstract class AsyncHandle implements Handle,Runnable{
+        private Handle handle;
+        private volatile boolean isCanceled;
 
         @Override
-        public Object adapt(Call call, Type returnType, Object... args) throws Exception {
-            return call;
+        public void cancel() {
+            if(handle!=null){
+                handle.cancel();
+            }
+            isCanceled =  true;
         }
 
         @Override
-        public boolean support(Method method) {
-            return Util.getRawType(method.getReturnType())==Call.class;
+        public boolean isCanceled() {
+            return handle==null?isCanceled:handle.isCanceled();
         }
 
         @Override
-        public ResultType checkMethod(Method method) throws RuntimeException {
-            return ResultType.Any;
+        public boolean isExecuted() {
+            return handle!=null&&handle.isExecuted();
         }
+
+        @Override
+        public void setHandle(Handle handle) {
+            this.handle = handle;
+        }
+
+        @Override
+        public abstract void run();
     }
 }

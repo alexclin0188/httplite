@@ -1,13 +1,15 @@
 package alexclin.httplite.impl;
 
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
-import alexclin.httplite.ResponseBody;
+import alexclin.httplite.listener.MediaType;
+import alexclin.httplite.listener.Response;
+import alexclin.httplite.listener.ResponseBody;
 
 /**
  * ResponseImpl
@@ -71,6 +73,44 @@ public class ResponseImpl implements Response {
     @Override
     public ResponseBody body() {
         return body;
+    }
+
+    /**
+     * ResponseBodyImpl
+     *
+     * @author alexclin  16/3/12 14:42
+     */
+    public static class ResponseBodyImpl implements ResponseBody {
+        private InputStream inputStream;
+        private MediaType mediaType;
+        private long contentLength;
+
+        public ResponseBodyImpl(InputStream inputStream, MediaType mediaType,long contentLength) {
+            this.inputStream = inputStream;
+            this.mediaType = mediaType;
+            this.contentLength = contentLength;
+        }
+
+        @Override
+        public MediaType contentType() {
+            return mediaType;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return contentLength;
+        }
+
+        @Override
+        public InputStream stream() throws IOException {
+            return inputStream;
+        }
+
+        @Override
+        public void close() throws IOException {
+            if(inputStream!=null)
+                inputStream.close();
+        }
     }
 }
 

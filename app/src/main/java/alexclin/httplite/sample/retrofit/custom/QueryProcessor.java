@@ -17,7 +17,7 @@ import alexclin.httplite.retrofit.ProcessorFactory;
 public class QueryProcessor extends ProcessorFactory.ObjectsProcessor {
 
     @Override
-    protected void performProcess(Annotation annotation, Request request, Object value) {
+    protected void performProcess(Annotation annotation, Request.Builder request, Object value) {
         request.param(((Query)annotation).value(),value.toString(),((Query)annotation).encoded());
     }
 

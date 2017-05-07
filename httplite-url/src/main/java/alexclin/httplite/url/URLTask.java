@@ -4,68 +4,74 @@ import android.os.Build;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import alexclin.httplite.Executable;
+import alexclin.httplite.Handle;
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
-import alexclin.httplite.ResponseHandler;
+import alexclin.httplite.RequestBody;
+import alexclin.httplite.exception.IllegalOperationException;
+import alexclin.httplite.listener.Callback;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.Dispatcher;
+import alexclin.httplite.util.LogUtil;
 
 /**
  * URLTask
  *
  * @author alexclin 16/1/2 19:39
  */
-public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.Task<Response>>,Executable{
+class URLTask implements Task,Comparable<Task>,Handle{
 
-    private URLite lite;
     private Request request;
     private int retryCount;
 
-    private ResponseHandler callback;
+    private Callback<Response> callback;
 
     private volatile boolean isExecuted;
     private volatile boolean isCanceled;
 
-    public URLTask(URLite lite, Request request) {
-        this.lite = lite;
+    URLTask(Request request,Callback<Response> callback) {
         this.request = request;
+        this.callback = callback;
     }
 
-    public void enqueueTask() {
-        Response response = null;
+    @Override
+    public void executeCallback(URLite lite) {
         int maxRetry = lite.settings.getMaxRetryCount();
+        Response response = null;
+        Exception exception = null;
         while (retryCount<= maxRetry&& !isCanceled()){
             try {
-                if(retryCount>0){
-                    callback.onRetry(retryCount,maxRetry);
-                }
                 retryCount++;
-                response = execute();
+                response = lite.dispatchTaskSync(this);
                 if(response!=null){
                     break;
                 }
             }catch (Exception e) {
-                e.printStackTrace();
+                exception = e;
                 if(retryCount>maxRetry || e instanceof CanceledException){
-                    callback.onFailed(e);
+                    callback.onFailed(request,e);
                     return;
                 }
             }
         }
-        if(!isCanceled()){
+        if(!isCanceled()&&response!=null){
             onResponse(response);
+        }else if(isCanceled()){
+            callback.onFailed(request,new CanceledException("URLTask has been canceled"));
         }else{
-            callback.onFailed(new CanceledException("URLTask has been canceled"));
+            callback.onFailed(request,exception);
         }
     }
 
-    public Response executeTask() throws Exception {
-        if(lite.isCacheAble(this)) lite.addCacheHeaders(request);
-        String urlStr = request.getUrl();
+    @Override
+    public Response execute(URLite lite) throws Exception {
+        Request real = request;
+        String urlStr = real.getUrl();
         URL url = new URL(urlStr);
         HttpURLConnection connection;
         if (lite.settings.getProxy() != null) {
@@ -82,12 +88,15 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
             httpsURLConnection.setSSLSocketFactory(lite.settings.getSslSocketFactory());
             httpsURLConnection.setHostnameVerifier(lite.settings.getHostnameVerifier());
         }
-        lite.processCookie(urlStr,request.getHeaders());
-        if (request.getHeaders()!=null&&!request.getHeaders().isEmpty()) {
+        Map<String, List<String>> headers = new HashMap<>();
+        lite.processCookie(urlStr,headers);
+        if(lite.isCacheAble(this))
+            lite.addCacheHeaders(request,headers);
+        if (real.getHeaders()!=null&&!real.getHeaders().isEmpty()) {
             boolean first;
-            for (String name : request.getHeaders().keySet()) {
+            for (String name : real.getHeaders().keySet()) {
                 first = true;
-                for (String value : request.getHeaders().get(name)) {
+                for (String value : real.getHeaders().get(name)) {
                     if (first) {
                         connection.setRequestProperty(name, value);
                         first = false;
@@ -97,12 +106,13 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
                 }
             }
         }
-        connection.setRequestMethod(request.getMethod().name());
+        connection.setRequestMethod(real.getMethod().name());
 
         connection.setDoInput(true);
-        if(request.getMethod().permitsRequestBody&&request.getBody()!=null){
-            connection.setRequestProperty("Content-Type", request.getBody().contentType().toString());
-            long contentLength = request.getBody().contentLength();
+        RequestBody requestBody = lite.realBody(real.getRequestBody());
+        if(real.getMethod().permitsRequestBody&&requestBody!=null){
+            connection.setRequestProperty("Content-Type", requestBody.contentType());
+            long contentLength = requestBody.contentLength();
             if (contentLength < 0) {
                 connection.setChunkedStreamingMode(256 * 1024);
             } else {
@@ -116,10 +126,10 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
             }
             connection.setRequestProperty("Content-Length", String.valueOf(contentLength));
             connection.setDoOutput(true);
-            request.getBody().writeTo(connection.getOutputStream());
+            requestBody.writeTo(connection.getOutputStream());
         }
 
-        Response response = URLite.createResponse(connection, request);
+        Response response = URLite.createResponse(connection, real);
         lite.saveCookie(urlStr,response.headers());
         isExecuted = true;
         if(!lite.isCacheAble(this)){
@@ -127,17 +137,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
         }else{
             return lite.createCacheResponse(response);
         }
-    }
-
-    @Override
-    public Response execute() throws Exception {
-        return lite.dispatchTaskSync(this);
-    }
-
-    @Override
-    public void enqueue(ResponseHandler responseHandler) {
-        this.callback = responseHandler;
-        lite.dispatchTask(this);
     }
 
     private void assertCanceled() throws Exception{
@@ -157,7 +156,6 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
 
     public void cancel(){
         isCanceled = true;
-        callback.onCancel();
     }
 
     public boolean isCanceled() {
@@ -168,12 +166,21 @@ public class URLTask implements Dispatcher.Task<Response>,Comparable<Dispatcher.
         return isExecuted;
     }
 
-    public void onResponse(Response response){
-        callback.onResponse(response);
+    @Override
+    public void setHandle(Handle handle) {
+        throw new IllegalOperationException("not support method");
+    }
+
+    void onResponse(Response response){
+        if(callback!=null){
+            callback.onSuccess(request,response.headers(),response);
+        }else {
+            LogUtil.e("callback is null");
+        }
     }
 
     @Override
-    public int compareTo(Dispatcher.Task<Response> another) {
+    public int compareTo(Task another) {
         return hashCode()-another.hashCode();
     }
 }

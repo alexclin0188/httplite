@@ -3,7 +3,6 @@ package alexclin.httplite.url;
 import android.net.Uri;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.util.Util;
 
@@ -23,7 +22,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/2 20:00
  */
-public class URLMultipartBody extends URLRequestBody {
+class URLMultipartBody extends URLRequestBody {
 
     @Override
     public void writeTo(OutputStream sink) throws IOException {
@@ -47,7 +46,7 @@ public class URLMultipartBody extends URLRequestBody {
     private final List<Part> parts;
     private long contentLength = -1L;
 
-    URLMultipartBody(String boundary, MediaType type, List<Part> parts) {
+    private URLMultipartBody(String boundary, MediaType type, List<Part> parts) {
         this.boundary = boundary;
         this.originalType = type;
         this.contentType = URLMediaType.parse(type + "; boundary=" + Uri.encode(boundary,Util.UTF_8.name()));
@@ -76,8 +75,8 @@ public class URLMultipartBody extends URLRequestBody {
     }
 
     /** A combination of {@link #type()} and {@link #boundary()}. */
-    @Override public MediaType contentType() {
-        return contentType;
+    @Override public String contentType() {
+        return contentType.toString();
     }
 
     @Override public long contentLength() throws IOException {
@@ -137,10 +136,10 @@ public class URLMultipartBody extends URLRequestBody {
                     }
                 }
 
-                MediaType contentType = body.contentType();
+                String contentType = body.contentType();
                 if (contentType != null) {
                     writer.write("Content-Type: ");
-                    writer.write(contentType.toString());
+                    writer.write(contentType);
                     writer.flush();
                     if(countBytes){
                         bos.write(CRLF);

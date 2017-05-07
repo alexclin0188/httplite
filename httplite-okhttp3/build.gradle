@@ -21,16 +21,12 @@ android {
     lintOptions {
         abortOnError false
     }
-    compileOptions {
-        sourceCompatibility project.ext.javaVersion
-        targetCompatibility project.ext.javaVersion
-    }
 }
 
 dependencies {
     provided 'com.squareup.okhttp3:okhttp:3.2.0'
-//    provided project(':httplite')
-    compile 'alexclin.httplite:httplite:1.1.1'
+    provided project(':httplite')
+//    compile 'alexclin.httplite:httplite:1.1.0'
 }
 
 apply from: "${project.rootDir}/bintray.gradle"

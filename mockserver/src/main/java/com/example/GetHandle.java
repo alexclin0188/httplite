@@ -104,7 +104,7 @@ public class GetHandle implements MethodHandle {
     }
 
     private MockResponse responseJson(String root, String path, Map<String, String[]> paramMap) {
-        Result<Object> result = new Result<>();
+        BaseResult<Object> result = new BaseResult<>();
         result.requestPath = path;
         result.requestMethod = "GET";
         if (!path.startsWith("/") || path.contains("..")) {

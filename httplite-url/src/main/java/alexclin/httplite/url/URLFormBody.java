@@ -3,15 +3,13 @@ package alexclin.httplite.url;
 import android.net.Uri;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import alexclin.httplite.MediaType;
-import alexclin.httplite.RequestBody;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.util.Util;
 
 /**
@@ -52,8 +50,8 @@ public class URLFormBody extends URLRequestBody {
         return Uri.decode(encodedValue(index));
     }
 
-    @Override public MediaType contentType() {
-        return CONTENT_TYPE;
+    @Override public String contentType() {
+        return CONTENT_TYPE.toString();
     }
 
     @Override public long contentLength() {

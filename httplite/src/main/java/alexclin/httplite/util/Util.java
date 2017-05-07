@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 import alexclin.httplite.HttpLite;
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 
 /**
  * Junk drawer of utility methods.
@@ -84,97 +84,81 @@ public final class Util {
         };
     }
 
-    public static boolean isHttpPrefix(String url) {
-        return !TextUtils.isEmpty(url) && (url.startsWith("http://") || url.startsWith("https://"));
+    public static boolean isHttpPrefix(String url){
+        return !TextUtils.isEmpty(url)&&(url.startsWith("http://")||url.startsWith("https://"));
     }
 
-    public static MediaType guessMediaType(HttpLite lite, File file) {
-        if (file == null || lite == null) {
+    public static String guessMediaType(HttpLite lite,File file){
+        if(file==null||lite==null){
             return null;
         }
         FileNameMap fileNameMap = URLConnection.getFileNameMap();
         String contentType = fileNameMap.getContentTypeFor(file.getAbsolutePath());
-        if (contentType == null) {
+        if(contentType==null){
             contentType = MediaType.APPLICATION_STREAM;
         }
-        MediaType type = lite.parse(contentType);
-        if (type == null) {
-            type = lite.parse(MediaType.APPLICATION_STREAM);
-        }
-        return type;
+        return contentType;
     }
 
     //获取回调接口的结果类型T
-    public static <T> Type type(Class<T> clazz, Object object, int index) {
-        if (!isSubType(object.getClass(), clazz)) return null;
-        Type[] types;
-        Type superType;
-        Class objClazz = object.getClass();
-        while (true) {
-            types = objClazz.getGenericInterfaces();
-            if (types.length > 0) {
-                for (Type type : types) {
-                    if (!(type instanceof ParameterizedType)) {
-                        continue;
-                    }
-                    ParameterizedType ptype = (ParameterizedType) type;
-                    if (ptype.getRawType() != clazz) {
-                        continue;
-                    }
-                    Type[] typeArgs = ptype.getActualTypeArguments();
-                    if (typeArgs.length > index) {
-                        return typeArgs[index];
-                    }
-                }
+    public static <T> Type type(Class<T> clazz, Object object, int index){
+        Type[] types = object.getClass().getGenericInterfaces();
+        for(Type type:types){
+            if(!(type instanceof ParameterizedType)){
+                continue;
             }
-            superType = objClazz.getGenericSuperclass();
-            if (superType instanceof Class) {
-                objClazz = (Class) superType;
-            } else {
-                break;
+            ParameterizedType ptype = (ParameterizedType)type;
+            if(ptype.getRawType()!=clazz){
+                continue;
+            }
+            Type[] typeArgs = ptype.getActualTypeArguments();
+            if(typeArgs.length>index){
+                return typeArgs[index];
             }
         }
         return null;
     }
 
     //获取回调接口(类似Callback<T>,Clazz<T>)的结果类型T
-    public static <T> Type type(Class<T> clazz, Object object) {
-        return type(clazz, object, 0);
+    public static <T> Type type(Class<T> clazz, Object object){
+        return type(clazz,object,0);
     }
 
-    public static boolean isSubType(Type subType, Class superClazz) {
-        if (subType == superClazz) return true;
-        if (subType instanceof Class) {
-            Type[] interfaces = ((Class) subType).getGenericInterfaces();
-            for (Type type : interfaces) {
+    public static boolean isSubType(Type subType,Class superClazz){
+        if(subType==superClazz) return true;
+        if(subType instanceof Class){
+            Type[] interfaces = ((Class)subType).getGenericInterfaces();
+            for(Type type:interfaces){
                 if (type instanceof ParameterizedType)
                     type = ((ParameterizedType) type).getRawType();
-                if (type == superClazz) return true;
+                if(type==superClazz) return true;
             }
-            Type superC = ((Class) subType).getSuperclass();
-            if (superC == superClazz) return true;
-            if (superC != Object.class) return isSubType(superC, superClazz);
-        } else if (subType instanceof TypeVariable) {
-            TypeVariable t = (TypeVariable) subType;
+            Type superC = ((Class)subType).getSuperclass();
+            if(superC==superClazz) return true;
+            if(superC!=Object.class) return isSubType(superC,superClazz);
+        }else if(subType instanceof TypeVariable){
+            TypeVariable t = (TypeVariable)subType;
             Type[] types = t.getBounds();
-            for (Type type : types) {
-                if (type == superClazz) return true;
+            for(Type type:types){
+                if(type==superClazz) return true;
             }
-        } else if (subType instanceof ParameterizedType) {
+        }else if(subType instanceof ParameterizedType){
             Type clazz = ((ParameterizedType) subType).getRawType();
-            return isSubType(clazz, superClazz);
+            return isSubType(clazz,superClazz);
         }
         return false;
     }
 
-    public static String appendString(String baseUrl, String url) {
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+    public static String appendString(String baseUrl,String url){
+        if(TextUtils.isEmpty(baseUrl)) return url;
+        if(TextUtils.isEmpty(url)) return baseUrl;
+        if(baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0,baseUrl.length()-1);
         }
-        if (url.startsWith("/")) {
-            baseUrl = baseUrl + url;
-        } else {
-            baseUrl = baseUrl + "/" + url;
+        if(url.startsWith("/")) {
+            baseUrl = baseUrl+url;
+        }else {
+            baseUrl = baseUrl+"/"+url;
         }
         return baseUrl;
     }
@@ -191,14 +175,14 @@ public final class Util {
         }
     }
 
-    public static String printArray(String foramt, Object[] array) {
+    public static String printArray(String foramt,Object[] array){
         StringBuilder sb = new StringBuilder();
         boolean isFirst = true;
-        for (Object object : array) {
-            if (isFirst) {
+        for(Object object:array){
+            if(isFirst){
                 sb.append(object.toString());
                 isFirst = false;
-            } else {
+            }else{
                 sb.append(object.toString()).append(",");
             }
         }
@@ -271,27 +255,27 @@ public final class Util {
     }
 
     public static RuntimeException methodError(Throwable cause, Method method, String message,
-                                               Object... args) {
+                                        Object... args) {
         message = String.format(message, args);
         IllegalArgumentException e = new IllegalArgumentException(message
                 + "\n    for method ->"
                 + method.getDeclaringClass().getSimpleName()
                 + "."
-                + method.getName() + "(" + method.getGenericParameterTypes().length + " param)");
+                + method.getName()+"("+method.getGenericParameterTypes().length+" param)");
         e.initCause(cause);
         return e;
     }
 
-    public static Type getTypeParameter(Type type, int index) {
-        if (type instanceof ParameterizedType) {
-            Type[] types = ((ParameterizedType) type).getActualTypeArguments();
-            if (types.length > index) return types[index];
+    public static Type getTypeParameter(Type type,int index){
+        if(type instanceof ParameterizedType){
+            Type[] types = ((ParameterizedType)type).getActualTypeArguments();
+            if(types.length>index) return types[index];
         }
         return null;
     }
 
-    public static Type getTypeParameter(Type type) {
-        return getTypeParameter(type, 0);
+    public static Type getTypeParameter(Type type){
+        return getTypeParameter(type,0);
     }
 
     public static String md5Hex(String s) {
@@ -300,7 +284,7 @@ public final class Util {
             byte[] md5bytes = messageDigest.digest(s.getBytes("UTF-8"));
             return bytes2hex(md5bytes);
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-            LogUtil.e("md5 failed", e);
+            LogUtil.e("md5 failed",e);
             return null;
         }
     }
@@ -311,10 +295,10 @@ public final class Util {
      * @param bytes 字节数组
      * @return HEX字符串
      */
-    public static String bytes2hex(byte[] bytes) {
+    public static String bytes2hex(byte[] bytes){
         final String HEX = "0123456789abcdef";
         StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
+        for (byte b : bytes){
             // 取出这个字节的高4位，然后与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
             sb.append(HEX.charAt((b >> 4) & 0x0f));
             // 取出这个字节的低位，与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数

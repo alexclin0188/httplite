@@ -1,6 +1,20 @@
 # httplite
 A android http library
 
+# 重构记录
+
+## 要做的调整(2016.11)
+
+* 1. Request改为Builder模式
+
+* 2. 移除不必要的Handle封装，网络请求只留一个同步和一个异步方法
+
+* 3. Retrofit实现简化
+
+* 4. Listener简化
+
+* 5. 下载处理简化
+
 ## 说明
 
 类库开发目的主要是以下三点
@@ -126,42 +140,42 @@ public interface ApiService {
     Observable<ZhihuData> testZhihu();
 
     @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }
 ```
 
 ### 初始化Httplite并创建API接口的实例
 
-替换依赖只用替换如下部分即可
-
-```java
-HttpLiteBuilder builder = Ok2Lite.create(); //okhttp2作为http实现类库，推荐
-//或者
-HttpLiteBuilder builder = Ok3Lite.create(); //okhttp3作为http实现类库，推荐
-//或者
-HttpLiteBuilder builder = URLite.create(); //使用URLConnection实现的http
-```
-
 配置并创建HttpLite
 
 ```java
-builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
-                .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
-                .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
+        URLite.Builder urlBuilder = new alexclin.httplite.url.URLite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app));//设置CookieStore;
+                
+        HttpLiteBuilder builder = new alexclin.httplite.url.URLite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app))  //设置CookieStore,设置则启用Cookie,不设置则不启用
+                .setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
+                .setWriteTimeout(30, TimeUnit.SECONDS)  //设置写超时
+                .setReadTimeout(30, TimeUnit.SECONDS)  //设置读超时
                 .setMaxRetryCount(2)  //设置失败重试次数
                 .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
                 .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
                 .addResponseParser(new GsonParser())
-                .baseUrl("http://192.168.99.238:10080/")//BaseUrl
-                .setProxy(...)//
-                .setProxySelector(...)//
-                .setSocketFactory(...)//
-                .setSslSocketFactory(...)//
-                .setHostnameVerifier(..)//
-                .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
-                .addCallAdapter(new RxCallAdapter());//添加Rx支持
-  //正常使用状态
-  Httplite httpLite = builder.build();
+                .setBaseUrl("https://192.168.99.238:10080/")
+//                .setProxy(...)
+//                .setProxySelector(...)
+                .setMockHandler(handler)
+                .setSocketFactory(SocketFactory.getDefault())
+                .setSslSocketFactory(manager.getSocketFactory())
+                .setHostnameVerifier(manager)
+                .setRequestInterceptor(new RequestInterceptor() {
+                    @Override
+                    public Request interceptRequest(Request request, Type resultType) {
+                        LogUtil.e("Request:" + request);
+                        return request;
+                    }
+                });
+        return builder.build();
 ```
 
 创建API接口实例
@@ -182,7 +196,31 @@ builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
                 });
 ```
 
+<<<<<<< HEAD
 详细使用指南请移步[《Android网络框架HttpLite使用指南》](http://www.jianshu.com/p/db66b49ec974)
+=======
+http实现有okhttp2和okhttp3可选
+```      
+        //okhttp2的网络实现
+        Ok2Lite.Builder ok2Builder = new Ok2Lite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app));
+        //okhttp3的网络实现
+        Ok3Lite.Builder ok3Builder = new Ok3Lite.Builder()
+                .setCookieJar(new CookieJar() {
+                    @Override
+                    public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+                        
+                    }
+
+                    @Override
+                    public List<Cookie> loadForRequest(HttpUrl url) {
+                        return null;
+                    }
+                });//okhttp3的cookie接口
+```
+
+详细使用指南请移步[《Android网络框架HttpLite使用指南》]()
+>>>>>>> dev
 
 或者[文档使用指南](./useage.md)
 
