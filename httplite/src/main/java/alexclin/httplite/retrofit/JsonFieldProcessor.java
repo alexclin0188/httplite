@@ -36,7 +36,13 @@ class JsonFieldProcessor implements ParamMiscProcessor{
                 String key = annotation.value();
                 Object arg = args[argPos];
                 if(TextUtils.isEmpty(key)){
-                    jsonObject = fillJsonWithObject(jsonObject,arg);
+                    if((arg instanceof JSONObject)||(arg instanceof JSONArray)){
+                        jsonObject = arg;
+                    }else if(arg.getClass().isArray()||(arg instanceof Collection)){
+                        jsonObject = toJsonArray(arg);
+                    }else if(!Util.isBasicTypeBean(arg)){
+                        jsonObject = convertToJson(arg);
+                    }
                     break;
                 }else{
                     if(jsonObject==null){
@@ -44,12 +50,10 @@ class JsonFieldProcessor implements ParamMiscProcessor{
                     }
                     if(Util.isBasicTypeBean(arg)||(arg instanceof JSONObject)||(arg instanceof JSONArray)){
                         ((JSONObject)jsonObject).put(key,arg);
-                    }else if(arg.getClass().isArray()){
+                    }else if(arg.getClass().isArray()||(arg instanceof Collection)){
                         ((JSONObject)jsonObject).put(key,toJsonArray(arg));
-                    }else if(arg instanceof Collection){
-                        ((JSONObject)jsonObject).put(key,new JSONArray((Collection<?>)arg));
-                    }else if(arg instanceof Serializable){
-                        ((JSONObject)jsonObject).put(key,convertToJson((Serializable) arg));
+                    }else {
+                        ((JSONObject)jsonObject).put(key,convertToJson(arg));
                     }
                 }
             }
@@ -115,91 +119,26 @@ class JsonFieldProcessor implements ParamMiscProcessor{
         return Util.isBasicType(type) || type == JSONObject.class || type == JSONArray.class || Util.isSubType(type, Serializable.class);
     }
 
-    private static Object fillJsonWithObject(Object jsonObject,Object bean){
-        if(bean instanceof JSONObject){
-            if(jsonObject==null){
-                return bean;
-            }else if(jsonObject instanceof JSONObject){
-                return combineJSONObject((JSONObject) jsonObject,(JSONObject) bean);
-            }else{
-                //TODO 启动时就该抛异常
-                throw new RuntimeException("无value的@JsonField注解和有value的不能同时使用, 且无value的@JsonField注解只能存在一个");
-            }
-        }else if(bean instanceof JSONArray){
-            if(jsonObject==null){
-                return bean;
-            }else if(jsonObject instanceof JSONArray){
-                return combineJSONArray((JSONArray) jsonObject,(JSONArray) bean);
-            }else if(jsonObject instanceof JSONObject){
-                //TODO 启动时就该抛异常
-                throw new RuntimeException("无value的@JsonField注解和有value的不能同时使用, 且无value的@JsonField注解只能存在一个");
-            }
-        }else if(bean.getClass().isArray()||(bean instanceof Collection)){
-            JSONArray array;
-            if (bean.getClass().isArray()){
-                array = toJsonArray(bean);
-            }else{
-                array  = new JSONArray((Collection<?>)bean);
-            }
-            if(jsonObject==null){
-                return array;
-            }else if(jsonObject instanceof JSONArray){
-                return combineJSONArray((JSONArray) jsonObject,array);
-            }else{
-                //TODO 启动时就该抛异常
-                throw new RuntimeException("无value的@JsonField注解和有value的不能同时使用, 且无value的@JsonField注解只能存在一个");
-            }
-        }else if(!Util.isBasicTypeBean(bean)&&(bean instanceof Serializable)){
-            JSONObject beanJson = convertToJson((Serializable) bean);
-            if(jsonObject==null){
-                return beanJson;
-            }else if(jsonObject instanceof JSONObject){
-                return combineJSONObject((JSONObject) jsonObject,beanJson);
-            }else if(jsonObject instanceof JSONArray){
-                //TODO 启动时就该抛异常
-                throw new RuntimeException("无value的@JsonField注解和有value的不能同时使用, 且无value的@JsonField注解只能存在一个");
-            }
-        }
-        return jsonObject;
-    }
-
     private static JSONArray toJsonArray(Object bean) {
-        JSONArray array;
-        array = new JSONArray();
-        int length = Array.getLength(bean);
-        for(int i=0;i<length;i++){
-            array.put(Array.get(bean,i));
+        JSONArray array = new JSONArray();
+        if(bean.getClass().isArray()){
+            int length = Array.getLength(bean);
+            for(int i=0;i<length;i++){
+                array.put(Array.get(bean,i));
+            }
+        }else{
+            for(Object object: (Collection<?>)bean){
+                array.put(convertToJson(object));
+            }
         }
         return array;
     }
 
-    private static JSONObject combineJSONObject(JSONObject json1,JSONObject json2){
-        Iterator<String> iterator = json2.keys();
-        while (iterator.hasNext()){
-            String key = iterator.next();
-            try {
-                json1.put(key,json2.get(key));
-            } catch (JSONException e) {
-                LogUtil.e("combineJSONObject get for "+key+" error",e);
-            }
+    private static Object convertToJson(Object object){
+        if(Util.isBasicTypeBean(object)){
+            return object;
         }
-        return json1;
-    }
-
-    private static JSONArray combineJSONArray(JSONArray array1,JSONArray array2){
-        for(int i=0;i<array2.length();i++){
-            try {
-                array1.put(array2.get(i));
-            } catch (JSONException e) {
-                LogUtil.e("combineJSONArray get index "+i+" error",e);
-            }
-        }
-        return null;
-    }
-
-    private static JSONObject convertToJson(Serializable serializable){
-        JSONObject jsonObject = new JSONObject();
-
+        //TODO 转换为json
         return null;
     }
 }
