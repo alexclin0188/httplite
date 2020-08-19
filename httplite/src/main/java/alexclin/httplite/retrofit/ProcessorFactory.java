@@ -52,7 +52,7 @@ public final class ProcessorFactory {
         parameterProcessorList.add(new BasicProcessors.ParamsProcessor());
         parameterProcessorList.add(new BasicProcessors.PathProcessor());
         parameterProcessorList.add(new BasicProcessors.PathsProcessor());
-        paramMiscProcessors.add(new BasicProcessors.JsonFieldProcessor());
+        paramMiscProcessors.add(new JsonFieldProcessor());
     }
 
     private ProcessorFactory() {

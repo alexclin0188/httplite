@@ -1,10 +1,20 @@
 # httplite
 A android http library
 
-# 2.0修改记录
+# 版本修改记录 
+## 1.0
+* 完成版本发布
+ 
+## 2.0修改记录
 *  Request改为Builder模式
 *  简化类库逻辑，去除不必要的封装
 *  下载处理逻辑简化
+## 2.0.1
+* 修复设置Request拦截器后，request没有baseUrl的bug
+## 2.0.2
+* @JsonField注解支持Bean类型
+
+
 
 ## 说明
 

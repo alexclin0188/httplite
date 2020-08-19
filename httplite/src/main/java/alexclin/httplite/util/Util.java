@@ -17,6 +17,9 @@ package alexclin.httplite.util;
 
 import android.text.TextUtils;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -124,20 +127,20 @@ public final class Util {
         return type(clazz,object,0);
     }
 
-    public static boolean isSubType(Type subType,Class superClazz){
+    public static boolean isSubType(Type subType,Class<?> superClazz){
         if(subType==superClazz) return true;
         if(subType instanceof Class){
-            Type[] interfaces = ((Class)subType).getGenericInterfaces();
+            Type[] interfaces = ((Class<?>)subType).getGenericInterfaces();
             for(Type type:interfaces){
                 if (type instanceof ParameterizedType)
                     type = ((ParameterizedType) type).getRawType();
                 if(type==superClazz) return true;
             }
-            Type superC = ((Class)subType).getSuperclass();
+            Type superC = ((Class<?>)subType).getSuperclass();
             if(superC==superClazz) return true;
             if(superC!=Object.class) return isSubType(superC,superClazz);
         }else if(subType instanceof TypeVariable){
-            TypeVariable t = (TypeVariable)subType;
+            TypeVariable<?> t = (TypeVariable<?>)subType;
             Type[] types = t.getBounds();
             for(Type type:types){
                 if(type==superClazz) return true;
@@ -257,13 +260,11 @@ public final class Util {
     public static RuntimeException methodError(Throwable cause, Method method, String message,
                                         Object... args) {
         message = String.format(message, args);
-        IllegalArgumentException e = new IllegalArgumentException(message
+        return new IllegalArgumentException(message
                 + "\n    for method ->"
                 + method.getDeclaringClass().getSimpleName()
                 + "."
-                + method.getName()+"("+method.getGenericParameterTypes().length+" param)");
-        e.initCause(cause);
-        return e;
+                + method.getName()+"("+method.getGenericParameterTypes().length+" param)",cause);
     }
 
     public static Type getTypeParameter(Type type,int index){
@@ -364,5 +365,14 @@ public final class Util {
             }
         }
         return path.delete();
+    }
+
+    public static boolean isBasicType(Type type){
+        return type==String.class || type == int.class || type == long.class || type == double.class || type == byte.class
+                || type == short.class || Util.isSubType(type,Number.class) || type == boolean.class || type == Boolean.class;
+    }
+
+    public static boolean isBasicTypeBean(Object object){
+        return object!=null&&isBasicType(object.getClass());
     }
 }

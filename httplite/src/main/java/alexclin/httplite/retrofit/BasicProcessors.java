@@ -8,9 +8,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import alexclin.httplite.listener.MediaType;
@@ -243,47 +248,6 @@ class BasicProcessors {
             if(parameterType!=String.class && parameterType!= File.class && parameterType!= RequestBody.class){
                 throw Util.methodError(method,"Annoation @Body only support parameter type String/File/RequestBody");
             }
-        }
-    }
-
-    static class JsonFieldProcessor implements ParamMiscProcessor{
-
-        @Override
-        public void process(Request.Builder request, Annotation[][] annotations,List<Pair<Integer,Integer>> list, Object... args) {
-            try {
-                JSONObject object = new JSONObject();
-                for(Pair<Integer,Integer> pair:list){
-                    int argPos = pair.first;
-                    int annotationPos = pair.second;
-                    if(args[argPos]==null) continue;
-                    JsonField annotation = (JsonField) annotations[argPos][annotationPos];
-                    String key = annotation.value();
-                    object.put(key,args[argPos]);
-                }
-                request.body(MediaType.APPLICATION_JSON,object.toString());
-            } catch (JSONException e) {
-                LogUtil.e("HandleJsonFields error:",e);
-            }
-        }
-
-        @Override
-        public boolean support(Annotation annotation) {
-            return annotation instanceof JsonField;
-        }
-
-        @Override
-        public void checkParameters(Method method, Annotation annotation, Type parameterType) throws RuntimeException {
-            if(!jsonSupportType(parameterType)){
-                throw Util.methodError(method,"Annotation @JsonField only support parameter type String/JSONObject/JSONArray/Boolean/Number/int/long/double/short");
-            }if(TextUtils.isEmpty(((JsonField)annotation).value())){
-                throw Util.methodError(method,"The annotation {@JsonField(value) value} must not be null");
-            }
-        }
-
-        private boolean jsonSupportType(Type type){
-            return type==String.class || type == JSONObject.class || type == int.class || type == long.class || type == double.class
-                    || type == short.class || Util.isSubType(type,Number.class) || type == boolean.class || type == Boolean.class
-                    || type == JSONArray.class;
         }
     }
 }

@@ -3,6 +3,8 @@ package alexclin.httplite.retrofit;
 import android.util.Pair;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.List;
 
 import alexclin.httplite.Request;
@@ -14,4 +16,5 @@ import alexclin.httplite.Request;
  */
 public interface ParamMiscProcessor extends AbsParamProcessor{
     void process(Request.Builder request,Annotation[][] annotations,List<Pair<Integer,Integer>> list,Object... args);
+    void checkMiscParameters(Method method, Annotation[][] annotations, List<Pair<Integer,Integer>> list, Type... argTypes);
 }

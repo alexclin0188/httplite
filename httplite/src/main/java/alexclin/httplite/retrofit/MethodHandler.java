@@ -88,6 +88,11 @@ class MethodHandler implements CallAdapter.RequestCreator{
             }
             parameterProcessors[i] = processors;
         }
+        if(!paramMiscProcessors.isEmpty()&&!retrofit.isReleaseMode){
+            for(ParamMiscProcessor processor:paramMiscProcessors.keySet()){
+                processor.checkMiscParameters(methodParameterAnnotationArrays,paramMiscProcessors.get(processor),methodParameterTypes);
+            }
+        }
     }
 
     private void saveMiscProcessorAndPos(ParamMiscProcessor processor, int i, int j) {
