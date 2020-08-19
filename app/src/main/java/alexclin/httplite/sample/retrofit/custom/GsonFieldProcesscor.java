@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.Request;
 import alexclin.httplite.retrofit.ParamMiscProcessor;
 import alexclin.httplite.util.Util;
@@ -25,7 +25,7 @@ public class GsonFieldProcesscor implements ParamMiscProcessor {
     public static final String BODY_TYPE = "gson_json_body";
 
     @Override
-    public void process(Request request, Annotation[][] annotations, List<Pair<Integer, Integer>> list, Object... args) {
+    public void process(Request.Builder request, Annotation[][] annotations, List<Pair<Integer, Integer>> list, Object... args) {
         //处理所有带有Gson注解的参数，list中存储的是所有Gson注解的位置
         JsonObject object = new JsonObject();
         for(Pair<Integer,Integer> pair:list){

@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import alexclin.httplite.MediaType;
+import alexclin.httplite.listener.MediaType;
 import alexclin.httplite.RequestBody;
 import alexclin.httplite.util.Util;
 
@@ -16,7 +16,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin  16/1/2 19:32
  */
-public abstract class URLRequestBody implements RequestBody{
+public abstract class URLRequestBody extends RequestBody{
 
     public static RequestBody create(MediaType contentType, String content) {
         Charset charset = Util.UTF_8;
@@ -42,8 +42,8 @@ public abstract class URLRequestBody implements RequestBody{
         if (content == null) throw new NullPointerException("content == null");
         Util.checkOffsetAndCount(content.length, offset, byteCount);
         return new URLRequestBody() {
-            @Override public MediaType contentType() {
-                return contentType;
+            @Override public String contentType() {
+                return contentType.toString();
             }
 
             @Override public long contentLength() {
@@ -61,8 +61,8 @@ public abstract class URLRequestBody implements RequestBody{
         if (file == null) throw new NullPointerException("content == null");
 
         return new URLRequestBody() {
-            @Override public MediaType contentType() {
-                return contentType;
+            @Override public String contentType() {
+                return contentType.toString();
             }
 
             @Override public long contentLength() {

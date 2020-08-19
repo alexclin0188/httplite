@@ -1,19 +1,18 @@
 package alexclin.httplite.sample.frag;
 
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.BaseResult;
 import com.example.FileInfo;
-import com.example.Result;
 
 import java.util.List;
 import java.util.Map;
@@ -25,17 +24,14 @@ import alexclin.httplite.sample.App;
 import alexclin.httplite.sample.R;
 import alexclin.httplite.sample.RecycleViewDivider;
 import alexclin.httplite.sample.adapter.FileAdapter;
-import alexclin.httplite.sample.event.ChangeFragEvent;
-import alexclin.httplite.sample.manager.DownloadManager;
 import alexclin.httplite.util.LogUtil;
-import de.greenrobot.event.EventBus;
 
 /**
  * GetFrag
  *
  * @author alexclin 16/1/10 11:38
  */
-public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener,Callback<Result<List<FileInfo>>>,View.OnClickListener{
+public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener,Callback<BaseResult<List<FileInfo>>>,View.OnClickListener{
     private RecyclerView mRecyclerView;
     private FileAdapter mAdapter;
 
@@ -65,12 +61,12 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
     public void onResume() {
         super.onResume();
         mHttpLite = App.httpLite(getActivity());
-        mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
+        new Request.Builder(url).header("header","not chinese").header("test_header","2016-01-06")
                 .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().async(new Callback<Result<List<FileInfo>>>() {
+                .get().build().enqueue(mHttpLite,new Callback<BaseResult<List<FileInfo>>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers,Result<List<FileInfo>> result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers,BaseResult<List<FileInfo>> result) {
                 //TODO
                 GetFrag.this.onSuccess(req,headers,result);
             }
@@ -96,14 +92,14 @@ public class GetFrag extends Fragment implements FileAdapter.OnFileClickListener
     }
 
     private void requestPath(String url) {
-        mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
+        new Request.Builder(url).header("header","not chinese").header("test_header","2016-01-06")
                 .header("double_header","header1").header("double_header","head2")
                 .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().async(this);
+                .get().build().enqueue(mHttpLite,this);
     }
 
     @Override
-    public void onSuccess(Request req,Map<String,List<String>> headers,Result<List<FileInfo>> result) {
+    public void onSuccess(Request req,Map<String,List<String>> headers,BaseResult<List<FileInfo>> result) {
         LogUtil.e("Succuess:" + result);
         url = result.requestPath;
         mBackUpBtn.setVisibility((url.equals("")||url.equals("/"))?View.GONE:View.VISIBLE);

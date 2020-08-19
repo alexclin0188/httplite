@@ -9,7 +9,7 @@ import java.nio.charset.Charset;
  *
  * @author alexclin 16/1/1 14:39
  */
-public class OkMediaType implements alexclin.httplite.MediaType {
+class OkMediaType implements alexclin.httplite.listener.MediaType {
     private MediaType mediaType;
 
     public OkMediaType(MediaType mediaType) {
@@ -34,17 +34,5 @@ public class OkMediaType implements alexclin.httplite.MediaType {
     @Override
     public Charset charset(Charset defaultValue) {
         return mediaType.charset(defaultValue);
-    }
-
-    public MediaType raw() {
-        return mediaType;
-    }
-
-    public static MediaType wrapperLite(alexclin.httplite.MediaType type){
-        if(type == null) return null;
-        if(type instanceof OkMediaType){
-           return ((OkMediaType)type).raw();
-        }else
-            return MediaType.parse(type.toString());
     }
 }

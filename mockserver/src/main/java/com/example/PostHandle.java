@@ -43,7 +43,7 @@ public class PostHandle implements MethodHandle{
             }
         }
         String path = request.getPath();
-        Result<Object> result = new Result<>();
+        BaseResult<Object> result = new BaseResult<>();
         result.requestPath = path;
         result.requestMethod = "POST";
         if(HttpUtil.getMimeType(request).equals("application/json")){
@@ -82,7 +82,7 @@ public class PostHandle implements MethodHandle{
                 .setBody(JSON.toJSONString(result));
     }
 
-    private void handleMultipart(RecordedRequest request,Result<Object> outResult) {
+    private void handleMultipart(RecordedRequest request,BaseResult<Object> outResult) {
         RecordedUpload upload = new RecordedUpload(request);
         try {
             Map<String,String> params = new HashMap<>();

@@ -6,7 +6,6 @@ import java.util.Map;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -14,10 +13,10 @@ import alexclin.httplite.util.LogUtil;
  *
  * @author alexclin 16/1/31 15:31
  */
-public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListener {
+public class MergeCallback<T> implements Callback<T>,ProgressListener {
     @Override
     public void onSuccess(Request req, Map<String, List<String>> headers,T result) {
-        LogUtil.e("Result:"+result);
+        LogUtil.e("BaseResult:"+result);
     }
 
     @Override
@@ -26,12 +25,7 @@ public class MergeCallback<T> implements Callback<T>,ProgressListener,RetryListe
     }
 
     @Override
-    public void onProgressUpdate(boolean out,long current, long total) {
+    public void onProgress(boolean out, long current, long total) {
         LogUtil.e("current:"+current+",total:"+total);
-    }
-
-    @Override
-    public void onRetry(int count, int maxCount) {
-        LogUtil.e("count:"+count+",maxCount:"+maxCount);
     }
 }

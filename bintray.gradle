@@ -44,24 +44,24 @@ task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
 }
-//task javadoc(type: Javadoc) {
-//    source = android.sourceSets.main.java.srcDirs
-//    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-//}
-//task javadocJar(type: Jar, dependsOn: javadoc) {
-//    classifier = 'javadoc'
-//    from javadoc.destinationDir
-//}
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
 artifacts {
-//    archives javadocJar
+    archives javadocJar
     archives sourcesJar
 }
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 bintray {
-    user = properties.getProperty("bintrayUser")
-    key = properties.getProperty("bintrayApiKey")
+    user = properties.getProperty("bintray_user")
+    key = properties.getProperty("bintray_key")
     configurations = ['archives']
     pkg {
         repo = "maven"
@@ -86,8 +86,6 @@ String projectVersion(name){
         return project.ext.httpLiteOkhttp3Version;
     }else if(name == "httplite-url"){
         return project.ext.httpLiteURLVersion;
-    }else if(name == "retrofit-rx"){
-        return project.ext.retrofitRxVersion;
     }else
         return project.ext.httpLiteVersion;
 }

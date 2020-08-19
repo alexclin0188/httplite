@@ -2,20 +2,22 @@
 
 buildscript {
     repositories {
-        jcenter()
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath 'com.android.tools.build:gradle:4.0.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
     }
 }
 
 allprojects {
     repositories {
-        jcenter()
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        google()
     }
 }
 
@@ -33,13 +35,12 @@ def httplite_version = project.ext.httpLiteVersion
 def okhttp2_version = project.ext.httpLiteOkhttp2Version
 def okhttp3_version = project.ext.httpLiteOkhttp3Version
 def urlite_version = project.ext.httpLiteURLVersion
-def httplite_rx_version = project.ext.retrofitRxVersion;
 def libDir = 'build/libs'
 
 task makeHttplite(type: Jar, dependsOn: ':httplite:build') {
-    archiveName = 'httplite' +httplite_version+'.jar'
-    from('httplite/build/intermediates/classes/release/')
-    destinationDir = file(libDir)
+    archiveFileName = 'httplite' +httplite_version+'.jar'
+    from('httplite/build/intermediates/aar_main_jar/release/')
+    destinationDirectory = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -48,9 +49,9 @@ task makeHttplite(type: Jar, dependsOn: ':httplite:build') {
 }
 
 task makeHttpOk2Lib(type: Jar,dependsOn: ':httplite-okhttp2:build') {
-    archiveName = 'httplite-ok2lite' +okhttp2_version+'.jar'
-    from('httplite-okhttp2/build/intermediates/classes/release/')
-    destinationDir = file(libDir)
+    archiveFileName = 'httplite-ok2lite' +okhttp2_version+'.jar'
+    from('httplite-okhttp2/build/intermediates/aar_main_jar/release/')
+    destinationDirectory = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -59,9 +60,9 @@ task makeHttpOk2Lib(type: Jar,dependsOn: ':httplite-okhttp2:build') {
 }
 
 task makeHttpOk3Lib(type: Jar,dependsOn: ':httplite-okhttp3:build') {
-    archiveName = 'httplite-ok3lite' +okhttp3_version+'.jar'
-    from('httplite-okhttp3/build/intermediates/classes/release/')
-    destinationDir = file(libDir)
+    archiveFileName = 'httplite-ok3lite' +okhttp3_version+'.jar'
+    from('httplite-okhttp3/build/intermediates/aar_main_jar/release/')
+    destinationDirectory = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -70,9 +71,9 @@ task makeHttpOk3Lib(type: Jar,dependsOn: ':httplite-okhttp3:build') {
 }
 
 task makeHttpUrl(type: Jar,dependsOn: ':httplite-url:build') {
-    archiveName = 'httplite-urlite' +urlite_version+'.jar'
-    from('httplite-url/build/intermediates/classes/release/')
-    destinationDir = file(libDir)
+    archiveFileName = 'httplite-urlite' +urlite_version+'.jar'
+    from('httplite-url/build/intermediates/aar_main_jar/release/')
+    destinationDirectory = file(libDir)
     exclude('**/BuildConfig.class')
     exclude('**/BuildConfig\$*.class')
     exclude('**/R.class')
@@ -80,17 +81,6 @@ task makeHttpUrl(type: Jar,dependsOn: ':httplite-url:build') {
     include('alexclin/httplite/**/*.class')
 }
 
-task makeHttpRx(type: Jar,dependsOn: ':retrofit-rx:build') {
-    archiveName = 'httplite-rx' +httplite_rx_version+'.jar'
-    from('retrofit-rx/build/intermediates/classes/release/')
-    destinationDir = file(libDir)
-    exclude('**/BuildConfig.class')
-    exclude('**/BuildConfig\$*.class')
-    exclude('**/R.class')
-    exclude('**/R\$*.class')
-    include('alexclin/httplite/**/*.class')
-}
-
-task makeJar (dependsOn:[clean,makeHttplite,makeHttpOk2Lib,makeHttpOk3Lib,makeHttpUrl,makeHttpRx]){
+task makeJar (dependsOn:[clean,makeHttplite,makeHttpOk2Lib,makeHttpOk3Lib,makeHttpUrl]){
 
 }

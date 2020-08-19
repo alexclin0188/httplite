@@ -1,14 +1,17 @@
 package alexclin.httplite.sample.retrofit;
 
+
 import com.example.RequestInfo;
-import com.example.Result;
+import com.example.BaseResult;
 import com.example.UserInfo;
 
 import java.io.File;
 
+import alexclin.httplite.Handle;
+import alexclin.httplite.Request;
+import alexclin.httplite.Result;
 import alexclin.httplite.annotation.FixHeaders;
 import alexclin.httplite.util.Clazz;
-import alexclin.httplite.util.HttpMethod;
 import alexclin.httplite.annotation.BaseURL;
 import alexclin.httplite.annotation.Form;
 import alexclin.httplite.annotation.GET;
@@ -19,13 +22,11 @@ import alexclin.httplite.annotation.POST;
 import alexclin.httplite.annotation.Param;
 import alexclin.httplite.annotation.Path;
 import alexclin.httplite.annotation.Progress;
-import alexclin.httplite.annotation.Retry;
 import alexclin.httplite.annotation.Tag;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.listener.RetryListener;
 import alexclin.httplite.sample.model.ZhihuData;
-import rx.Observable;
+import io.reactivex.Observable;
 
 /**
  * ApiService
@@ -40,7 +41,7 @@ public interface ApiService {
             @JsonField("password")String password,
             @JsonField("token") String token,
             @Tag Object tag,
-            Callback<Result<UserInfo>> callback
+            Callback<BaseResult<UserInfo>> callback
     );
 
     @GET("http://www.baidu.com")
@@ -57,34 +58,31 @@ public interface ApiService {
             @Param("param2") String param2,
             @IntoFile String path,
             @Progress ProgressListener progressListener,
-            @Retry RetryListener retryListener,
             Callback<File> callback
     );
 
     @GET( "http://news-at.zhihu.com/api/4/news/latest")
-    ZhihuData syncZhihu(Clazz<ZhihuData> clazz) throws Exception;
+    Result<ZhihuData> syncZhihu();
 
-    @HTTP(method = HttpMethod.POST,path = "/dosomething/{some_path}")
+    @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
     void doSomething(
             @Path("some_path") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
             @Form("form_f1") String form_f1,
             @Tag Object tag,
-            Callback<Result<RequestInfo>> callback
+            Callback<BaseResult<RequestInfo>> callback
     );
 
-    @HTTP(method = HttpMethod.POST,path = "/dosomething/{some_path}")
+    @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
     Result<RequestInfo> doSomethingSync(
             @Path("some_path") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
             @Form("form_f1") String form_f1,
-            @Tag Object tag,
-            Clazz<Result<RequestInfo>> clazz
-    ) throws Exception;
+            @Tag Object tag);
 
-    @HTTP(method = HttpMethod.PUT,path = "put/{holde_test}")
+    @HTTP(method = Request.Method.PUT,path = "put/{holde_test}")
     void putJsonBody(
             @Path("holde_test") String holder,
             @JsonField("field1") String field1,
@@ -95,17 +93,17 @@ public interface ApiService {
     );
 
     @GET("/download/{test_holder}")
-    void downdloadFile(
+    Handle downdloadFile(
             @Path("test_holder") String holder,
             @Param("param1") String param1,
             @Param("param2") String param2,
             @IntoFile String path,
-            @Progress @Retry MergeCallback<File> callback
+            @Progress MergeCallback<File> callback
     );
 
     @GET("http://news-at.zhihu.com/api/4/news/latest")
     Observable<ZhihuData> testZhihu();
 
     @GET("http://news-at.zhihu.com/api/4/news/latest")
-    Observable<alexclin.httplite.util.Result<ZhihuData>> testZhihuResult();
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 }

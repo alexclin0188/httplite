@@ -2,8 +2,6 @@ package alexclin.httplite.sample.retrofit;
 
 import java.io.File;
 
-import alexclin.httplite.util.LogUtil;
-
 /**
  * ExMergeCallback
  *
@@ -13,7 +11,7 @@ public class ExMergeCallback extends MergeCallback<File> {
     private boolean isCanceled;
 
     @Override
-    public void onProgressUpdate(boolean out,long current, long total) {
-        super.onProgressUpdate(out,current, total);
+    public void onProgress(boolean out, long current, long total) {
+        super.onProgress(out,current, total);
     }
 }

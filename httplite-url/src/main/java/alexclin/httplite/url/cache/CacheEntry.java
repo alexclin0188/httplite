@@ -1,6 +1,6 @@
 package alexclin.httplite.url.cache;
 
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 
 public class CacheEntry {
     private Response response;

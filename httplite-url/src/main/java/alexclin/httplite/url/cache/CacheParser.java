@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.impl.ResponseImpl;
 import alexclin.httplite.url.URLite;
 import alexclin.httplite.util.LogUtil;

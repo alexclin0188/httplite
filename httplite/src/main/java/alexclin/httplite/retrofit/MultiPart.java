@@ -42,7 +42,7 @@ public class MultiPart {
         this.nameFileType = new Pair<>(new Pair<>(name,fileName),new Pair<>(file,mediaType));
     }
 
-    void addTo(Request request){
+    void addTo(Request.Builder request){
         if(requestBody!=null){
             request.multipart(requestBody);
         }else if(headersBody!=null){

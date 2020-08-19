@@ -1,22 +1,28 @@
 package alexclin.httplite.impl;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import alexclin.httplite.MediaType;
-import alexclin.httplite.Response;
+import alexclin.httplite.Handle;
+import alexclin.httplite.Request;
+import alexclin.httplite.listener.MediaType;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.exception.CanceledException;
-import alexclin.httplite.exception.DecodeException;
 import alexclin.httplite.exception.HttpException;
 import alexclin.httplite.exception.ParserException;
 import alexclin.httplite.listener.ResponseParser;
@@ -28,18 +34,23 @@ import alexclin.httplite.util.Util;
  * @author alexclin  16/4/1 22:25
  */
 public class ObjectParser {
-    private Collection<ResponseParser> parsers;
+    private final Collection<ResponseParser> parsers;
+    private final ResponseParser defaultParser;
 
     public ObjectParser(Collection<ResponseParser> parsers) {
-        this.parsers = parsers;
+        this.parsers = new ArrayList<>();
+        this.defaultParser = new DefaultParser();
+        if(parsers!=null)
+            this.parsers.addAll(parsers);
+        this.parsers.add(defaultParser);
     }
 
-    public static boolean isSuccess(Response response) {
+    private static boolean isSuccess(Response response) {
         int code = response.code();
         return code >= 200 && code < 300;
     }
 
-    public static HttpException responseToException(Response response) throws HttpException {
+    private static HttpException responseToException(Response response) throws HttpException {
         String message = response.message();
         if (TextUtils.isEmpty(message)) {
             try {
@@ -51,14 +62,14 @@ public class ObjectParser {
         return new HttpException(response.code(), message);
     }
 
-    public static String decodeToString(Response response) throws IOException {
+    static String decodeToString(Response response) throws IOException {
         MediaType mt = response.body().contentType();
         if (mt != null) {
             BufferedReader reader = null;
             StringBuilder stringBuilder;
             try {
                 Charset cs = mt.charset(Util.UTF_8);
-                reader = new BufferedReader(new InputStreamReader(response.body().stream(), cs == null ? Util.UTF_8 : cs));
+                reader = new BufferedReader(new InputStreamReader(response.body().stream(), cs));
                 stringBuilder = new StringBuilder();
                 String s;
                 while ((s = reader.readLine()) != null) {
@@ -73,79 +84,114 @@ public class ObjectParser {
     }
 
     public <T> T parseObject(Response response, Type type) throws Exception{
-        return parseObject(response,type,null);
+        Handle cancelable = response.request().handle();
+        if(isBaseType(type)||isStringType(type)) return defaultParser.parseResponse(response, type);
+        for (ResponseParser parser : parsers) {
+            if (cancelable.isCanceled())
+                throw new CanceledException("Canceled during parse");
+            if (parser.isSupported(type)) {
+                try {
+                    return parser.parseResponse(response, type);
+                } catch (Exception e) {
+                    throw new ParserException(e);
+                } finally {
+                    Util.closeQuietly(response.body());
+                }
+            }
+        }
+        throw new ParserException("There is no ResponseParser in HttpLite support type:" + type);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T parseObject(Response response, Type type,Cancelable cancelable) throws Exception{
-        ParseType parseType = handleType(type);
-        int code = response.code();
-        if(type==Boolean.class){
-            return (T)Boolean.valueOf(isSuccess(response));
-        }else if(type==Integer.class){
-            return (T)Integer.valueOf(code);
-        }else {
-            if(!isSuccess(response)){
-                throw responseToException(response);
+    private static boolean isBaseType(Type type){
+        return Boolean.class.equals(type)||Integer.class.equals(type)
+                ||Response.class.equals(type);
+    }
+
+    private static boolean isStringType(Type type) {
+        return String.class.equals(type) || CharSequence.class.equals(type);
+    }
+
+    private static class DefaultParser implements ResponseParser{
+
+        @Override
+        public boolean isSupported(Type type) {
+            return isStringType(type)||isBaseType(type);
+        }
+
+        @Override @SuppressWarnings("unchecked")
+        public <T> T parseResponse(Response response, Type type) throws Exception {
+            int code = response.code();
+            if(type==Boolean.class){
+                return (T)Boolean.valueOf(isSuccess(response));
+            }else if(type==Integer.class){
+                return (T)Integer.valueOf(code);
+            }else if(type == Response.class)
+                return (T)response;
+            if(!isSuccess(response)) throw responseToException(response);
+            Request request = response.request();
+            if (InputStream.class.equals(type)) {
+                return (T) response.body().stream();
+            } else if (isStringType(type)) {
+                return (T)decodeToString(response);
             }
-            switch (parseType){
-                case RAW:
-                    return (T)response;
-                case Bitmap:
-                    return (T)decodeBitmap(response);
-                case String:
-                    return (T)decodeToString(response);
-                case Object:
-                    if(parsers.isEmpty()){
-                        throw new ParserException("No ResponseParser has set in HttpLite, failed with type:"+type);
-                    }
-                    for(ResponseParser parser: parsers){
-                        if(cancelable!=null&&cancelable.isCanceled())
-                            throw new CanceledException("Canceled during parse");
-                        if(parser.isSupported(type)){
-                            try {
-                                return parser.parseResponse(response, type);
-                            } catch (Exception e) {
-                                throw new ParserException(e);
-                            }finally {
-                                Util.closeQuietly(response.body());
+            Request.DownloadParams downloadParams = request.getDownloadParams();
+            if (downloadParams == null) {
+                throw new IllegalArgumentException("Parse File-Type result but there is no downloadParams in request(HFRequest) ");
+            }
+            File downloadFile = downloadParams.getTargetFile();
+            File parentDir = downloadParams.getParentDir();
+            String msg = "";
+            boolean suc = parentDir==null || parentDir.exists() || parentDir.mkdirs();
+            if (suc) {
+                if (!downloadFile.exists()) {
+                    suc = downloadFile.createNewFile();
+                }
+                if (suc) {
+                    InputStream inputStream = null;
+                    OutputStream outputStream = null;
+                    try {
+                        inputStream = new BufferedInputStream(response.body().stream());
+                        if (isSupportRange(request,response)) {//断点续传文件下载
+                            outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile, true));
+                        } else {//普通文件下载
+                            outputStream = new BufferedOutputStream(new FileOutputStream(downloadFile));
+                        }
+                        byte[] buf = new byte[4096];
+                        int len;
+                        while ((len = inputStream.read(buf)) != -1) {
+                            outputStream.write(buf, 0, len);
+                            if (request.handle().isCanceled()) {
+                                throw new IOException("Request has been canceled!");
                             }
                         }
+                        return (T) downloadFile;
+                    } finally {
+                        Util.closeQuietly(inputStream);
+                        Util.closeQuietly(outputStream);
                     }
-                default:
-                    throw new ParserException("There is no ResponseParser in HttpLite support type:"+type);
+                } else {
+                    msg = "file :" + downloadFile + " create failed";
+                }
+            } else {
+                msg = "dir:" + parentDir + " create failed";
             }
+            throw new IllegalStateException(msg);
         }
-    }
 
-    private Bitmap decodeBitmap(Response response) throws Exception{
-        InputStream in = null;
-        try {
-            in = response.body().stream();
-            return BitmapFactory.decodeStream(in);
-        } catch (IOException e) {
-            throw new DecodeException("Decode Bitmap error",e);
-        }finally {
-            Util.closeQuietly(in);
+        private static boolean isSupportRange(Request request, Response response) {
+            Map<String, List<String>> headers = request.getHeaders();
+            if(headers==null) return false;
+            if((headers.get("RANGE")==null
+                    || headers.get("RANGE").isEmpty())&&(headers.get("range")==null
+                    || headers.get("range").isEmpty()))
+                return false;
+            if (response == null) return false;
+            String ranges = response.header("Accept-Ranges");
+            if (ranges != null) {
+                return ranges.contains("bytes");
+            }
+            ranges = response.header("Content-Range");
+            return ranges != null && ranges.contains("bytes");
         }
-    }
-
-    private ParseType handleType(Type type) {
-        if(type==Response.class){
-            return ParseType.RAW;
-        }else if(type== Bitmap.class){
-            return ParseType.Bitmap;
-        }else if(type == String.class){
-            return ParseType.String;
-        }
-        return ParseType.Object;
-    }
-
-    private enum ParseType{
-        RAW,Bitmap,String,Object
-    }
-
-    public interface Cancelable{
-        boolean isCanceled();
     }
 }

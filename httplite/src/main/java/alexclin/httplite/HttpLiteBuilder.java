@@ -7,9 +7,7 @@ import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -18,11 +16,8 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 
 import alexclin.httplite.listener.MockHandler;
-import alexclin.httplite.listener.ResponseListener;
-import alexclin.httplite.mock.MockCall;
-import alexclin.httplite.listener.RequestListener;
+import alexclin.httplite.listener.RequestInterceptor;
 import alexclin.httplite.listener.ResponseParser;
-import alexclin.httplite.retrofit.CallAdapter;
 import alexclin.httplite.util.ClientSettings;
 import alexclin.httplite.util.Util;
 
@@ -32,36 +27,23 @@ import alexclin.httplite.util.Util;
  * @author alexclin at 16/1/1 10:56
  */
 public abstract class HttpLiteBuilder{
-    private String baseUrl;
-    private boolean isRelease;
-    private RequestListener mRequestFilter;
-    private ResponseListener mResponseFilter;
-    private Executor downloadExecutor;
-    private List<CallAdapter> invokers;
-
+    String baseUrl;
+    RequestInterceptor mRequestInterceptor;
+    MockHandler mockHandler;
     private ClientSettings settings = new ClientSettings();
+    List<ResponseParser> parsers = new ArrayList<>();
+    ExecutorService mockExecutor;
 
-    private HashMap<String,ResponseParser> parserMap;
-
-    protected abstract LiteClient initLiteClient();
+    protected abstract LiteClient initClient(ClientSettings settings);
 
     public final HttpLite build(){
-        LiteClient client = initLiteClient();
-        client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(),new HttpCall.Factory(), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
+        LiteClient client = initClient(settings);
+        return new HttpLite(this,client);
     }
 
-    public final HttpLite mock(MockHandler mockHandler){
-        LiteClient client = initLiteClient();
-        client.setConfig(settings);
-        return new HttpLite(client,baseUrl,settings.getMaxRetryCount(),new MockCall.MockFactory(mockHandler), isRelease,
-                mRequestFilter,mResponseFilter, downloadExecutor,parserMap,invokers);
-    }
-
-    public HttpLiteBuilder baseUrl(String baseUrl){
+    public HttpLiteBuilder setBaseUrl(String baseUrl){
         if(!Util.isHttpPrefix(baseUrl)){
-            throw new IllegalArgumentException("You must set a baseUrl start with http/https prefix for global BaseUrl");
+            throw new IllegalArgumentException("You must set a setBaseUrl start with http/https prefix for global BaseUrl");
         }
         this.baseUrl = baseUrl;
         return this;
@@ -138,21 +120,6 @@ public abstract class HttpLiteBuilder{
         return this;
     }
 
-    public HttpLiteBuilder useCookie(CookieStore cookieStore){
-        settings.setCookieHandler(new CookieManager(cookieStore, CookiePolicy.ACCEPT_ALL));
-        return this;
-    }
-
-    public HttpLiteBuilder useCookie(CookieStore cookieStore,CookiePolicy policy){
-        settings.setCookieHandler(new CookieManager(cookieStore, policy));
-        return this;
-    }
-
-    public HttpLiteBuilder setRelease(boolean isRelase){
-        this.isRelease = isRelase;
-        return this;
-    }
-
     public HttpLiteBuilder setCache(File dir,long maxCacheSize){
         settings.setCacheDir(dir);
         settings.setCacheMaxSize(maxCacheSize);
@@ -163,32 +130,27 @@ public abstract class HttpLiteBuilder{
         if(null==parser){
             return this;
         }
-        if(parserMap==null) parserMap = new HashMap<>();
-        String key = parser.getClass().getName();
-        parserMap.put(key,parser);
+        parsers.add(parser);
         return this;
     }
 
-    public HttpLiteBuilder requestListener(RequestListener requestFilter){
-        this.mRequestFilter = requestFilter;
+    public HttpLiteBuilder setMockHandler(MockHandler mockHandler){
+        this.mockHandler = mockHandler;
         return this;
     }
 
-    public HttpLiteBuilder responseListener(ResponseListener responseFilter){
-        this.mResponseFilter = responseFilter;
+    public HttpLiteBuilder setMockExecutor(ExecutorService executor){
+        this.mockExecutor = executor;
         return this;
     }
 
-    public HttpLiteBuilder customDownloadExecutor(ExecutorService executor){
-        this.downloadExecutor = executor;
+    public HttpLiteBuilder setRequestExecutor(ExecutorService executor){
+        this.settings.setRequestExecutor(executor);
         return this;
     }
 
-    public HttpLiteBuilder addCallAdapter(CallAdapter invoker){
-        if(invokers==null) invokers = new ArrayList<>();
-        if(invoker!=null&&!invokers.contains(invoker)){
-            this.invokers.add(invoker);
-        }
+    public HttpLiteBuilder setRequestInterceptor(RequestInterceptor requestFilter){
+        this.mRequestInterceptor = requestFilter;
         return this;
     }
 }

@@ -5,8 +5,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,12 +15,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import alexclin.httplite.exception.IllegalOperationException;
-import alexclin.httplite.impl.ProgressRequestBody;
-import alexclin.httplite.impl.ProgressResponse;
 import alexclin.httplite.listener.Callback;
 import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.listener.RetryListener;
-import alexclin.httplite.util.HttpMethod;
+import alexclin.httplite.util.Clazz;
 import alexclin.httplite.util.Util;
 
 /**
@@ -29,7 +25,7 @@ import alexclin.httplite.util.Util;
  *
  * @author alexclin 16/1/31 10:21
  */
-public final class Request implements Cloneable{
+public final class Request{
     public static final int NO_CACHE = 0;
     public static final int FORCE_CACHE = -1;
     public static final int UNSPECIFIED_CACHE = -100;
@@ -45,325 +41,61 @@ public final class Request implements Cloneable{
         }
     };
 
-    private String baseUrl;
-    private String url;
-    HttpMethod method;
-    ProgressListener progressListener;
-    RetryListener retryListener;
-    HttpLite lite;
-    private Map<String,List<String>> headers;
-    private List<Pair<String,Pair<String,Boolean>>> params;
-    private RequestBody body;
-    private ProgressRequestBody progressBody;
-    private Object tag;
-    private MainProgressListener progressWrapper;
-    private int cacheExpiredTime = UNSPECIFIED_CACHE;
+    private final String url;
+    private String fullUrl;
+    private final Map<String,Pair<String,Boolean>> pathHolders;
+    private final Method method;
+    private final ProgressListener progressListener;
+    private final ProgressListener wrapListener;
+    private final Map<String,List<String>> headers;
+    private final List<Pair<String,Pair<String,Boolean>>> params;
+    private final RequestBody requestBody;
+    private final Object tag;
+    private final int cacheExpiredTime;
+    private final DownloadParams downloadParams;
+    private final Handle handle;
+    private final Builder builder;
 
-    private FormBuilder formBuilder;
-    private MultipartBuilder multipartBuilder;
-
-    private HashMap<String,Pair<String,Boolean>> pathHolders;
-
-    private DownloadHandler.DownloadParams downloadParams;
-
-    private Object mark;
-
-    Request(HttpLite lite, String url) {
-        this.lite = lite;
-        this.url = url;
-    }
-
-    public Request(HttpLite lite) {
-        this.lite = lite;
-    }
-
-    public Map<String,List<String>> getHeaders(){
-        if(headers==null){
-            headers = new HashMap<>();
-        }
-        return headers;
-    }
-
-    public Request header(String name, String value) {
-        List<String> values = getHeaders().get(name);
-        if(values==null){
-            values = new ArrayList<>();
-            values.add(value);
+    private Request(Builder builder) {
+        this.url = Util.isHttpPrefix(builder.url)?builder.url:Util.appendString(builder.baseUrl,builder.url);
+        this.method = builder.method;
+        this.progressListener = builder.progressListener;
+        this.headers = builder.headers;
+        this.params = builder.params;
+        this.tag = builder.tag;
+        this.cacheExpiredTime = builder.cacheExpiredTime;
+        this.downloadParams = builder.downloadParams;
+        this.pathHolders = builder.pathHolders==null?null:Collections.unmodifiableMap(builder.pathHolders);
+        this.handle = new HandleImpl();
+        this.requestBody = builder.body;
+        if(this.progressListener!=null){
+            this.wrapListener = new MainProgressListener(this.progressListener);
         }else{
-            values.add(value);
+            this.wrapListener = null;
         }
-        getHeaders().put(name, values);
-        return this;
+        this.builder = builder;
     }
 
-    public Request removeHeader(String name) {
-        List<String> values = getHeaders().get(name);
-        if(values!=null){
-            values.remove(name);
+    private String buildUrlAndParams(String baseUrl,String url,Map<String,Pair<String,Boolean>> pathHolders) {
+        if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)){
+            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and setBaseUrl is empty",url));
+        }else if(!Util.isHttpPrefix(url)&&!TextUtils.isEmpty(baseUrl)){
+            url = Util.appendString(baseUrl,url);
         }
-        return this;
-    }
-
-    public Request headers(Map<String,List<String>> headers) {
-        this.headers = headers;
-        return this;
-    }
-
-    public Request pathHolder(String key,String value){
-        return pathHolder(key,value,false);
-    }
-
-    public Request pathHolder(String key,String value, boolean encoded){
-        if(key!=null&&value!=null) getPathHolders().put(key, new Pair<>(value, encoded));
-        return this;
-    }
-
-    public Request pathHolders(HashMap<String,String> pathHolders,boolean encoded){
-        if(pathHolders!=null){
-            for(String key:pathHolders.keySet()){
-                getPathHolders().put(key,new Pair<String, Boolean>(pathHolders.get(key),encoded));
-            }
-        }
-        return this;
-    }
-
-    public Request param(String name,String value){
-        return param(name,value,false);
-    }
-
-    public Request param(String name,Object value){
-        return param(name,value==null?null:value.toString(),false);
-    }
-
-    public Request param(String name,String value,boolean encoded){
-        if(value==null) return this;
-        if(params==null){
-            params = new ArrayList<>();
-        }
-        params.add(new Pair<>(name, new Pair<>(value, encoded)));
-        return this;
-    }
-
-    public Request form(String name,String value){
-        return form(name,value,false);
-    }
-
-    public Request formEncoded(String name,String value){
-        return form(name,value,true);
-    }
-
-    public Request form(String name,String value,boolean encoded){
-        initFormBuilder();
-        if(encoded)
-            formBuilder.addEncoded(name, value);
-        else
-            formBuilder.add(name, value);
-        return this;
-    }
-
-    public Request multipart(String name,String value){
-        initMultiPartBuilder();
-        multipartBuilder.add(name, value);
-        return this;
-    }
-
-    public Request multipartType(MediaType type){
-        initMultiPartBuilder();
-        multipartBuilder.setType(type);
-        return this;
-    }
-
-    public Request multipart(RequestBody body){
-        initMultiPartBuilder();
-        multipartBuilder.add(body);
-        return this;
-    }
-
-    public Request multipart(Map<String,List<String>> headers,RequestBody body){
-        initMultiPartBuilder();
-        multipartBuilder.add(headers,body);
-        return this;
-    }
-
-    public Request multipart(String name, String fileName, RequestBody body){
-        initMultiPartBuilder();
-        multipartBuilder.add(name,fileName,body);
-        return this;
-    }
-
-    public Request multipart(String name, String fileName, File file){
-        return multipart(name, fileName, lite.createRequestBody(Util.guessMediaType(lite, file), file));
-    }
-
-    public Request multipart(String name, String fileName, File file,String mediaType){
-        return multipart(name, fileName, lite.createRequestBody(lite.parse(mediaType), file));
-    }
-
-    public Request body(String mediaType,String content){
-        if(content==null) return this;
-        this.body = lite.createRequestBody(lite.parse(mediaType), content);
-        return this;
-    }
-
-    public Request body(String mediaType,File file){
-        if(TextUtils.isEmpty(mediaType)){
-            this.body = lite.createRequestBody(Util.guessMediaType(lite,file), file);
-        }else{
-            this.body = lite.createRequestBody(lite.parse(mediaType), file);
-        }
-        return this;
-    }
-
-    public Request body(RequestBody body){
-        this.body = body;
-        return this;
-    }
-
-    public Request cacheExpire(int expire){
-        this.cacheExpiredTime = expire;
-        return this;
-    }
-
-    public Call get() {
-        return method(HttpMethod.GET, null);
-    }
-
-    public Call head() {
-        return method(HttpMethod.HEAD, null);
-    }
-
-    public Call post(RequestBody body) {
-        return method(HttpMethod.POST, body);
-    }
-
-    public Call post(){
-        return method(HttpMethod.POST, null);
-    }
-
-    public Call post(String mediaType,String content){
-        return method(HttpMethod.POST, lite.createRequestBody(lite.parse(mediaType), content));
-    }
-
-    public Call post(String mediaType,File file){
-        return method(HttpMethod.POST, lite.createRequestBody(lite.parse(mediaType), file));
-    }
-
-    public Call delete(RequestBody body) {
-        return method(HttpMethod.DELETE, body);
-    }
-
-    public Call delete() {
-        return delete(lite.createRequestBody(null, new byte[0]));
-    }
-
-    public Call put(RequestBody body) {
-        return method(HttpMethod.PUT, body);
-    }
-
-    public Call patch(RequestBody body) {
-        return method(HttpMethod.PATCH, body);
-    }
-
-    public Call method(HttpMethod method, RequestBody body) {
-        preWorkForTask(body);
-        boolean isBodyNull = body==null&&this.body==null;
-        if (method == null) {
-            throw new IllegalArgumentException("method == null");
-        }
-        if (!isBodyNull && !method.permitsRequestBody) {
-            throw new IllegalArgumentException("method " + method + " must not have a call body.");
-        }
-        if (isBodyNull && method.requiresRequestBody) {
-            throw new IllegalArgumentException("method " + method + " must have a call body.");
-        }
-        this.method = method;
-        if(body!=null){
-            this.body = body;
-        }
-        checkContentType();
-        return lite.makeCall(this);
-    }
-
-    public Request tag(Object tag) {
-        this.tag = tag;
-        return this;
-    }
-
-    public Request onProgress(ProgressListener listener){
-        this.progressListener = listener;
-        return this;
-    }
-
-    public Request onRetry(RetryListener listener){
-        this.retryListener = listener;
-        return this;
-    }
-
-    private void initFormBuilder(){
-        if(multipartBuilder!=null){
-            throw new IllegalOperationException("You cannot call form-Method after you have called multipart method on call");
-        }
-        if(body!=null){
-            throw new IllegalOperationException("You cannot call form-Method after you have set RequestBody on call");
-        }
-        if(formBuilder == null){
-            formBuilder = new FormBuilder();
-        }
-    }
-
-    private void initMultiPartBuilder(){
-        if(formBuilder!=null){
-            throw new IllegalOperationException("You cannot call multipart-method after you have called form-method on call");
-        }
-        if(body!=null){
-            throw new IllegalOperationException("You cannot call multipart-method after you have set RequestBody on call");
-        }
-        if(multipartBuilder==null){
-            multipartBuilder = new MultipartBuilder();
-        }
-    }
-
-    private void preWorkForTask(RequestBody body) {
-        if((this.body!=null||body!=null)&&(formBuilder!=null||multipartBuilder!=null)){
-            throw new IllegalOperationException("You cannot not use multipart/from and raw RequestBody on the same call");
-        }
-        if(formBuilder!=null){
-            this.body = formBuilder.build(lite.getClient());
-        }else if(multipartBuilder!=null){
-            this.body = multipartBuilder.build(lite.getClient());
-        }
-    }
-
-    private void checkUrl(String baseUrl,String url){
         if(url==null){
-            throw new NullPointerException("Url is null for this Request");
+            throw new IllegalStateException("url is null for this request, set a url first");
         }
-        if(!Util.isHttpPrefix(url)&&TextUtils.isEmpty(baseUrl)&&TextUtils.isEmpty(lite.getBaseUrl())){
-            throw new IllegalArgumentException(String.format(Locale.getDefault(),"url:%s is not http prefix and baseUrl is empty",url));
+        if(TextUtils.isEmpty(url)){
+            throw new IllegalStateException("Url is empty for this Request");
         }
-    }
-
-    private String buildUrlAndParams(String baseUrl,String url) {
-        checkUrl(baseUrl,url);
-        if(!Util.isHttpPrefix(url)){
-            if(!TextUtils.isEmpty(lite.getBaseUrl())){
-                if(!TextUtils.isEmpty(baseUrl)){
-                    if(Util.isHttpPrefix(baseUrl)){
-                        url = Util.appendString(baseUrl,url);
-                    }else{
-                        baseUrl = Util.appendString(lite.getBaseUrl(),baseUrl);
-                        url = Util.appendString(baseUrl,url);
-                    }
-                }else{
-                    url = Util.appendString(lite.getBaseUrl(), url);
-                }
-            }else{
-                if(!TextUtils.isEmpty(baseUrl)){
-                    url = Util.appendString(baseUrl,url);
-                }
+        if(pathHolders!=null){
+            String value;
+            for (String key : pathHolders.keySet()){
+                Pair<String,Boolean> pair = pathHolders.get(key);
+                value = pair.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
+                url = url.replace("{" + key + "}",value);
             }
         }
-        url = processPathHolders(url, pathHolders);
         StringBuilder sb = new StringBuilder(url);
         if (params != null && !params.isEmpty()){
             int index = url.indexOf("?");
@@ -392,107 +124,32 @@ public final class Request implements Cloneable{
         return sb.toString();
     }
 
-    private String processPathHolders(String url, Map<String, Pair<String,Boolean>> pathHolders) {
-        if(pathHolders!=null){
-            String value;
-            for (String key : pathHolders.keySet()){
-                Pair<String,Boolean> pair = pathHolders.get(key);
-                value = pair.second?pair.first:Uri.encode(pair.first,Util.UTF_8.name());
-                url = url.replace("{" + key + "}",value);
-            }
-        }
-        return url;
-    }
-
-    private HashMap<String,Pair<String,Boolean>> getPathHolders(){
-        if(pathHolders==null){
-            pathHolders = new HashMap<>();
-        }
-        return pathHolders;
-    }
-
-    private void checkContentType() {
-        if(headers==null||body==null) return;
-        String contentType = null;
-        for(String key:headers.keySet()){
-            if("Content-Type".equalsIgnoreCase(key)){
-                contentType = key;
-                break;
-            }
-        }
-        if(contentType!=null){
-            headers.remove(contentType);
-            final MediaType type = lite.parse(contentType);
-            final RequestBody tmp = body;
-            body = new RequestBody() {
-                @Override
-                public MediaType contentType() {
-                    return type;
-                }
-
-                @Override
-                public long contentLength() throws IOException {
-                    return tmp.contentLength();
-                }
-
-                @Override
-                public void writeTo(OutputStream sink) throws IOException {
-                    tmp.writeTo(sink);
-                }
-            };
-        }
-    }
-
     public String getUrl() {
-        return buildUrlAndParams(baseUrl,url);
+        if(fullUrl==null){
+            return url;
+        }else{
+            return fullUrl;
+        }
     }
 
-    public String rawUrl() {
-        return url;
+    void ensureFullUrl(String baseUrl){
+        fullUrl = buildUrlAndParams(baseUrl, url,pathHolders);
     }
 
-    public HttpMethod getMethod() {
+    public ProgressListener getWrapListener() {
+        return wrapListener;
+    }
+
+    public Method getMethod() {
         return method;
     }
 
     public List<Pair<String,Pair<String,Boolean>>> getParams() {
-        return params;
+        return params==null?null:Collections.unmodifiableList(params);
     }
 
-    public RequestBody getBody() {
-        if(progressListener!=null&&body!=null){
-            if(progressBody==null||!progressBody.isWrappBody(body)){
-                progressBody = new ProgressRequestBody(body,getMainProgressListener());
-            }
-            return progressBody;
-        }
-        return body;
-    }
-
-    Response handleResponse(Response response){
-        if(progressListener!=null&&getDownloadParams()==null){
-            return new ProgressResponse(response,getMainProgressListener());
-        }
-        return response;
-    }
-
-    void setUrl(String url){
-        checkUrl(baseUrl,url);
-        this.url = url;
-    }
-
-    void setBaseUrl(String baseUrl){
-        if(TextUtils.isEmpty(lite.getBaseUrl())&&!Util.isHttpPrefix(baseUrl)){
-            throw new IllegalArgumentException("Global BaseUrl is empty, you must set a baseUrl(@BaseURL) with http/https prefix for this request");
-        }
-        this.baseUrl = baseUrl;
-    }
-
-    private ProgressListener getMainProgressListener(){
-        if(progressWrapper ==null){
-            progressWrapper = new MainProgressListener(progressListener);
-        }
-        return progressWrapper;
+    public RequestBody getRequestBody() {
+        return requestBody;
     }
 
     public Object getTag() {
@@ -503,97 +160,47 @@ public final class Request implements Cloneable{
         return progressListener;
     }
 
-    public RetryListener getRetryListener() {
-        return retryListener;
-    }
-
     public int getCacheExpiredTime() {
         return cacheExpiredTime;
     }
 
-    public Request intoFile(String path,boolean autoResume){
-        this.downloadParams = checkAndCreateDownload(path,null,autoResume,true);
-        return this;
-    }
-
-    public Request intoFile(String path, boolean autoResume,boolean autoRename){
-        this.downloadParams = checkAndCreateDownload(path, null, autoResume, autoRename);
-        return this;
-    }
-
-    public Request intoFile(String path,String fileName,boolean autoResume,boolean autoRename){
-        this.downloadParams = checkAndCreateDownload(path,fileName,autoResume,autoRename);
-        return this;
-    }
-
-    public Handle download(Callback<File> callback){
-        return get().async(callback);
-    }
-
-    private DownloadHandler.DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
-        DownloadHandler.DownloadParams params = DownloadHandler.createParams(path, fileName, autoResume, autoRename,url);
-        if(params==null){
-            String info = String.format("call intoFile() with wrong params->path:%s,fileName:%s,resume:%b,rename:%b",path,fileName,autoResume,autoRename);
-            throw new IllegalArgumentException(info);
-        }
-        return params;
-    }
-
-    public DownloadHandler.DownloadParams getDownloadParams() {
+    public DownloadParams getDownloadParams() {
         return downloadParams;
     }
 
-    public Request mark(Object mark){
-        this.mark = mark;
-        return this;
+    public Map<String, List<String>> getHeaders() {
+        return headers==null?null:Collections.unmodifiableMap(headers);
     }
 
-    public Object getMark(){
-        return mark;
+    public <T> Result<T> execute(HttpLite lite, Type type){
+        return lite.execute(this,type);
     }
 
-    @Override
-    public Request clone() throws CloneNotSupportedException {
-        Request request = (Request) super.clone();
-        if(this.headers!=null){
-            request.headers = new HashMap<>();
-            for(Map.Entry<String,List<String>> entry:this.headers.entrySet()){
-                request.headers.put(entry.getKey(),new ArrayList<>(entry.getValue()));
-            }
-        }
-        request.params = this.params!=null?new ArrayList<>(this.params):null;
-        request.pathHolders = this.pathHolders!=null?new HashMap<>(this.pathHolders):null;
-//        request.lite = this.lite;
-//        request.url = this.url;
-//        request.baseUrl = this.baseUrl;
-//        request.method = this.method;
-//        request.progressListener = this.progressListener;
-//        request.retryListener = this.retryListener;
-//        request.body = this.body;
-//        request.progressBody = this.progressBody;
-//        request.tag = this.tag;
-//        request.progressWrapper = this.progressWrapper;
-//        request.cacheExpiredTime = this.cacheExpiredTime;
-//        request.formBuilder = this.formBuilder;
-//        request.multipartBuilder = this.multipartBuilder;
-//        request.downloadParams = this.downloadParams;
-//        request.mark = this.mark;
-        return request;
+    public <T> Result<T> execute(HttpLite lite, Clazz<T> clazz){
+        return lite.execute(this,clazz);
     }
 
-    public static class MainProgressListener implements ProgressListener{
+    public <T> void enqueue(HttpLite lite, Callback<T> callback){
+        lite.enqueue(this,callback);
+    }
+
+    public Handle handle(){
+        return handle;
+    }
+
+    private static class MainProgressListener implements ProgressListener{
         private ProgressListener listener;
 
-        public MainProgressListener(ProgressListener listener) {
+        MainProgressListener(ProgressListener listener) {
             this.listener = listener;
         }
 
         @Override
-        public void onProgressUpdate(final boolean out,final long current,final long total) {
-            HttpLite.postOnMain(new Runnable() {
+        public void onProgress(final boolean out, final long current, final long total) {
+            HttpLite.runOnMain(new Runnable() {
                 @Override
                 public void run() {
-                    listener.onProgressUpdate(out,current,total);
+                    listener.onProgress(out,current,total);
                 }
             });
         }
@@ -601,22 +208,539 @@ public final class Request implements Cloneable{
 
     @Override
     public String toString() {
-        return "Request{" +
-                " url='" + getUrl() + '\'' +
-                ", method=" + method +
-                ", progressListener=" + progressListener +
-                ", retryListener=" + retryListener +
-                ", headers=" + headers +
-                ", params=" + params +
-                ", body=" + body +
-                ", tag=" + tag +
-                ", cacheExpiredTime=" + cacheExpiredTime +
-                ", formBuilder=" + formBuilder +
-                ", multipartBuilder=" + multipartBuilder +
-                ", pathHolders=" + pathHolders +
-                ", downloadParams=" + downloadParams +
-                ", mark=" + mark +
-                '}';
+        boolean first;
+        StringBuilder builder = new StringBuilder("Request{url='").append(url).append('\'')
+                .append(", method=").append(method);
+        if(progressListener!=null){
+            builder.append(", progress=").append(progressListener);
+        }
+        if(pathHolders!=null){
+            builder.append(", paths=[");
+            first = true;
+            for(Map.Entry<String,Pair<String,Boolean>> entry:pathHolders.entrySet()){
+                if(first){
+                    first = false;
+                }else{
+                    builder.append(",");
+                }
+                builder.append(entry.getKey()).append(":").append(entry.getValue().first).append("-")
+                        .append(entry.getValue().second);
+            }
+            builder.append("]");
+        }
+        if(headers!=null){
+            builder.append(", headers=[");
+            first = true;
+            for(Map.Entry<String,List<String>> entry:headers.entrySet()){
+                if(first){
+                    first = false;
+                }else{
+                    builder.append(",");
+                }
+                builder.append(entry.getKey()).append(":");
+                if(entry.getValue().size()>1){
+                    for(String v:entry.getValue()){
+                        builder.append(v).append(" ");
+                    }
+                }else{
+                    builder.append(entry.getValue().get(0));
+                }
+            }
+        }
+        if(params!=null){
+            builder.append(", , params=[");
+            first = true;
+            for(Pair<String,Pair<String,Boolean>> entry:params){
+                if(first){
+                    first = false;
+                }else{
+                    builder.append(",");
+                }
+                builder.append(entry.first).append(":").append(entry.second.first).append("-").append(entry.second.second);
+            }
+            builder.append("]");
+        }
+        if(requestBody!=null){
+            builder.append(", body=").append(requestBody);
+        }
+        if(tag!=null){
+            builder.append(", tag=").append(tag);
+        }
+        if(downloadParams!=null){
+            builder.append(", download=").append(downloadParams);
+        }
+        builder.append(", cache=").append(cacheExpiredTime).append('}');
+        return builder.toString();
+    }
+
+    public Builder newBuilder(){
+        try {
+            return (Builder) builder.clone();
+        } catch (CloneNotSupportedException e) {
+            return builder;
+        }
+    }
+
+    public static final class Builder implements Cloneable{
+        private String url;
+        private String baseUrl;
+        private Method method;
+        private ProgressListener progressListener;
+        private Map<String,List<String>> headers;
+        private List<Pair<String,Pair<String,Boolean>>> params;
+        private RequestBody body;
+        private Object tag;
+        private int cacheExpiredTime = UNSPECIFIED_CACHE;
+
+        private RequestBody.FormBody formBody;
+        private RequestBody.MultipartBody multipartBody;
+
+        private HashMap<String,Pair<String,Boolean>> pathHolders;
+
+        private DownloadParams downloadParams;
+
+        public Builder(String url) {
+            this.url = url;
+        }
+
+        public Builder(){}
+
+        public Builder method(Method method) {
+            this.method = method;
+            return this;
+        }
+
+        public Builder baseUrl(String baseUrl){
+            this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public Builder url(String url) {
+            this.url = url;
+            return this;
+        }
+
+        public Builder header(String name, String value) {
+            List<String> values = createHeaders().get(name);
+            if(values==null){
+                values = new ArrayList<>();
+                values.add(value);
+            }else{
+                values.add(value);
+            }
+            createHeaders().put(name, values);
+            return this;
+        }
+
+        private Map<String,List<String>> createHeaders(){
+            if(headers==null){
+                headers = new HashMap<>();
+            }
+            return headers;
+        }
+
+        public Builder removeHeader(String name) {
+            List<String> values = createHeaders().get(name);
+            if(values!=null){
+                values.remove(name);
+            }
+            return this;
+        }
+
+        public Builder headers(Map<String,List<String>> headers) {
+            this.headers = headers;
+            return this;
+        }
+
+        public Builder pathHolder(String key,String value){
+            return pathHolder(key,value,false);
+        }
+
+        public Builder pathHolder(String key,String value, boolean encoded){
+            if(key!=null&&value!=null) getPathHolders().put(key, new Pair<>(value, encoded));
+            return this;
+        }
+
+        public Builder pathHolders(HashMap<String,String> pathHolders,boolean encoded){
+            if(pathHolders!=null){
+                for(String key:pathHolders.keySet()){
+                    getPathHolders().put(key,new Pair<String, Boolean>(pathHolders.get(key),encoded));
+                }
+            }
+            return this;
+        }
+
+        public Builder param(String name,String value){
+            return param(name,value,false);
+        }
+
+        public Builder param(String name,Object value){
+            return param(name,value==null?null:value.toString(),false);
+        }
+
+        public Builder param(String name,String value,boolean encoded){
+            if(value==null) return this;
+            if(params==null){
+                params = new ArrayList<>();
+            }
+            params.add(new Pair<>(name, new Pair<>(value, encoded)));
+            return this;
+        }
+
+        public Builder form(String name,String value){
+            return form(name,value,false);
+        }
+
+        public Builder formEncoded(String name,String value){
+            return form(name,value,true);
+        }
+
+        public Builder form(String name,String value,boolean encoded){
+            initFormBuilder();
+            if(encoded)
+                formBody.addEncoded(name, value);
+            else
+                formBody.add(name, value);
+            return this;
+        }
+
+        public Builder multipart(String name,String value){
+            initMultiPartBuilder();
+            multipartBody.add(name, value);
+            return this;
+        }
+
+        public Builder multipartType(String mediaType){
+            initMultiPartBuilder();
+            multipartBody.setType(mediaType);
+            return this;
+        }
+
+        public Builder multipart(RequestBody body){
+            initMultiPartBuilder();
+            multipartBody.add(body);
+            return this;
+        }
+
+        public Builder multipart(Map<String,List<String>> headers,RequestBody body){
+            initMultiPartBuilder();
+            multipartBody.add(headers,body);
+            return this;
+        }
+
+        public Builder multipart(String name, String fileName, RequestBody body){
+            initMultiPartBuilder();
+            multipartBody.add(name,fileName,body);
+            return this;
+        }
+
+        public Builder multipart(String name, String fileName, File file){
+            RequestBody body = RequestBody.createBody(file,null);
+            return multipart(name, fileName, body);
+        }
+
+        public Builder multipart(String name, String fileName, File file,String mediaType){
+            RequestBody body = RequestBody.createBody(file,mediaType);
+            return multipart(name, fileName, body);
+        }
+
+        public Builder body(String mediaType,String content){
+            if(content==null) return this;
+            this.body = RequestBody.createBody(content,mediaType);
+            return this;
+        }
+
+        public Builder body(String mediaType,File file){
+            this.body = RequestBody.createBody(file,mediaType);
+            return this;
+        }
+
+        public Builder body(RequestBody body){
+            this.body = body;
+            return this;
+        }
+
+        public Builder cacheExpire(int expire){
+            this.cacheExpiredTime = expire;
+            return this;
+        }
+
+        public Builder intoFile(String path,boolean autoResume){
+            this.downloadParams = checkAndCreateDownload(path,null,autoResume,true);
+            return this;
+        }
+
+        public Builder intoFile(String path, boolean autoResume,boolean autoRename){
+            this.downloadParams = checkAndCreateDownload(path, null, autoResume, autoRename);
+            return this;
+        }
+
+        public Builder intoFile(String path,String fileName,boolean autoResume,boolean autoRename){
+            this.downloadParams = checkAndCreateDownload(path,fileName,autoResume,autoRename);
+            return this;
+        }
+
+        private DownloadParams checkAndCreateDownload(String path,String fileName,boolean autoResume,boolean autoRename){
+            DownloadParams params = DownloadParams.createParams(path, fileName, autoResume, autoRename,url);
+            if(params==null){
+                String info = String.format("call intoFile() with wrong params->path:%s,fileName:%s,resume:%b,rename:%b",path,fileName,autoResume,autoRename);
+                throw new IllegalArgumentException(info);
+            }
+            return params;
+        }
+
+        public Builder get() {
+            return method(Method.GET, null);
+        }
+
+        public Builder head() {
+            return method(Method.HEAD, null);
+        }
+
+        public Builder post(RequestBody body) {
+            return method(Method.POST, body);
+        }
+
+        public Builder post(){
+            return method(Method.POST, null);
+        }
+
+        public Builder post(String mediaType,String content){
+            return method(Method.POST, RequestBody.createBody(content,mediaType));
+        }
+
+        public Builder post(String mediaType,File file){
+            return method(Method.POST, RequestBody.createBody(file,mediaType));
+        }
+
+        public Builder delete(RequestBody body) {
+            return method(Method.DELETE, body);
+        }
+
+        public Builder delete() {
+            return delete(RequestBody.createBody(new byte[0],null));
+        }
+
+        public Builder put(RequestBody body) {
+            return method(Method.PUT, body);
+        }
+
+        public Builder patch(RequestBody body) {
+            return method(Method.PATCH, body);
+        }
+
+        public Builder method(Method method, RequestBody body) {
+            preWorkForTask(body);
+            boolean isBodyNull = body==null&&this.body==null;
+            if (method == null) {
+                throw new IllegalArgumentException("method == null");
+            }
+            if (!isBodyNull && !method.permitsRequestBody) {
+                throw new IllegalArgumentException("method " + method + " must not have a call requestBody.");
+            }
+            if (isBodyNull && method.requiresRequestBody) {
+                throw new IllegalArgumentException("method " + method + " must have a call requestBody.");
+            }
+            this.method = method;
+            if(body!=null){
+                this.body = body;
+            }
+            checkContentType();
+            return this;
+        }
+
+        public Builder tag(Object tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public Builder onProgress(ProgressListener listener){
+            this.progressListener = listener;
+            return this;
+        }
+
+        private void initFormBuilder(){
+            if(multipartBody !=null){
+                throw new IllegalOperationException("You cannot call form-Method after you have called multipart method on call");
+            }
+            if(body!=null){
+                throw new IllegalOperationException("You cannot call form-Method after you have set RequestBody on call");
+            }
+            if(formBody == null){
+                formBody = new RequestBody.FormBody();
+            }
+        }
+
+        private void initMultiPartBuilder(){
+            if(formBody !=null){
+                throw new IllegalOperationException("You cannot call multipart-method after you have called form-method on call");
+            }
+            if(body!=null){
+                throw new IllegalOperationException("You cannot call multipart-method after you have set RequestBody on call");
+            }
+            if(multipartBody ==null){
+                multipartBody = new RequestBody.MultipartBody();
+            }
+        }
+
+        private void preWorkForTask(RequestBody body) {
+            if((this.body!=null||body!=null)&&(formBody !=null|| multipartBody !=null)){
+                throw new IllegalOperationException("You cannot not use multipart/from and raw RequestBody on the same call");
+            }
+            if(formBody !=null){
+                this.body = formBody;
+            }else if(multipartBody !=null){
+                this.body = multipartBody;
+            }
+        }
+
+        private HashMap<String,Pair<String,Boolean>> getPathHolders(){
+            if(pathHolders==null){
+                pathHolders = new HashMap<>();
+            }
+            return pathHolders;
+        }
+
+        private void checkContentType() {
+            if(headers==null||body==null) return;
+            String contentType = null;
+            for(String key:headers.keySet()){
+                if("Content-Type".equalsIgnoreCase(key)){
+                    contentType = key;
+                    break;
+                }
+            }
+            if(contentType!=null){
+                headers.remove(contentType);
+                if(body instanceof RequestBody.NotBody){
+                    ((RequestBody.NotBody) body).setMediaType(contentType);
+                }else{
+                    body = RequestBody.wrapBody(body,contentType);
+                }
+            }
+        }
+
+        @Override
+        public Object clone() throws CloneNotSupportedException {
+            Builder builder = (Builder) super.clone();
+            return builder;
+        }
+
+        public Request build(){
+            return new Request(this);
+        }
+    }
+
+    public enum Method {
+        GET(false,false),POST(true,true),PUT(true,true),DELETE(true,false),HEAD(false,false),PATCH(true,true);
+
+        public final boolean permitsRequestBody;
+        public final boolean requiresRequestBody;
+
+        Method(boolean permitsRequestBody, boolean requiresRequestBody) {
+            this.permitsRequestBody = permitsRequestBody;
+            this.requiresRequestBody = requiresRequestBody;
+        }
+
+        public static boolean permitsRequestBody(Method method) {
+            return requiresRequestBody(method)
+                    || method.name().equals("OPTIONS")
+                    || method.name().equals("DELETE")    // Permitted as spec is ambiguous.
+                    || method.name().equals("PROPFIND")  // (WebDAV) without requestBody: call <allprop/>
+                    || method.name().equals("MKCOL")     // (WebDAV) may contain a requestBody, but behaviour is unspecified
+                    || method.name().equals("LOCK");     // (WebDAV) requestBody: create lock, without requestBody: refresh lock
+        }
+
+        public static boolean requiresRequestBody(Method method) {
+            return method.name().equals("POST")
+                    || method.name().equals("PUT")
+                    || method.name().equals("PATCH")
+                    || method.name().equals("PROPPATCH") // WebDAV
+                    || method.name().equals("REPORT");   // CalDAV/CardDAV (defined in WebDAV Versioning)
+        }
+    }
+
+    public static class DownloadParams{
+        public File parentDir;
+        public File targetFile;
+        public boolean autoResume;
+        public boolean autoRename;
+
+        DownloadParams(File parentDir, File targetFile, boolean autoResume, boolean autoRename) {
+            this.parentDir = parentDir;
+            this.targetFile = targetFile;
+            this.autoResume = autoResume;
+            this.autoRename = autoRename;
+        }
+
+        public File getParentDir() {
+            return parentDir;
+        }
+
+        public File getTargetFile() {
+            return targetFile;
+        }
+
+        public boolean isAutoResume() {
+            return autoResume;
+        }
+
+        public boolean isAutoRename() {
+            return autoRename;
+        }
+
+        private static DownloadParams createParams(String path, String fileName, boolean autoResume, boolean autoRename,String url) {
+            if(TextUtils.isEmpty(path)){
+                return null;
+            }
+            File parentDir = new File(path);
+            if(TextUtils.isEmpty(fileName)){
+                if(path.endsWith("/")){
+                    autoRename = true;
+                }else{
+                    if(parentDir.exists()&&parentDir.isDirectory()){
+                        autoRename = true;
+                    }else{
+                        int index = path.lastIndexOf("/");
+                        if(index!=-1){
+                            fileName = parentDir.getName();
+                            parentDir = parentDir.getParentFile();
+                        }else
+                            return null;
+                    }
+                }
+            }
+            if(TextUtils.isEmpty(fileName)){
+                fileName = createDefaultName(url);
+            }
+            File targetFile = new File(parentDir,fileName);
+            if(!parentDir.exists()){
+                if(!parentDir.mkdirs()){
+                    return null;
+                }
+            }
+            if(!parentDir.canWrite()){
+                return null;
+            }
+            return new DownloadParams(parentDir,targetFile,autoResume,autoRename);
+        }
+
+        private static String createDefaultName(String url) {
+            int index = url.lastIndexOf("/");
+            if(index>-1&&index<url.length()-1){
+                return url.substring(index+1);
+            }
+            return String.format(Locale.getDefault(),"download-%d.tmp", System.currentTimeMillis());
+        }
+
+        @Override
+        public String toString() {
+            return "{parentDir=" + parentDir +
+                    ", targetFile=" + targetFile +
+                    ", autoResume=" + autoResume +
+                    ", autoRename=" + autoRename +
+                    '}';
+        }
     }
 }
 

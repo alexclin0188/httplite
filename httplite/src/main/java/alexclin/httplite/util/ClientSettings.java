@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.CookieHandler;
 import java.net.Proxy;
 import java.net.ProxySelector;
+import java.util.concurrent.ExecutorService;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
@@ -26,9 +27,9 @@ public final class ClientSettings {
     private int connectTimeout = 10_000;
     private int readTimeout = 10_000;
     private int writeTimeout = 10_000;
-    private CookieHandler cookieHandler;
     private File cacheDir;
     private long cacheMaxSize;
+    private ExecutorService executor;
 
     public ClientSettings() {
     }
@@ -81,10 +82,6 @@ public final class ClientSettings {
         return cacheDir;
     }
 
-    public CookieHandler getCookieHandler() {
-        return cookieHandler;
-    }
-
     public long getCacheMaxSize() {
         return cacheMaxSize;
     }
@@ -133,15 +130,19 @@ public final class ClientSettings {
         this.writeTimeout = writeTimeout;
     }
 
-    public void setCookieHandler(CookieHandler cookieHandler) {
-        this.cookieHandler = cookieHandler;
-    }
-
     public void setCacheDir(File cacheDir) {
         this.cacheDir = cacheDir;
     }
 
     public void setCacheMaxSize(long cacheMaxSize) {
         this.cacheMaxSize = cacheMaxSize;
+    }
+
+    public void setRequestExecutor(ExecutorService executor){
+        this.executor = executor;
+    }
+
+    public ExecutorService getRequestExecutor() {
+        return executor;
     }
 }

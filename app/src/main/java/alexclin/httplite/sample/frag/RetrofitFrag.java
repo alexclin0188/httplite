@@ -3,44 +3,38 @@ package alexclin.httplite.sample.frag;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.BaseResult;
 import com.example.RequestInfo;
-import com.example.Result;
 import com.example.UserInfo;
 
 import java.io.File;
-import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import alexclin.httplite.listener.ProgressListener;
-import alexclin.httplite.okhttp2.Ok2Lite;
-import alexclin.httplite.sample.TrustAllManager;
-import alexclin.httplite.util.Clazz;
-import alexclin.httplite.HttpLite;
-import alexclin.httplite.HttpLiteBuilder;
+import alexclin.httplite.Handle;
+import alexclin.httplite.Result;
+import alexclin.httplite.sample.App;
+import alexclin.httplite.sample.retrofit.ExMergeCallback;
 import alexclin.httplite.Request;
 import alexclin.httplite.listener.Callback;
-import alexclin.httplite.listener.RequestListener;
-import alexclin.httplite.rx.AndroidSchedulers;
-import alexclin.httplite.rx.RxCallAdapter;
 import alexclin.httplite.sample.R;
-import alexclin.httplite.sample.json.JacksonParser;
 import alexclin.httplite.sample.model.ZhihuData;
 import alexclin.httplite.sample.retrofit.ApiService;
 import alexclin.httplite.sample.retrofit.ExRequestInfo;
 import alexclin.httplite.sample.retrofit.MergeListener;
 import alexclin.httplite.util.LogUtil;
-import rx.Observable;
-import rx.Subscriber;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * RetrofitFrag
@@ -49,7 +43,6 @@ import rx.schedulers.Schedulers;
  */
 public class RetrofitFrag extends Fragment implements View.OnClickListener{
     private View view;
-    private HttpLite httpLite;
 
     private ApiService apiService;
 
@@ -65,9 +58,8 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
         view.findViewById(R.id.btn_retrofit6).setOnClickListener(this);
         view.findViewById(R.id.btn_retrofit7).setOnClickListener(this);
         view.findViewById(R.id.btn_retrofit8).setOnClickListener(this);
-        httpLite = initHttpLite();
 //        TestRetrofit.test(httpLite);
-        if(apiService==null) apiService = httpLite.retrofit(ApiService.class);
+        if(apiService==null) apiService = App.retrofit(getActivity()).create(ApiService.class);
         return view;
     }
 
@@ -75,10 +67,10 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btn_retrofit1:
-                apiService.login("user_alexclin", "12345678", "sdfdsfdsfdsfsdf", this,new Callback<Result<UserInfo>>() {
+                apiService.login("user_alexclin", "12345678", "sdfdsfdsfdsfsdf", this,new Callback<BaseResult<UserInfo>>() {
                     @Override
-                    public void onSuccess(Request req,Map<String, List<String>> headers,Result<UserInfo> result) {
-                        LogUtil.e("Result:"+result);
+                    public void onSuccess(Request req,Map<String, List<String>> headers,BaseResult<UserInfo> result) {
+                        LogUtil.e("BaseResult:"+result);
                     }
 
                     @Override
@@ -86,7 +78,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                         LogUtil.e("Onfailed",e);
                     }
                 });
-                httpLite.cancel(this);
+                App.httpLite(getActivity()).cancel(this);
                 break;
             case R.id.btn_retrofit2:
                 apiService.testBaidu(new Callback<String>() {
@@ -115,10 +107,10 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_retrofit4:
-                apiService.doSomething("IamHolder", "12345", "67890","qwert", this, new Callback<Result<RequestInfo>>() {
+                apiService.doSomething("IamHolder", "12345", "67890","qwert", this, new Callback<BaseResult<RequestInfo>>() {
                     @Override
-                    public void onSuccess(Request req, Map<String, List<String>> headers,Result<RequestInfo> result) {
-                        LogUtil.e("Result:" + result);
+                    public void onSuccess(Request req, Map<String, List<String>> headers,BaseResult<RequestInfo> result) {
+                        LogUtil.e("BaseResult:" + result);
                     }
 
                     @Override
@@ -131,12 +123,12 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 new Thread(){
                     @Override
                     public void run() {
-                        try {
-                            LogUtil.e("SyncResult->start");
-                            ZhihuData data = apiService.syncZhihu(new Clazz<ZhihuData>() {});
+                        LogUtil.e("SyncResult->start");
+                        Result<ZhihuData> data = apiService.syncZhihu();
+                        if(data.error()==null){
                             LogUtil.e("SyncResult:"+data);
-                        }catch (Exception e){
-                            LogUtil.e("SyncFailed", e);
+                        }else {
+                            LogUtil.e("SyncFailed", data.error());
                         }
                     }
                 }.start();
@@ -144,12 +136,12 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
             case R.id.btn_retrofit6:
                 String saveDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
                 MergeListener mergeListener = new MergeListener();
-                apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,mergeListener,new Callback<File>(){
+                apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,new Callback<File>(){
 
                     @Override
                     public void onSuccess(Request req, Map<String, List<String>> headers,File result) {
                         LogUtil.e("Req:"+req);
-                        LogUtil.e("Result:" + result);
+                        LogUtil.e("BaseResult:" + result);
                         for(String key:headers.keySet()){
                             for(String head:headers.get(key)){
                                 LogUtil.e("head:"+key+","+head);
@@ -168,7 +160,7 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 apiService.putJsonBody("JsonPath", "123", 3, 5.0,10, new Callback<ExRequestInfo>() {
                     @Override
                     public void onSuccess(Request req, Map<String, List<String>> headers,ExRequestInfo result) {
-                        LogUtil.e("Result:" + result);
+                        LogUtil.e("BaseResult:" + result);
                     }
 
                     @Override
@@ -179,72 +171,42 @@ public class RetrofitFrag extends Fragment implements View.OnClickListener{
                 });
                 break;
             case R.id.btn_retrofit8:
-//                String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
-//                ExMergeCallback callback = new ExMergeCallback();
-//                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
-//                callback.setHandle(handle1);
-//                view.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        handle1.cancel();
-//                    }
-//                },2);
+                String saveDir1 = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+                ExMergeCallback callback = new ExMergeCallback();
+                final Handle handle1 = apiService.downdloadFile("holder_123","12345","56789",saveDir1,callback);
+                view.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handle1.cancel();
+                    }
+                },2);
                 Observable<ZhihuData> observable = apiService.testZhihu();
                 observable.subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Subscriber<ZhihuData>() {
-                    @Override
-                    public void onCompleted() {
-                        LogUtil.e("onCompleted");
-                    }
+                        .subscribe(new Observer<ZhihuData>() {
+                            @Override
+                            public void onSubscribe(@NonNull Disposable d) {
+                                LogUtil.e("onSubscribe d:"+d.isDisposed());
+                            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        LogUtil.e("Onfailed", e);
-                    }
+                            @Override
+                            public void onError(Throwable e) {
+                                LogUtil.e("Onfailed", e);
+                            }
 
-                    @Override
-                    public void onNext(ZhihuData zhihuData) {
-                        LogUtil.e("Result:" + zhihuData);
-                        LogUtil.e("Result:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
-                    }
-                });
+                            @Override
+                            public void onComplete() {
+                                LogUtil.e("onCompleted");
+                            }
+
+                            @Override
+                            public void onNext(ZhihuData zhihuData) {
+                                LogUtil.e("onNext Result:" + zhihuData);
+                                LogUtil.e("onNext Result isMain:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
+                            }
+                        });
                 break;
         }
     }
 
-    private HttpLite initHttpLite(){
-        if(this.httpLite!=null) return this.httpLite;
-//        String baseUrl = "http://192.168.99.238:10080/";
-        HttpLiteBuilder builder = Ok2Lite.create();//URLite.create();
-        TrustAllManager manager = new TrustAllManager();
-        HttpLite lite = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
-                .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
-                .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
-                .setMaxRetryCount(2)  //设置失败重试次数
-                .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
-                .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
-                .setCache(getActivity().getCacheDir(), 10 * 1024 * 1024)
-                .setSslSocketFactory(manager.getSocketFactory())
-                .setHostnameVerifier(manager)
-//                .baseUrl(baseUrl)
-                .addResponseParser(new JacksonParser())
-                .requestListener(new RequestListener() {
-                    @Override
-                    public void onRequest(HttpLite lite, Request request, Type type) {
-                        if(!request.getHeaders().containsKey("handle"))
-                            request.header("handle", "misc");
-                        request.cacheExpire(Request.NO_CACHE);
-                        request.onProgress(new ProgressListener() {
-                            @Override
-                            public void onProgressUpdate(boolean out, long current, long total) {
-                                LogUtil.e(String.format(Locale.ENGLISH,"Out:%b,cur:%d,total:%d",out,current,total));
-                            }
-                        });
-                    }
-                })
-                .addCallAdapter(new RxCallAdapter())
-                .build();
-        return lite;
-    }
 }

@@ -18,6 +18,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Form {
     String value();
 
-    /** Specifies whether the {@linkplain #value() value} and name are already URL encoded. */
+    /** Specifies whether the {@linkplain #value() value} and name are already URL encoded.
+     * @return encoded
+     */
     boolean encoded() default false;
 }

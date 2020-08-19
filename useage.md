@@ -1,11 +1,3 @@
-# 前言
-
-Http请求是做Android应用开发工作几乎必须要用到的东西。做Android开发这几年，从最开始仿照网上代码自己使用apache的DefaultHttpClient封装网络请求工具类，到后面开始使用GitHub上面的一些http框架，Afinal,xUtils到Volley,AsyncHttpClient等，网上这些http框架大多都还比较易用，但是做实际业务中还是感觉到业务和界面代码与Http请求的代码还是耦合性过高，特别是在服务器接口比较多的时候。所以自己在以前的项目中也一直在尝试做一些封装解耦，但是一直感觉达不到自己想要的效果，直到看到Retrofit这个类库。
-
-在我的上一篇文章中，简单介绍了一下Retrofit的实现原理。
-
-在断断续续看了几个月的OkHttpClient和Retrofit源码，我终于决定尝试着封装一个自己的框架：[httplite](https://github.com/alexclin0188/httplite)
-
 # 类库主要特性介绍
 [httplite](https://github.com/alexclin0188/httplite)类库主要实现了以下特性
 * 1.隔离了底层http实现，http实现可替换
@@ -18,106 +10,130 @@ Http请求是做Android应用开发工作几乎必须要用到的东西。做And
 
 # 类库使用指南
 ## 一、添加依赖
-* Gradle
 
-使用okhttp 2.7.5作为http实现
+* httplite类库分为四部分：
+  - httplite: httplite核心库，'alexclin.httplite:httplite:x.x.x'
+  - urlite: 使用系统URLConnection作为网络底层实现，'alexclin.httplite:httplite-url:x.x.x'
+  - okhttp2：使用okhttp2作为网络底层实现,'alexclin.httplite:httplite-okhttp2:x.x.x'
+  - okhttp3: 使用okhttp3作为网络底层实现,'alexclin.httplite:httplite-okhttp3:x.x.x'
+
+其中urlite/okhttp2/okkhttp3的gradle包是依赖于httplite，所以使用时只用添加三者其一为依赖即可。如使用URLite则添加依赖
 
 ```
-    compile 'alexclin.httplite:httplite-okhttp2:1.1.0'
-```
-
-使用okhttp 3.2.0作为http实现
-```
-    compile 'alexclin.httplite:httplite-okhttp3:1.1.0'
-```
-
-使用系统URLConnection作为http实现
-```
-    compile 'alexclin.httplite:httplite-url:1.1.0'
+    compile 'alexclin.httplite:httplite-url:2.0.0'
 ```
 
-如需Rx扩展则还需要
+* 如果需要在JAVA接口定义API时使用RxJava,则需要添加以下依赖
+
 ```
-    compile 'alexclin.httplite:httplite-rx:1.0.0'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'//可选，在Android中使用会需要使用此类库
+    compile 'io.reactivex.rxjava2:rxjava:2.1.0'
 ```
 
-或者直接使用releaselib中的jar包
+httplite核心库中自动做了RxJava类的检测，创建接口实例时会自动增加Obserble\<T\>类的支持
 
-* 1 okhttp2: httplite1.1.0.jar+httplite-ok2lite1.0.1.jar+okhttp 2.x.x版本jar包
-* 2 okhttp3: httplite1.1.0.jar+httplite-ok3lite1.0.1.jar+okhttp 3.x.x版本jar包
-* 3 url: httplite1.1.0.jar+httplite-urlite1.1.0.jar
+* okhttp2-httplite与okhttp3-httplite在使用时，需要另外加入okhttp对应版本的依赖
+
+  - 使用okhttp 2.x作为http实现
+
+```
+    compile 'alexclin.httplite:httplite-okhttp2:2.0.0'
+    compile 'com.squareup.okhttp:okhttp:2.x'
+```
+
+  - 使用okhttp 3.x作为http实现
+
+```
+    compile 'alexclin.httplite:httplite-okhttp3:2.0.0'
+    compile 'com.squareup.okhttp3:okhttp:3.x'
+```
+
+PS:如需使用jar包可在项目releaselib目录下找到对应jar包
 
 ## 二、类库初始化
-或者也可以直接使用jar包
+
 首先创建HttpLiteBuilder进行配置，目前有三种HTTP实现可选
+
+对Builder进行配置并创建HttpLite实例
+
 ```
-//使用OkHttp2.x作为Http实现
-HttpLiteBuilder builder = Ok2Lite.create();
-//使用OkHttp3.x作为Http实现
-HttpLiteBuilder builder = Ok3Lite.create();
 //使用系统URLConnection作为http实现
-HttpLiteBuilder builder = URLite.create();
+URLite.Builder urlBuilder = new alexclin.httplite.url.URLite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app));//设置CookieStore;
+                
+//使用OkHttp2.x作为Http实现
+Ok2Lite.Builder ok2Builder = new Ok2Lite.Builder()
+                .setCookieStore(PersistentCookieStore.getInstance(app));
+                
+//使用OkHttp3.x作为Http实现
+Ok3Lite.Builder ok3Builder = new Ok3Lite.Builder()
+                .setCookieJar(new CookieJar() {...});//okhttp3的cookie接口
+//任选上面三者之一
+HttpLiteBuilder builder = urlBuilder
+                .setConnectTimeout(30, TimeUnit.SECONDS)  //设置连接超时
+                .setWriteTimeout(30, TimeUnit.SECONDS)  //设置写超时
+                .setReadTimeout(30, TimeUnit.SECONDS)  //设置读超时
+                .setMaxRetryCount(2)  //设置失败重试次数
+                .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
+                .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
+                .addResponseParser(new GsonParser())
+                .setBaseUrl("https://192.168.99.238:10080/")
+					//...设置其它支持的属性....
+                .setMockHandler(handler)
+                .setSocketFactory(SocketFactory.getDefault())
+                .setSslSocketFactory(manager.getSocketFactory())
+                .setHostnameVerifier(manager)
+                .setRequestInterceptor(new RequestInterceptor() {...});
+Httplite httplite = builder.build();
 ```
-对Builder进行配置
-```
-builder = builder.setConnectTimeout(10, TimeUnit.SECONDS)  //设置连接超时
-              .setWriteTimeout(10, TimeUnit.SECONDS)  //设置写超时
-              .setReadTimeout(10, TimeUnit.SECONDS)  //设置读超时
-              .setMaxRetryCount(2)  //设置失败重试次数
-              .setFollowRedirects(true)  //设置是否sFollowRedirects,默认false
-              .setFollowSslRedirects(true) //设置是否setFollowSslRedirects
-              .addResponseParser(new GsonParser())
-              .baseUrl("http://192.168.99.238:10080/")//BaseUrl
-              .setProxy(...)//
-              .setProxySelector(...)//
-              .setSocketFactory(...)//
-              .setSslSocketFactory(...)//
-              .setHostnameVerifier(..)//
-              .useCookie(...)  //设置CookieStore,设置则启用Cookie,不设置则不启用
-              .addCallAdapter(new RxCallAdapter());//添加Rx支持
-```
-创建HttpLite实例
-```
-HttpLite httpLite = builder.build();
-```
+
 另外提供mock支持，需传入MockHandler
+
 ```
-httpLite = builder.mock(new MockHandler() {
-                      @Override
-                      public <T> void mock(Request request, Mock<T> mock) throws Exception {
-                          //模拟完整的http返回结果输入流
-                          mock.mock(int code,String msg,Map<String, List<String>> headers, final InputStream stream,MediaType mediaType);
-                          //直接模拟结果
-                          mock(T result, Map<String, List<String>> headers)；
-                          //模拟Json格式的结果
-                          mock.mockJson(....);
-                          //以文件内容作为Http返回结果输入流
-                          mock.mock(new File("...."))；
-                      }
-                      @Override
-                      public boolean needMock(Request request) {
-                          //TODO 判断该请求是否需要Mock
-                          return true;
-                      }
-            });
+         MockHandler handler = new MockHandler() {
+            @Override
+            public <T> void mock(Request request, Mock<T> mock) throws Exception {
+                LogUtil.e("mock Request:"+request);
+                  //模拟完整的http返回结果输入流
+				   mock.mock(int code,String msg,Map<String, List<String>> headers, final InputStream stream,MediaType mediaType);
+                  //直接模拟结果
+					mock(T result, Map<String, List<String>> headers)；
+                  //模拟Json格式的结果
+					mock.mockJson(....);
+                  //以文件内容作为Http返回结果输入流
+                  mock.mock(new File("...."))；
+            }
+
+            @Override
+            public boolean needMock(Request request) {
+                //TODO 判断该请求是否需要Mock
+                return request.getUrl().startsWith("http://198test");
+            }
+        };
+builder = builder.setMockHandler(handler);
+........
+
 ```
+
 ## 二、普通方式发起http请求
 
 发起普通GET请求
 
 ```
-    mHttpLite.url(url).header("header","not chinese").header("test_header","2016-01-06")
-                .header("double_header","header1").addHeader("double_header","head2")
-                .param("type","json").param("param2","You dog").param("param3", "中文")
-                .get().async(new Callback<Result<List<FileInfo>>>() {
+        new Request.Builder(url).header("header","not chinese").header("test_header","2016-01-06")
+                .header("double_header","header1").header("double_header","head2")
+                .param("type","json").param("param2","You dog").param("param3", "中文").get().build()
+                .enqueue(httpLite,new Callback<BaseResult<List<FileInfo>>>() {
             @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers,Result<List<FileInfo>> result) {
+            public void onSuccess(Request req, Map<String, List<String>> headers,BaseResult<List<FileInfo>> result) {
                 //TODO
+                GetFrag.this.onSuccess(req,headers,result);
             }
 
             @Override
             public void onFailed(Request req, Exception e) {
                 //TODO
+                GetFrag.this.onFailed(req,e);
             }
         });
 ```
@@ -128,61 +144,65 @@ httpLite = builder.mock(new MockHandler() {
     //multipart上传文件
     MediaType type = mHttpLite.parse(MediaType.MULTIPART_FORM+";charset=utf-8");
     RequestBody body = mHttpLite.createRequestBody(mHttpLite.parse(MediaType.APPLICATION_STREAM),file);
-    mHttpLite.url("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
+    new Request.Builder("/").multipartType(type).multipart("早起早睡","身体好").multipart(info.fileName,info.hash).multipart(info.fileName,info.filePath,body)
        .onProgress(new ProgressListener() {
             @Override
-            public void onProgressUpdate(boolean out, long current, long total) {
+            public void onProgress(boolean out, long current, long total) {
                 LogUtil.e("是否上传:"+out+",cur:"+current+",total:"+total);
             }
-        })
-        .post().async(new Callback<Result<String>>() {
-            @Override
-            public void onSuccess(Request req,Map<String, List<String>> headers,Result<String> result) {
-                LogUtil.e("Result:"+result);
-            }
-            @Override
-            public void onFailed(Request req, Exception e) {
-                LogUtil.e("onFailed:"+e);
-                e.printStackTrace();
-           }
-    });
+        }).post()
+        .enqueue(httpLite,new Callback<BaseResult<String>>() {
+                @Override
+                public void onSuccess(Request req,Map<String, List<String>> headers,BaseResult<String> result) {
+                    LogUtil.e("BaseResult:"+result);
+                }
+
+                @Override
+                public void onFailed(Request req, Exception e) {
+                    LogUtil.e("onFailed:"+e);
+                    e.printStackTrace();
+                }
+            });
     //post json
-    mHttpLite.url("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info)).async(new Callback<String>() {
-        @Override
-        public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
-            LogUtil.e("Result:" + result);
-        }
-        @Override
-        public void onFailed(Request req, Exception e) {
-            LogUtil.e("E:" + e.getLocalizedMessage());
-            e.printStackTrace();
-        }
+    new Request.Builder("/").post(MediaType.APPLICATION_JSON, JSON.toJSONString(info))
+    	.enqueue(httpLite,new Callback<String>() {
+	        @Override
+	        public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
+	            LogUtil.e("Result:" + result);
+	        }
+	        @Override
+	        public void onFailed(Request req, Exception e) {
+	            LogUtil.e("E:" + e.getLocalizedMessage());
+	            e.printStackTrace();
+	        }
     });
     //post form表单
-    mHttpLite.url("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post().async(new Callback<String>() {
-        @Override
-       public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
-            LogUtil.e("Result:" + result);
-        }
-        @Override
-        public void onFailed(Request req, Exception e) {
-            LogUtil.e("E:" + e.getLocalizedMessage());
-            e.printStackTrace();
-        }
+    new Request.Builder("/").form("&test1","name&1").form("干撒呢","whatfuck").formEncoded(Uri.encode("test&2"),Uri.encode("name&2")).post()
+    	.enqueue(httpLite,new Callback<String>() {
+	        @Override
+	        public void onSuccess(Request req,Map<String, List<String>> headers,String result) {
+	            LogUtil.e("Result:" + result);
+	        }
+	        @Override
+	        public void onFailed(Request req, Exception e) {
+	            LogUtil.e("E:" + e.getLocalizedMessage());
+	            e.printStackTrace();
+	        }
     });
 ```
 
 下载文件
 
 ```
-mHttpLite.url(url).intoFile(dir,name,true,true)
+	new Request.Builder(url).intoFile(dir,name,true,true)
         .onProgress(new ProgressListener() {
             @Override
-            public void onProgressUpdate(boolean out, long current, long total) {
+            public void onProgress(boolean out, long current, long total) {
                         //TODO
                     }
                 })
-                .download(new Callback<File>() {
+        .get().build()
+        .enqueue(httpLite,new Callback<File>() {
                     @Override
                     public void onSuccess(Request req, Map<String, List<String>> headers, File result) {
                         //TODO
@@ -195,105 +215,184 @@ mHttpLite.url(url).intoFile(dir,name,true,true)
                 });
 ```
 
-## 三、使用java接口定义API接口(类似Retrofit的功能)
+## 三、JavaInterface+注解的是使用方式
 
 ### 1.基础使用
 
+* 1. 定义Api接口
+
 ```
-        //生成API接口实例
-        final SampleApi api = mHttplite.retrofit(SampleApi.class);
-        //调用异步方法
-        api.login("user", "pass", "token", new Callback<Result<UserInfo>>() {
-            @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, Result<UserInfo> result) {
-                //TODO
-            }
+@BaseURL("https://192.168.99.238:10080/")
+public interface ApiService {
+    @POST("/login")
+    void login(
+            @JsonField("username") String userName,
+            @JsonField("password")String password,
+            @JsonField("token") String token,
+            @Tag Object tag,
+            Callback<BaseResult<UserInfo>> callback
+    );
 
-            @Override
-            public void onFailed(Request req, Exception e) {
-                //TODO
-            }
-        });
-        //调用异步方法
-        new Thread(){
-            @Override
-            public void run() {
-                //获取知乎主页数据
-                try {
-                    ZhihuData data = api.syncZhihu();
-                    //TODO
-                } catch (Exception e) {
-                    //TODO
-                }
-            }
-        }.start();
-        //生成Call
-        final Call call = api.zhihuCall();
-        //异步调用Call
-        call.async(new Callback<ZhihuData>() {
-            @Override
-            public void onSuccess(Request req, Map<String, List<String>> headers, ZhihuData result) {
-                //TODO
-            }
+    @GET("http://www.baidu.com")
+    void testBaidu(Callback<String> callback);
 
-            @Override
-            public void onFailed(Request req, Exception e) {
-                //TODO
-            }
-        });
-        //或者同步调用Call
-        new Thread(){
-            @Override
-            public void run() {
-                //获取知乎主页数据
-                try {
-                    ZhihuData data = call.sync(new Clazz<ZhihuData>(){});
-                    //TODO
-                } catch (Exception e) {
-                    //TODO
-                }
-            }
-        }.start();
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    void testZhihu(Callback<ZhihuData> callback);
+
+    @GET("/download/{test_holder}")
+    @FixHeaders({"handle:GET"})
+    void downdloadFile(
+            @Path("test_holder") String holder,
+            @Param("param1") String param1,
+            @Param("param2") String param2,
+            @IntoFile String path,
+            @Progress ProgressListener progressListener,
+            Callback<File> callback
+    );
+
+    @GET( "http://news-at.zhihu.com/api/4/news/latest")
+    Result<ZhihuData> syncZhihu();
+
+    @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
+    void doSomething(
+            @Path("some_path") String holder,
+            @Param("param1") String param1,
+            @Param("param2") String param2,
+            @Form("form_f1") String form_f1,
+            @Tag Object tag,
+            Callback<BaseResult<RequestInfo>> callback
+    );
+
+    @HTTP(method = Request.Method.POST,path = "/dosomething/{some_path}")
+    Result<RequestInfo> doSomethingSync(
+            @Path("some_path") String holder,
+            @Param("param1") String param1,
+            @Param("param2") String param2,
+            @Form("form_f1") String form_f1,
+            @Tag Object tag);
+
+    @HTTP(method = Request.Method.PUT,path = "put/{holde_test}")
+    void putJsonBody(
+            @Path("holde_test") String holder,
+            @JsonField("field1") String field1,
+            @JsonField("field2") int field2,
+            @JsonField("field3") Double field3,
+            @JsonField("field4") long field4,
+            Callback<ExRequestInfo> callback
+    );
+
+    @GET("/download/{test_holder}")
+    Handle downdloadFile(
+            @Path("test_holder") String holder,
+            @Param("param1") String param1,
+            @Param("param2") String param2,
+            @IntoFile String path,
+            @Progress MergeCallback<File> callback
+    );
+}
+```
+
+* 创建接口实例并使用API接口
+
+```
+		 Retrofit retrofit = new Retrofit(httpLite,releaseMode);
+		 ApiService apiService = retrofit.create(ApiService.class);
+		 //异步方法
+		 apiService.login("user_alexclin", "12345678", "sdfdsfdsfdsfsdf", this,new Callback<BaseResult<UserInfo>>() {
+		                    @Override
+		                    public void onSuccess(Request req,Map<String, List<String>> headers,BaseResult<UserInfo> result) {
+		                        LogUtil.e("BaseResult:"+result);
+		                    }
+		
+		                    @Override
+		                    public void onFailed(Request req, Exception e) {
+		                        LogUtil.e("Onfailed",e);
+		                    }
+		                });
+ 		//同步方法
+ 		new Thread(){
+                    @Override
+                    public void run() {
+                        LogUtil.e("SyncResult->start");
+                        Result<ZhihuData> data = apiService.syncZhihu();
+                        if(data.error()==null){
+                            LogUtil.e("SyncResult:"+data);
+                        }else {
+                            LogUtil.e("SyncFailed", data.error());
+                        }
+                    }
+                }.start();
+       //下载
+       String saveDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+       MergeListener mergeListener = new MergeListener();
+       apiService.downdloadFile("holder_123","12345","56789",saveDir,mergeListener,new Callback<File>(){
+
+                    @Override
+                    public void onSuccess(Request req, Map<String, List<String>> headers,File result) {
+                        LogUtil.e("Req:"+req);
+                        LogUtil.e("BaseResult:" + result);
+                        for(String key:headers.keySet()){
+                            for(String head:headers.get(key)){
+                                LogUtil.e("head:"+key+","+head);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailed(Request req, Exception e) {
+                        LogUtil.e("Req:"+req);
+                        LogUtil.e("OnFailed", e);
+                    }
+                });
+       ....
+       //TODO 详细使用参考demo中RetrofitFrag类中使用
 ```
 
 ### 2.RxJava的支持
 
-支持RxJava需要在配置HttpLiteBuilder时添加RxCallAdapter
+在项目添加RxAndroid和RxJava的依赖后，即可在Interface定义中使用RxJava
 
 ```
-HttpLiteBuilder builder = ....
-.....
-builder.addCallAdapter(new RxCallAdapter());
-.....
-
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.0'
 ```
+
 定义返回Obserable的API函数
 
 ```
-@GET("http://news-at.zhihu.com/api/4/news/latest")
-Observable<ZhihuData> testZhihu();
+	@GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<ZhihuData> testZhihu();
+
+    @GET("http://news-at.zhihu.com/api/4/news/latest")
+    Observable<alexclin.httplite.Result<ZhihuData>> testZhihuResult();
 ```
 使用返回的Obserable
 
 ```
-Observable<ZhihuData> observable = apiService.testZhihu();
-observable.subscribeOn(Schedulers.io())
-    .observeOn(AndroidSchedulers.mainThread())
-    .subscribe(new Subscriber<ZhihuData>() {
-       @Override
-       public void onCompleted() {
-           LogUtil.e("onCompleted");
-       }
-       @Override
-       public void onError(Throwable e) {
-           LogUtil.e("Onfailed", e);
-       }
-       @Override
-       public void onNext(ZhihuData zhihuData) {
-           LogUtil.e("Result:" + zhihuData);
-           LogUtil.e("Result:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
-       }
-    });
+    apiService.testZhihu().subscribeOn(Schedulers.io())
+           .observeOn(AndroidSchedulers.mainThread())
+           .subscribe(new Observer<ZhihuData>() {
+              @Override
+              public void onSubscribe(@NonNull Disposable d) {
+                  LogUtil.e("onSubscribe d:"+d.isDisposed());
+              }
+
+              @Override
+              public void onError(Throwable e) {
+                  LogUtil.e("Onfailed", e);
+              }
+
+              @Override
+              public void onComplete() {
+                  LogUtil.e("onCompleted");
+              }
+
+              @Override
+              public void onNext(ZhihuData zhihuData) {
+                  LogUtil.e("onNext Result:" + zhihuData);
+                  LogUtil.e("onNext Result isMain:" + (Thread.currentThread()== Looper.getMainLooper().getThread()));
+              }
+          });
 ```
 
 ### 3.自定义注解的使用
@@ -302,14 +401,14 @@ observable.subscribeOn(Schedulers.io())
 
 只需定义自己的注解，在HttpLite的Retrofit实例中添加对应注解的处理器即可
 
-定义注解和注解处理器,此处只列出GsonFieldProcesscor代码，详细参考Demo
+* 定义注解和注解处理器,此处只列出GsonFieldProcesscor代码，详细参考Demo
 
 ```
 public class GsonFieldProcesscor implements ParamMiscProcessor {
     public static final String BODY_TYPE = "gson_json_body";
 
     @Override
-    public void process(Request request, Annotation[][] annotations, List<Pair<Integer, Integer>> list, Object... args) {
+    public void process(Request.Builder request, Annotation[][] annotations, List<Pair<Integer, Integer>> list, Object... args) {
         //处理所有带有Gson注解的参数，list中存储的是所有Gson注解的位置
         JsonObject object = new JsonObject();
         for(Pair<Integer,Integer> pair:list){
@@ -352,41 +451,49 @@ public class GsonFieldProcesscor implements ParamMiscProcessor {
     }
 }
 ```
-
+* 在接口定义中使用自定义注解
 
 ```
-@BaseURL("http://192.168.99.238:10080/")
+@BaseURL("https://192.168.99.238:10080/")
 public interface CustomApi {
     @GET("/login")
+    @FixHeaders({
+            "abcded:tests123",
+            "headerFix:headerValue"
+    })
     void login(
             @Query("username") String userName,
             @Query("password") String password,
             @Query("token") String token,
             @Tag Object tag,
-            Callback<Result<UserInfo>> callback
+            Callback<BaseResult<UserInfo>> callback
     );
 
     @POST("/test")
     void testPost(@GsonField("param1") String param1,
-                  @GsonField("param1")String param2,
-                  Callback<Result<RequestInfo>> callback);
+                  @GsonField("param2")String param2,
+                  Callback<BaseResult<RequestInfo>> callback);
 }
 ```
 
+* 为自定义注解注册处理器和和做必要的Body类型注册
+
 ```
-//添加自定义注解处理器
-//普通的参数注解处理ParamterProcessor
-Retrofit.registerParamterProcessor(new QueryProcessor());
-//对个参数组合到一起的参数注解处理ParamMiscProcessor，如将多个参数组合成一个json字符串作为请求的BODY
-Retrofit.registerParamMiscProcessor(new GsonFieldProcesscor());
-//当注解处理的参数是用作Body时，还需要注册Body类型
-Retrofit.basicAnnotationRule().registerBodyAnnotation(GsonField.class,
-     GsonFieldProcesscor.BODY_TYPE,true);
+	//添加自定义注解处理器
+	//普通的参数注解处理ParamterProcessor
+	Retrofit.registerParamterProcessor(new QueryProcessor());
+	//对个参数组合到一起的参数注解处理ParamMiscProcessor，如将多个参数组合成一个json字符串作为请求的BODY
+	Retrofit.registerParamMiscProcessor(new GsonFieldProcesscor());
+	//当注解处理的参数是用作Body时，还需要注册Body类型
+	Retrofit.basicAnnotationRule().registerBodyAnnotation(GsonField.class,
+	     GsonFieldProcesscor.BODY_TYPE,true);
 ```
+
+* 创建接口实例使用API
 
 ```
         //创建实例
-        CustomApi api = mHttplite.retrofit(CustomApi.class);
+        CustomApi api = retrofit.create(CustomApi.class);
         //发起请求
         Object tag = new Object();
         api.login("user", "pass", "token", tag, new Callback<Result<UserInfo>>() {
@@ -416,51 +523,6 @@ Retrofit.basicAnnotationRule().registerBodyAnnotation(GsonField.class,
     }
 ```
 
-### 4.RequestListener和MethodFilter的使用
-
-HttpLite支持在创建API接口实例时传入RequestListener和MethodFilter
-
-```
-SampleApi api = mHttplite.retrofit(SampleApi.class,listener,filter);
-```
-
-* RequestListener主要用于监听接口中的请求，或者为请求添加一些通用参数
-
-```
-    RequestListener listener = new RequestListener() {
-            @Override
-            public void onRequest(HttpLite lite, Request request, Type resultType) {
-                LogUtil.e("RequestUrl:"+request.rawUrl());
-                //添加通用参数
-                request.param("commonParam","1234");
-            }
-        };
-```
-
-* MethodFilter主要用于给某些请求加一些前置操作
-
-```
-    MethodFilter filter = new MethodFilter() {
-            @Override
-            public Object onMethod(HttpLite lite, final MethodInvoker invoker, final Object[] args) throws Throwable {
-                String publicKey = ......
-                if(TextUtils.isEmpty(publicKey)){
-                    //publicKey是空，则先请求key
-                    new Thread(){
-                        @Override
-                        public void run() {
-                            //获取key
-                            ......
-                            //获取key成功后再发起真正的请求
-                            invoker.invoke(args);
-                        }
-                    }.start();
-                }else{
-                    return invoker.invoke(args);
-                }
-            }
-        };
-```
 
 ## 四、配置ResponseParser
 
@@ -483,10 +545,10 @@ demo模块app中分别有使用Jackson,FastJson,Gson实现Json解析，通过继
 public abstract class StringParser implements ResponseParser{
 
     @Override
-    public final <T> T praseResponse(Response response, Type type) throws Exception{
-        return praseResponse(HttpCallback.decodeResponseToString(response),type);
+    public final <T> T parseResponse(Response response, Type type) throws Exception{
+        return parseResponse(ObjectParser.decodeToString(response), type);
     }
 
-    public abstract <T> T praseResponse(String content, Type type) throws Exception;
+    public abstract <T> T parseResponse(String content, Type type) throws Exception;
 }
 ```

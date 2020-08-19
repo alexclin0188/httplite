@@ -1,25 +1,29 @@
 package alexclin.httplite.sample;
 
 import android.os.Bundle;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.example.RequestInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import alexclin.httplite.Result;
 import alexclin.httplite.sample.event.ChangeFragEvent;
 import alexclin.httplite.sample.frag.RequestFrag;
 import alexclin.httplite.sample.frag.DownloadFrag;
 import alexclin.httplite.sample.frag.GetFrag;
 import alexclin.httplite.sample.frag.PostFrag;
 import alexclin.httplite.sample.frag.RetrofitFrag;
-import alexclin.httplite.sample.retrofit.TestRetrofit;
+import alexclin.httplite.util.Clazz;
+import alexclin.httplite.util.Util;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import de.greenrobot.event.EventBus;
@@ -61,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        TestRetrofit.testCustom(App.httpLite(this));
 //        TestRetrofit.testFilter(App.httpLite(this));
 //        TestRetrofit.testSampleApi(App.httpLite(this));
+        Util.isSubType(new Clazz<Result<RequestInfo>>(){}.type(),Result.class);
     }
 
     @Override

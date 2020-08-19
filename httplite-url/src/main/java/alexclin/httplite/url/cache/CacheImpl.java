@@ -2,11 +2,13 @@ package alexclin.httplite.url.cache;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.impl.ResponseImpl;
-import alexclin.httplite.url.CacheDispatcher;
 import alexclin.httplite.util.LogUtil;
 
 /**
@@ -20,15 +22,15 @@ public class CacheImpl{
 
     private DiskLruCache cache;
     private ByteArrayPool pool;
-    private CachePolicy cachePolicy;
+    private CacheHandler cachePolicy;
 
-    public CacheImpl(File directory, long maxSize, ByteArrayPool pool,CachePolicy cachePolicy) throws IOException{
+    public CacheImpl(File directory, long maxSize, ByteArrayPool pool,CacheHandler cachePolicy) throws IOException{
         cache = DiskLruCache.open(directory,APP_VERSION,2,maxSize,2048);
         this.pool = pool;
         this.cachePolicy = cachePolicy;
     }
 
-    public CacheImpl(File directory, long maxSize,CachePolicy cachePolicy) throws IOException{
+    public CacheImpl(File directory, long maxSize,CacheHandler cachePolicy) throws IOException{
         this(directory,maxSize,new ByteArrayPool(DEFAULT_POOL_SIZE),cachePolicy);
     }
 
@@ -91,7 +93,7 @@ public class CacheImpl{
         return returnResponse;
     }
 
-    public void addCacheHeaders(Request request){
+    public void addCacheHeaders(Request request,Map<String, List<String>> headers){
         CacheEntry entry = null;
         try {
             DiskLruCache.Snapshot snapshot = cache.get(cachePolicy.createCacheKey(request));
@@ -108,14 +110,25 @@ public class CacheImpl{
         }
 
         if (entry.getEtag() != null) {
-            request.header("If-None-Match", entry.getEtag());
+            addHeader(headers,"If-None-Match", entry.getEtag());
         }
 
         if (entry.getLastModified() > 0) {
             String lastModified = CacheParser.formatDateAsEpoch(entry.getLastModified());
             if(lastModified!=null)
-                request.header("If-Modified-Since", lastModified);
+                addHeader(headers,"If-Modified-Since", lastModified);
         }
+    }
+
+    private static void addHeader(Map<String, List<String>> headers,String key,String value){
+        List<String> list = headers.get(key);
+        if(list==null){
+            list = new ArrayList<>();
+        }else if(!(list instanceof ArrayList)){
+            list = new ArrayList<>(list);
+        }
+        list.add(value);
+        headers.put(key,list);
     }
 
     public String createCacheKey(Request request){

@@ -2,7 +2,7 @@ package alexclin.httplite.impl;
 
 import java.lang.reflect.Type;
 
-import alexclin.httplite.Response;
+import alexclin.httplite.listener.Response;
 import alexclin.httplite.listener.ResponseParser;
 
 /**

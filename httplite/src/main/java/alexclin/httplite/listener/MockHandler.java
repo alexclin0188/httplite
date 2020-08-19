@@ -1,7 +1,7 @@
 package alexclin.httplite.listener;
 
 import alexclin.httplite.Request;
-import alexclin.httplite.mock.Mock;
+import alexclin.httplite.Mock;
 
 /**
  * MockHandler
