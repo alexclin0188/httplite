@@ -90,7 +90,7 @@ class MethodHandler implements CallAdapter.RequestCreator{
         }
         if(!paramMiscProcessors.isEmpty()&&!retrofit.isReleaseMode){
             for(ParamMiscProcessor processor:paramMiscProcessors.keySet()){
-                processor.checkMiscParameters(methodParameterAnnotationArrays,paramMiscProcessors.get(processor),methodParameterTypes);
+                processor.checkMiscParameters(method,methodParameterAnnotationArrays,paramMiscProcessors.get(processor),methodParameterTypes);
             }
         }
     }
