@@ -42,6 +42,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
@@ -365,6 +366,10 @@ public final class Util {
             }
         }
         return path.delete();
+    }
+
+    public static boolean isEmpty(Collection<?> collection){
+        return collection==null||collection.isEmpty();
     }
 
     public static boolean isBasicType(Type type){

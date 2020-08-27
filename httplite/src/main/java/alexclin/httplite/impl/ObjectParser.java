@@ -50,7 +50,7 @@ public class ObjectParser {
         return code >= 200 && code < 300;
     }
 
-    private static HttpException responseToException(Response response) throws HttpException {
+    private static HttpException responseToException(Response response){
         String message = response.message();
         if (TextUtils.isEmpty(message)) {
             try {
@@ -85,7 +85,8 @@ public class ObjectParser {
 
     public <T> T parseObject(Response response, Type type) throws Exception{
         Handle cancelable = response.request().handle();
-        if(isBaseType(type)||isStringType(type)) return defaultParser.parseResponse(response, type);
+        if(defaultParser.isSupported(type))
+            return defaultParser.parseResponse(response, type);
         for (ResponseParser parser : parsers) {
             if (cancelable.isCanceled())
                 throw new CanceledException("Canceled during parse");
@@ -115,7 +116,7 @@ public class ObjectParser {
 
         @Override
         public boolean isSupported(Type type) {
-            return isStringType(type)||isBaseType(type);
+            return isStringType(type)||isBaseType(type) || File.class.equals(type);
         }
 
         @Override @SuppressWarnings("unchecked")
@@ -140,7 +141,7 @@ public class ObjectParser {
             }
             File downloadFile = downloadParams.getTargetFile();
             File parentDir = downloadParams.getParentDir();
-            String msg = "";
+            String msg;
             boolean suc = parentDir==null || parentDir.exists() || parentDir.mkdirs();
             if (suc) {
                 if (!downloadFile.exists()) {
@@ -181,9 +182,8 @@ public class ObjectParser {
         private static boolean isSupportRange(Request request, Response response) {
             Map<String, List<String>> headers = request.getHeaders();
             if(headers==null) return false;
-            if((headers.get("RANGE")==null
-                    || headers.get("RANGE").isEmpty())&&(headers.get("range")==null
-                    || headers.get("range").isEmpty()))
+            if((headers.get("RANGE")==null || Util.isEmpty(headers.get("RANGE")))
+                    &&(headers.get("range")==null || Util.isEmpty(headers.get("range"))))
                 return false;
             if (response == null) return false;
             String ranges = response.header("Accept-Ranges");

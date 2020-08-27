@@ -116,7 +116,7 @@ public abstract class HttpLiteBuilder{
     }
 
     public HttpLiteBuilder setMaxRetryCount(int maxRetryCount) {
-        settings.setMaxRetryCount(maxRetryCount<1?1:maxRetryCount);
+        settings.setMaxRetryCount(Math.max(maxRetryCount, 1));
         return this;
     }
 
